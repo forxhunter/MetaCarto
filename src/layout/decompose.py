@@ -165,7 +165,13 @@ def _bin_pack(pieces, cofactor_score, max_size, min_size):
                     shared == best_shared and len(existing) < len(bins[best])):
                 best, best_shared = index, shared
 
-        if best is None or (len(piece) >= min_size and best_shared == 0):
+        # Only combine pieces that actually share chemistry. Packing unrelated
+        # communities together merely to reach the size floor manufactures a
+        # 54-reaction "cluster" that is five unrelated pathways -- which is
+        # exactly why such clusters cannot be given a name: there is nothing
+        # they have in common to name. Undersized leftovers are handled by
+        # merge_small, which merges on shared chemistry too.
+        if best is None or best_shared == 0:
             bins.append(list(piece))
             bin_mets.append(piece_mets)
         else:
@@ -423,7 +429,8 @@ def close_cycles(groups, model, cofactor_score, max_size=MAX_CLUSTER, verbose=Fa
 # --------------------------------------------------------------------------
 
 def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
-             kegg_mapping=None, close_rings=True, verbose=False):
+             kegg_mapping=None, close_rings=True, name_structural=True,
+             verbose=False):
     """{cluster name: [reactions]}, biological where the model allows it."""
     mapping = load_kegg_mapping() if kegg_mapping is None else kegg_mapping
 
@@ -489,6 +496,13 @@ def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
                 if is_boundary_cluster(reactions, cofactor_score)}
     merged = merge_small(sized, cofactor_score, min_size=min_size,
                          max_size=max_size, boundary=boundary)
+
+    # Name whatever structure produced before anything else looks at the names.
+    # A caption reading "Cluster_8" tells a reader nothing, and the reactions in
+    # that cluster already say what they are.
+    if name_structural:
+        from .naming import name_clusters
+        merged = name_clusters(merged, model)
 
     # Ring consolidation has to see the final cluster boundaries, so it runs
     # last -- but taking reactions out of a donor can leave the donor under the

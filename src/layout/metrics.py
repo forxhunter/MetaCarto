@@ -133,6 +133,16 @@ def _label_boxes(body):
         box(node, node["bigg_id"], METABOLITE_FONT_FACTOR, (node["x"], node["y"]))
     for reaction in body["reactions"].values():
         box(reaction, reaction["bigg_id"], REACTION_FONT_FACTOR, None)
+
+    # Free text labels -- map title, region and cluster captions -- were never
+    # measured, so every caption collision on a composed poster was invisible to
+    # this metric by construction.
+    for label in body.get("text_labels", {}).values():
+        size = label.get("font_size_base", ESCHER_DEFAULT_FONT_BASE) * 3.0
+        width = max(len(str(label.get("text", ""))), 1) * size * CHAR_WIDTH_RATIO
+        height = size * LINE_HEIGHT_RATIO
+        boxes.append((label["x"], label["y"] - height / 2.0,
+                      label["x"] + width, label["y"] + height / 2.0, None))
     return boxes
 
 
