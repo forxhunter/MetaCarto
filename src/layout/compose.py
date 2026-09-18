@@ -23,10 +23,16 @@ import networkx as nx
 
 from .render import (CHAR_WIDTH_RATIO, ESCHER_DEFAULT_FONT_BASE, LINE_HEIGHT_RATIO,
                      METABOLITE_FONT_FACTOR, REACTION_FONT_FACTOR)
+from . import taxonomy
 from .sugiyama import layered_layout
 
-TILE_GAP = 900.0           # clear space between tiles
-TITLE_OFFSET = 190.0       # cluster caption above its tile
+TILE_GAP = 260.0           # clear space between tiles
+TITLE_OFFSET = 150.0       # cluster caption above its tile
+REGION_GAP = 480.0         # clear space between biological regions
+REGION_TITLE_OFFSET = 420.0
+REGION_ASPECT = 1.5        # shape of a single region block
+CANVAS_ASPECT = 1.4        # shape of the whole poster
+REGION_FONT_BASE = 30.0
 CANVAS_PADDING = 700.0
 
 
@@ -136,59 +142,120 @@ def _shift_point(point, dx, dy):
     return {"x": point["x"] + dx, "y": point["y"] + dy}
 
 
-def _pack_rows(layering, centres, width, height, gap):
-    """Close up the gaps the meta-layout leaves between tiles.
+def _skyline_pack(order, width, height, gap, target_width):
+    """Pack tiles into a block, filling the holes a shelf leaves behind.
 
-    Brandes-Koepf aligns nodes into columns, which is exactly what makes a
-    pathway backbone straight and exactly what wastes space at tile scale: a
-    column sized for the tallest, widest tile leaves a hole wherever a small
-    tile sits in it, and a nine-tile model ends up mostly whitespace.
+    Shelf packing makes every row as tall as its tallest tile, so a row holding
+    one tall pathway and three short ones is mostly empty. A skyline tracks the
+    current occupied height across the block and drops each tile into the
+    lowest place it fits, which closes those holes.
 
-    The layer assignment and the within-layer order are worth keeping -- they
-    are the metabolic flow and the crossing-minimised arrangement. So keep
-    both, and re-pack each layer as a row butted up against its neighbours.
+    `order` is kept as the placement order, so the metabolic flow the meta-
+    layout worked out still determines which tile goes where first.
     """
-    order = []
+    columns = []          # (x_start, x_end, height) skyline segments
+    placed = {}
+
+    def height_at(x0, x1):
+        top = 0.0
+        for start, end, level in columns:
+            if start < x1 and x0 < end:
+                top = max(top, level)
+        return top
+
+    for name in order:
+        w, h = width[name] + gap, height[name] + gap
+        # Candidate positions are the left *and* right edge of every placed
+        # tile. Taking only the right edges, which is the easy mistake, means a
+        # tile can never be tucked against the left side of a taller neighbour,
+        # and the packer leaves half the block empty.
+        candidates = sorted({0.0}
+                            | {start for start, _, _ in columns}
+                            | {end for _, end, _ in columns})
+        best_x, best_y = 0.0, None
+        for x in candidates:
+            if x + w > target_width and x > 0.0:
+                continue
+            y = height_at(x, x + w)
+            if best_y is None or y < best_y - 1e-9 or (
+                    abs(y - best_y) <= 1e-9 and x < best_x):
+                best_x, best_y = x, y
+        if best_y is None:
+            best_x, best_y = 0.0, height_at(0.0, w)
+
+        placed[name] = (best_x + w / 2.0, best_y + h / 2.0)
+        columns.append((best_x, best_x + w, best_y + h))
+
+    return placed
+
+
+def _block_extent(placements, width, height, gap):
+    right = max(x + (width[n] + gap) / 2.0 for n, (x, _) in placements.items())
+    bottom = max(y + (height[n] + gap) / 2.0 for n, (_, y) in placements.items())
+    return right, bottom
+
+
+def _pack_regions(layering, centres, width, height, gap, names):
+    """Lay the tiles out as labelled biological regions, packed two levels deep.
+
+    Grouping pathway tiles into KEGG-style superclasses is how every curated
+    global map is organised -- a reader finds lipid metabolism by region, not by
+    reading every caption.
+
+    The packing has to be two-level to be worth anything. Giving each region a
+    full-width band and stacking the bands leaves a region holding one tile
+    wasting the whole width beside it: measured at 23% of the canvas covered,
+    77% whitespace. So each region is packed into a block sized to its own
+    content, and the blocks are then packed against each other.
+
+    Within a region the meta-layout's flow order is preserved, so the
+    arrangement is still metabolically ordered, just locally.
+    """
+    flow_order = []
     for layer in layering.layers:
         members = [n for n in layer if n in width]
-        order.extend(sorted(members, key=lambda n: centres.get(n, (0.0, 0.0))[0]))
-    if not order:
-        return centres
+        flow_order.extend(sorted(members, key=lambda n: centres.get(n, (0.0, 0.0))[0]))
+    for name in names:
+        if name not in flow_order and name in width:
+            flow_order.append(name)
+    if not flow_order:
+        return centres, {}
 
-    # One row per meta-layer would be faithful to the flow but badly
-    # proportioned -- a deep pathway DAG gives many rows of one or two tiles.
-    # Shelf-pack the flow order instead: related pathways stay adjacent in
-    # reading order, and the block comes out roughly poster-shaped, which is
-    # how KEGG's global map (templates/t4) is arranged.
-    area = sum((width[n] + gap) * (height[n] + gap) for n in order)
-    target_width = max(math.sqrt(area * 1.3), max(width[n] for n in order))
+    regions = taxonomy.group(flow_order)
+    rank = {name: index for index, name in enumerate(flow_order)}
 
-    rows, current, current_width = [], [], 0.0
-    for node in order:
-        if current and current_width + width[node] + gap > target_width:
-            rows.append(current)
-            current, current_width = [], 0.0
-        current.append(node)
-        current_width += width[node] + gap
-    if current:
-        rows.append(current)
+    # Level 1: pack each region against its own tiles.
+    blocks, block_width, block_height = {}, {}, {}
+    for label, members in regions.items():
+        members = sorted(members, key=lambda n: rank.get(n, 0))
+        area = sum((width[n] + gap) * (height[n] + gap) for n in members)
+        target = max(math.sqrt(area * REGION_ASPECT),
+                     max(width[n] for n in members) + gap)
+        local = _skyline_pack(members, width, height, gap, target)
+        right, bottom = _block_extent(local, width, height, gap)
+        blocks[label] = local
+        block_width[label] = right
+        block_height[label] = bottom + REGION_TITLE_OFFSET
 
-    row_widths = [sum(width[n] for n in row) + gap * (len(row) - 1) for row in rows]
-    widest = max(row_widths)
+    # Level 2: pack the region blocks against each other.
+    labels = list(blocks)
+    total = sum((block_width[l] + REGION_GAP) * (block_height[l] + REGION_GAP)
+                for l in labels)
+    target = max(math.sqrt(total * CANVAS_ASPECT),
+                 max(block_width[l] for l in labels) + REGION_GAP)
+    block_pos = _skyline_pack(labels, block_width, block_height, REGION_GAP, target)
 
-    packed, cursor_y = {}, 0.0
-    for row, row_width in zip(rows, row_widths):
-        row_height = max(height[n] for n in row)
-        cursor_x = (widest - row_width) / 2.0        # centre each row
-        for node in row:
-            # Top-align within the row rather than centring. A row is as tall
-            # as its tallest tile, and centring a short tile in that band puts
-            # empty space both above and below it; top-aligning collects the
-            # slack in one place and lines the captions up across the row.
-            packed[node] = (cursor_x + width[node] / 2.0, cursor_y + height[node] / 2.0)
-            cursor_x += width[node] + gap
-        cursor_y += row_height + gap
-    return packed
+    placed, captions = {}, {}
+    for label in labels:
+        cx, cy = block_pos[label]
+        origin_x = cx - (block_width[label] + REGION_GAP) / 2.0
+        origin_y = cy - (block_height[label] + REGION_GAP) / 2.0
+        captions[label] = (origin_x, origin_y + REGION_TITLE_OFFSET * 0.35,
+                           block_width[label])
+        for name, (x, y) in blocks[label].items():
+            placed[name] = (origin_x + x, origin_y + REGION_TITLE_OFFSET + y)
+
+    return placed, captions
 
 
 def compose(tiles, meta_graph, map_name, author="AutoLayout", description="",
@@ -226,7 +293,8 @@ def compose(tiles, meta_graph, map_name, author="AutoLayout", description="",
         x_gap=gap * 0.5, y_gap=gap * 0.6,
         reversal_cost=reversal_cost, fold_after=None,
     )
-    centres = _pack_rows(layering, centres, width, height, gap)
+    centres, captions = _pack_regions(layering, centres, width, height, gap,
+                                      [name for name, _ in tiles])
 
     nodes, reactions, labels = {}, {}, {}
     for index, (name, tile) in enumerate(tiles):
@@ -241,6 +309,16 @@ def compose(tiles, meta_graph, map_name, author="AutoLayout", description="",
                 "x": left + dx,
                 "y": top + dy - TITLE_OFFSET * 0.55,
                 "text": name,
+                "font_size_base": 12.0,
+            }
+
+    if show_titles:
+        for label, (x, y, _block_width) in captions.items():
+            labels[f"region_{label}"] = {
+                "x": x,
+                "y": y,
+                "text": label.upper(),
+                "font_size_base": REGION_FONT_BASE,
             }
 
     xs = [n["x"] for n in nodes.values()] + [l["x"] for l in labels.values()]
