@@ -21,9 +21,9 @@ There are **two independent pipelines**. Know which one you are touching:
 | Escher output | schema-invalid (see below) | schema-correct |
 | determinism | random seed, varies per run | fully deterministic |
 
-v2 is newer and measurably better (see *Metrics* below) but does **not** yet do v1's global
-meta-tiling of subsystems onto one canvas. Neither is deleted. `layout_algorithm.md` is the v2
-design document and explains why v1's approach cannot reach the target aesthetic.
+v2 is newer and measurably better (see *Metrics* below). Neither is deleted.
+`layout_algorithm.md` is the v2 design document and explains why v1's approach cannot reach the
+target aesthetic.
 
 ## Environment
 
@@ -84,6 +84,7 @@ cobra model + reaction subset
   sugiyama.layered_layout()         FAS -> layering -> crossing reduction -> Brandes-Köpf
   motifs.expand_rings()             members onto a circle, rotated to face entry/exit
   render.build_escher_map()         markers, cofactor arcs, orthogonal routing, labels
+  compose.compose()                 --combined only: meta-tiling of the per-cluster maps
   metrics.score()                   acceptance metrics
 ```
 
@@ -110,6 +111,14 @@ Four ideas carry almost all the quality; change them only deliberately:
    reaction axis. The perpendicular is derived from the *unflipped* direction; deriving it after
    negating for the substrate side flips the bank too and scatters ATP and ADP to opposite sides.
 
+`compose.py` builds the whole-model map (`--combined`). It runs the *same* layered algorithm a
+second time one level up: each cluster drawing becomes a box, the boxes are laid out by flow
+(cluster A above B when A produces what B consumes), then shelf-packed in that flow order into a
+poster-shaped block with a caption per pathway. Drawing the whole model in one Sugiyama pass
+instead is what the naive `--combined` used to do, and it is 24x worse on crossings: iAF1260 goes
+from 2.598 crossings per edge as one drawing to 0.106 as a composed one. Shared metabolites are
+left duplicated per tile rather than wired across tiles, which is what `templates/t4` does.
+
 `decompose.py` enforces the `constraints.md` cluster limits (≤60 reactions, ≥6) and falls back to
 greedy-modularity communities on the currency-stripped graph. Many BiGG models — iAF1260 among
 them — carry no `subsystem` annotation at all, so this is the normal path, not an edge case.
@@ -134,6 +143,9 @@ across the corpus is not an improvement. Two caveats when reading a report:
 - `aspect_ratio` legitimately sits low for an unbranched pathway — a ten-step chain drawn as a
   tall column is what a reader expects, and folding it would be worse. `sugiyama._fold_columns`
   only wraps a stack past `fold_after` (26 layers), where it stops fitting on a page.
+- `hairball_index` is not meaningful on a composed whole-model map. It measures density variance
+  across the canvas, and a tiled poster is dense tiles separated by empty gutters by construction
+  (iAF1260 scores 7.8). Read it per cluster, not on `*_Combined.json`.
 - Subsystem `groups` trade crossings for clustering. On the e_coli_core combined map: no groups
   gives 0.163 crossings/edge and hairball 3.42; subsystem groups give 0.204 and 3.07. Grouping is
   the default because keeping a pathway in one place is the biological point; `--no-groups` opts out.

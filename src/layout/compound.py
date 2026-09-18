@@ -333,7 +333,13 @@ def build_compound_graph(model, reactions):
     # Metabolites that ended up with no edge are pure cofactors of this
     # subsystem. They are dropped from the layout graph but still drawn, as
     # per-reaction side nodes.
-    for met_id in [n for n in D.nodes if D.degree(n) == 0]:
+    #
+    # Boundary metabolites are the exception: an exchange reaction contributes
+    # no edge because it has only one participant, so dropping its metabolite
+    # deletes the reaction from the map. A cluster of nothing but exchanges --
+    # which is exactly what `Extracellular exchange` is -- would then vanish
+    # entirely. Curated maps draw these as named nodes on the border.
+    for met_id in [n for n in D.nodes if D.degree(n) == 0 and n not in roles]:
         D.remove_node(met_id)
 
     return CompoundGraph(

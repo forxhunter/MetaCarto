@@ -20,6 +20,7 @@ import traceback
 import cobra
 
 from src.layout import metrics, preview, render
+from src.layout.compose import build_meta_graph, compose
 from src.layout.compound import compute_cofactor_scores
 from src.layout.decompose import clusters
 from src.layout.engine import layout_reactions
@@ -69,15 +70,19 @@ def emit(model, reactions, name, out_dir, want_preview, use_fba, verbose, pitch,
     if result is None:
         print(f"  {name}: no drawable structure, skipped")
         return None
+    save_map(result.escher_map, out_dir, name, want_preview, pitch, verbose)
+    return result.escher_map
 
+
+def save_map(escher_map, out_dir, name, want_preview, pitch, verbose=True):
     stem = os.path.join(out_dir, safe_name(name))
-    render.save(result.escher_map, stem + ".json")
+    render.save(escher_map, stem + ".json")
     if want_preview:
-        preview.render(result.escher_map, stem + ".png")
-
-    values = metrics.score(result.escher_map, pitch=pitch)
-    print(f"  {name}: {values['reactions']} reactions, {values['nodes']} nodes")
-    print(metrics.format_report(values))
+        preview.render(escher_map, stem + ".png")
+    values = metrics.score(escher_map, pitch=pitch)
+    if verbose:
+        print(f"  {name}: {values['reactions']} reactions, {values['nodes']} nodes")
+        print(metrics.format_report(values))
     return values
 
 
@@ -147,19 +152,28 @@ def main(argv=None):
             continue
         print(f"  {len(groups)} clusters")
 
+        tiles = []
         for name, reactions in sorted(targets.items()):
             try:
-                emit(model, reactions, name, out_dir, args.preview,
-                     not args.no_fba, not args.quiet, LAYER_GAP)
+                tile = emit(model, reactions, name, out_dir, args.preview,
+                            not args.no_fba, not args.quiet, LAYER_GAP)
+                if tile is not None:
+                    tiles.append((name, tile))
             except Exception as exc:
                 print(f"  {name}: FAILED {exc}")
                 traceback.print_exc()
 
-        if args.combined and not args.subsystem:
+        if args.combined and not args.subsystem and tiles:
+            # Meta-tiling: reuse the per-cluster drawings and lay the tiles out
+            # with the same layered pass. Drawing the whole model in one go
+            # instead is what produces an unreadable 2.6-crossings-per-edge map.
             try:
-                emit(model, list(model.reactions), f"{model_id}_Combined", out_dir,
-                     args.preview, not args.no_fba, not args.quiet, LAYER_GAP,
-                     groups=None if args.no_groups else metabolite_groups(model.reactions))
+                meta = build_meta_graph({n: r for n, r in targets.items()},
+                                        compute_cofactor_scores(model))
+                combined = compose(tiles, meta, f"{model_id}_Combined", author=AUTHOR)
+                if combined is not None:
+                    save_map(combined, out_dir, f"{model_id}_Combined",
+                             args.preview, LAYER_GAP, not args.quiet)
             except Exception as exc:
                 print(f"  combined: FAILED {exc}")
                 traceback.print_exc()

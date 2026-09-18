@@ -1,8 +1,8 @@
 # Biologically-Structured Layout Algorithm (v2)
 
 > **Status: implemented.** `src/layout/` and `layout_v2.py`. Sections 1-5, 7, 8 (as
-> `_enforce_separation`) and 9 are live; §6 compartment hulls and whole-model meta-tiling are
-> not. Measured results are in CLAUDE.md. Where the design below turned out to be wrong once
+> `_enforce_separation`), 9, and §6's meta-tiling (`src/layout/compose.py`) are live; §6's
+> compartment hulls are not. Measured results are in CLAUDE.md. Where the design below turned out to be wrong once
 > tested, the correction is marked **[revised]**.
 
 Target: given **any** subset of a metabolic model, produce a drawing that reads like
@@ -155,7 +155,13 @@ stub is drawn as an arc.
 - Compartment = the `_c` / `_m` / `_e` / `_p` suffix. After coordinates are fixed, draw a rounded
   convex hull (Escher has no group primitive — emit it as a `text_label` plus a reserved margin,
   or post-process the SVG). Transport reactions are the only edges allowed to cross a hull.
-- Module (subsystem) packing: keep v1's variable row-height/column-width grid (that part is sound)
+- Module (subsystem) packing **[implemented, revised]**: `compose.py` runs the layered pass on the
+  meta-graph, but then *discards* its x-coordinates. Brandes-Koepf aligns nodes into columns, which
+  is what straightens a pathway backbone and what wastes space at tile scale -- a column sized for
+  the widest tile leaves a hole wherever a small tile sits in it. What is worth keeping is the
+  layer assignment and the within-layer order (the flow, and the crossing-minimised arrangement),
+  so tiles are shelf-packed in that order into a poster-shaped block, top-aligned per row. Original
+  plan, kept for the record: keep v1's variable row-height/column-width grid
   but replace `kamada_kawai` + gravity compaction with Sugiyama on the meta-graph — pathways have
   a real hierarchy (central carbon in the middle, biosynthesis radiating outward), and a layered
   meta-layout reproduces it. Route inter-module edges as orthogonal buses down the gutters, as in

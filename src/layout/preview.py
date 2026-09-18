@@ -18,6 +18,7 @@ MIDMARKER = (58, 123, 213)
 MULTIMARKER = (127, 140, 153)
 METABOLITE_TEXT = (28, 37, 46)
 REACTION_TEXT = (43, 95, 168)
+TITLE_TEXT = (168, 58, 110)
 
 
 def _bezier(p0, b1, b2, p3, steps=14):
@@ -92,6 +93,13 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
         for reaction in reactions.values():
             lx, ly = to_px(reaction["label_x"], reaction["label_y"])
             canvas.text(lx, ly, reaction["bigg_id"], REACTION_TEXT, font_scale)
+
+        # Free-standing captions: cluster titles on a composed whole-model map,
+        # and the attribution line. Without these a meta-tiled map looks like
+        # unlabelled islands.
+        for label in body.get("text_labels", {}).values():
+            lx, ly = to_px(label["x"], label["y"])
+            canvas.text(lx, ly, label.get("text", ""), TITLE_TEXT, font_scale + 1)
 
     return canvas.save(path)
 
