@@ -137,6 +137,26 @@ class Canvas:
             self.line(points[i][0], points[i][1],
                       points[i + 1][0], points[i + 1][1], colour, thickness)
 
+    def bar(self, x, y, width, height, colour):
+        """Solid block standing in for text too small to draw as glyphs.
+
+        A preview that clamps its font to a 1x minimum draws poster text an
+        order of magnitude oversized relative to the geometry, which makes the
+        one view of a whole-model map unusable for judging it. A bar of the
+        label's true length and height reports the ink honestly: it says "text
+        of this footprint, illegible at this size", which is the fact that
+        matters.
+        """
+        left, right = int(round(x)), int(round(x + width))
+        top, bottom = int(round(y - height / 2.0)), int(round(y + height / 2.0))
+        if right <= left:
+            right = left + 1
+        if bottom <= top:
+            bottom = top + 1
+        for py in range(max(0, top), min(self.height, bottom)):
+            for px in range(max(0, left), min(self.width, right)):
+                self._blend(px, py, colour)
+
     def text(self, x, y, message, colour, scale=1):
         """Draw `message` with its left edge at x and vertically centred on y."""
         cursor = int(round(x))

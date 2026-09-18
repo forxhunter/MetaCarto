@@ -7,6 +7,7 @@ looks right is also evidence the exported JSON is structurally right.
 from .raster import Canvas, text_width
 
 MAX_PIXELS = 2200.0
+POSTER_PIXELS = 4400.0     # a whole-model map needs more canvas to be readable at all
 
 BACKBONE = (47, 59, 71)
 STUB = (154, 166, 178)
@@ -33,12 +34,14 @@ def _bezier(p0, b1, b2, p3, steps=14):
     return points
 
 
-def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
+def render(escher_map, path, show_labels=True, max_pixels=None):
     body = escher_map[1]
     nodes, reactions, canvas_box = body["nodes"], body["reactions"], body["canvas"]
 
     span_x = max(canvas_box["width"], 1.0)
     span_y = max(canvas_box["height"], 1.0)
+    if max_pixels is None:
+        max_pixels = POSTER_PIXELS if max(span_x, span_y) > 12000.0 else MAX_PIXELS
     scale = min(max_pixels / span_x, max_pixels / span_y, 0.5)
     width = max(240, int(span_x * scale))
     height = max(240, int(span_y * scale))
@@ -100,11 +103,11 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
         kind = node["node_type"]
         if kind == "metabolite":
             if node.get("node_is_primary", True):
-                canvas.disc(x, y, max(3.0, 30.0 * scale), PRIMARY_FILL, PRIMARY_EDGE)
+                canvas.disc(x, y, max(1.0, 30.0 * scale), PRIMARY_FILL, PRIMARY_EDGE)
             else:
-                canvas.disc(x, y, max(2.0, 16.0 * scale), SECONDARY_FILL, SECONDARY_EDGE)
+                canvas.disc(x, y, max(1.0, 16.0 * scale), SECONDARY_FILL, SECONDARY_EDGE)
         elif kind == "midmarker":
-            canvas.disc(x, y, max(2.0, 11.0 * scale), MIDMARKER)
+            canvas.disc(x, y, max(1.0, 11.0 * scale), MIDMARKER)
         else:
             canvas.disc(x, y, max(1.0, 6.0 * scale), MULTIMARKER)
 
@@ -125,32 +128,38 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
         from .render import (CHAR_WIDTH_RATIO, ESCHER_DEFAULT_FONT_BASE,
                              METABOLITE_FONT_FACTOR, REACTION_FONT_FACTOR)
 
-        def font_scale(holder, factor):
+        def draw_label(holder, factor, text, lx, ly, colour):
+            """Glyphs when they would be the right size, a bar when they would
+            not. Clamping the glyph scale to 1x is what made poster previews
+            unreadable *and* unfaithful at the same time."""
             base = holder.get("font_size_base", ESCHER_DEFAULT_FONT_BASE)
-            per_char = base * factor * CHAR_WIDTH_RATIO * scale
-            return max(1, int(round(per_char / GLYPH_WIDTH)))
+            size_px = base * factor * scale
+            per_char = size_px * CHAR_WIDTH_RATIO
+            steps = per_char / GLYPH_WIDTH
+            if steps >= 0.75:
+                canvas.text(lx, ly, text, colour, max(1, int(round(steps))))
+            else:
+                canvas.bar(lx, ly, max(1.0, per_char * len(str(text))),
+                           max(1.0, size_px), colour)
 
         for node in nodes.values():
             if node["node_type"] != "metabolite":
                 continue
             lx, ly = to_px(node["label_x"], node["label_y"])
             colour = METABOLITE_TEXT if node.get("node_is_primary", True) else SECONDARY_EDGE
-            canvas.text(lx, ly, node.get("label_text", node["bigg_id"]), colour,
-                        font_scale(node, METABOLITE_FONT_FACTOR))
+            draw_label(node, METABOLITE_FONT_FACTOR,
+                       node.get("label_text", node["bigg_id"]), lx, ly, colour)
         for reaction in reactions.values():
             lx, ly = to_px(reaction["label_x"], reaction["label_y"])
-            canvas.text(lx, ly, reaction["bigg_id"], REACTION_TEXT,
-                        font_scale(reaction, REACTION_FONT_FACTOR))
+            draw_label(reaction, REACTION_FONT_FACTOR, reaction["bigg_id"],
+                       lx, ly, REACTION_TEXT)
 
         # Free-standing captions: cluster titles on a composed whole-model map,
         # and the attribution line. Without these a meta-tiled map looks like
         # unlabelled islands.
         for label in body.get("text_labels", {}).values():
             lx, ly = to_px(label["x"], label["y"])
-            base = label.get("font_size_base", ESCHER_DEFAULT_FONT_BASE)
-            canvas.text(lx, ly, label.get("text", ""), TITLE_TEXT,
-                        max(1, int(round(base * 3.0 * CHAR_WIDTH_RATIO
-                                         * scale / GLYPH_WIDTH))))
+            draw_label(label, 3.0, label.get("text", ""), lx, ly, TITLE_TEXT)
 
     return canvas.save(path)
 
