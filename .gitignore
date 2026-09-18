@@ -28,3 +28,6 @@ layout_output/
 
 # Published maps mirror is its own git repository with its own remote
 escher_maps_BiGG/
+
+# Escher fork is its own git repository with its own remote
+escher/
