@@ -1,0 +1,579 @@
+"""Escher rendering: markers, cofactor stubs, orthogonal routing, labels
+(layout_algorithm.md S5 and S7).
+
+This module owns everything between "primary metabolites have coordinates" and
+"a file Escher will open". It also fixes the v1 schema defects: Escher accepts
+only `metabolite`, `multimarker` and `midmarker` node types, a reaction is a
+marker chain rather than a node, and arrowheads are derived from *signed*
+stoichiometry, which v1 discarded.
+"""
+
+import json
+import math
+
+# All distances are Escher canvas pixels.
+STUB_RADIUS = 160.0        # cofactor distance from the reaction axis
+MARKER_OFFSET = 36.0       # multimarker distance from the midmarker
+STUB_SPREAD = math.radians(24.0)
+STUB_ANGLE = math.radians(72.0)     # mostly perpendicular: stubs must not crowd the axis
+PARALLEL_GAP = 150.0       # lateral offset between opposed reactions
+LABEL_DX = 24.0
+LABEL_DY = -12.0
+
+
+def _unit(dx, dy):
+    length = math.hypot(dx, dy)
+    if length < 1e-9:
+        return 0.0, -1.0, 0.0
+    return dx / length, dy / length, length
+
+
+def _rotate(vx, vy, angle):
+    c, s = math.cos(angle), math.sin(angle)
+    return vx * c - vy * s, vx * s + vy * c
+
+
+def _orthogonal_path(p0, p1):
+    """Vertical-horizontal-vertical route; a single segment when x already
+    matches, which is the case for every backbone edge Brandes-Koepf aligned."""
+    (x0, y0), (x1, y1) = p0, p1
+    if abs(x0 - x1) < 1.0:
+        return [(x0, y0), (x1, y1)]
+    if abs(y0 - y1) < 1.0:
+        return [(x0, y0), (x1, y1)]
+    ym = (y0 + y1) / 2.0
+    return [(x0, y0), (x0, ym), (x1, ym), (x1, y1)]
+
+
+def _offset_channel(path, shift):
+    """Re-route a path down a parallel channel `shift` to one side.
+
+    Used for opposed reaction pairs. It stays orthogonal: nudging the midpoint
+    sideways and drawing three straight-line legs, which is the obvious thing
+    to do, produces two diagonals and breaks the one property the whole layered
+    pass exists to deliver.
+    """
+    start, end = path[0], path[-1]
+    dx, dy = end[0] - start[0], end[1] - start[1]
+
+    if abs(dy) >= abs(dx):
+        inset = min(70.0, abs(dy) / 4.0) if dy else 70.0
+        y_a = start[1] + math.copysign(inset, dy or 1.0)
+        y_b = end[1] - math.copysign(inset, dy or 1.0)
+        lane = start[0] + shift
+        return [start, (start[0], y_a), (lane, y_a), (lane, y_b), (end[0], y_b), end]
+
+    inset = min(70.0, abs(dx) / 4.0) if dx else 70.0
+    x_a = start[0] + math.copysign(inset, dx or 1.0)
+    x_b = end[0] - math.copysign(inset, dx or 1.0)
+    lane = start[1] + shift
+    return [start, (x_a, start[1]), (x_a, lane), (x_b, lane), (x_b, end[1]), end]
+
+
+def _route_polyline(points):
+    """Orthogonalise a routed polyline leg by leg, dropping repeated points."""
+    out = []
+    for i in range(len(points) - 1):
+        for point in _orthogonal_path(points[i], points[i + 1]):
+            if not out or math.hypot(point[0] - out[-1][0], point[1] - out[-1][1]) > 1.0:
+                out.append(point)
+    return out or list(points)
+
+
+def _walk(path, distance):
+    """Point and local direction at `distance` along a polyline."""
+    remaining = distance
+    for i in range(len(path) - 1):
+        (x0, y0), (x1, y1) = path[i], path[i + 1]
+        ux, uy, length = _unit(x1 - x0, y1 - y0)
+        if remaining <= length or i == len(path) - 2:
+            t = max(0.0, min(length, remaining))
+            return (x0 + ux * t, y0 + uy * t), (ux, uy)
+        remaining -= length
+    return path[-1], (0.0, 1.0)
+
+
+def _path_length(path):
+    return sum(math.hypot(path[i + 1][0] - path[i][0], path[i + 1][1] - path[i][1])
+               for i in range(len(path) - 1))
+
+
+class EscherBuilder:
+    def __init__(self, author="AutoLayout"):
+        self.nodes = {}
+        self.reactions = {}
+        self.text_labels = {}
+        self.author = author
+        self._counter = 0
+
+    def _new_id(self):
+        self._counter += 1
+        return str(self._counter)
+
+    def add_metabolite(self, bigg_id, name, x, y, primary=True):
+        node_id = self._new_id()
+        self.nodes[node_id] = {
+            "node_type": "metabolite",
+            "x": float(x),
+            "y": float(y),
+            "bigg_id": bigg_id,
+            "name": name or bigg_id,
+            "label_x": float(x) + LABEL_DX,
+            "label_y": float(y) + LABEL_DY,
+            "node_is_primary": bool(primary),
+        }
+        return node_id
+
+    def add_marker(self, kind, x, y):
+        node_id = self._new_id()
+        self.nodes[node_id] = {"node_type": kind, "x": float(x), "y": float(y)}
+        return node_id
+
+    def to_escher(self, map_name, description, canvas):
+        return [
+            {
+                "map_name": map_name,
+                "map_id": map_name.replace(" ", "_"),
+                "map_description": description,
+                "homepage": "https://escher.github.io",
+                "schema": "https://escher.github.io/escher/jsonschema/1-0-0#",
+            },
+            {
+                "reactions": self.reactions,
+                "nodes": self.nodes,
+                "text_labels": self.text_labels,
+                "canvas": canvas,
+            },
+        ]
+
+
+def _cofactor_side(axis_point, direction, occupied):
+    """Put the cofactor fan on the emptier side of the reaction axis.
+
+    Curated maps keep cofactors on a consistent side so the eye can ignore
+    them; the only reason to flip is a neighbour already sitting there.
+    """
+    px, py = -direction[1], direction[0]
+    scores = {}
+    for side in (1, -1):
+        probe = (axis_point[0] + side * px * STUB_RADIUS,
+                 axis_point[1] + side * py * STUB_RADIUS)
+        scores[side] = sum(
+            1 for ox, oy in occupied
+            if (ox - probe[0]) ** 2 + (oy - probe[1]) ** 2 < (1.4 * STUB_RADIUS) ** 2
+        )
+    return 1 if scores[1] <= scores[-1] else -1
+
+
+def _stub_positions(anchor, direction, side, count, forward):
+    """Fan `count` cofactors off one multimarker, all on the same side."""
+    if count == 0:
+        return []
+    ux, uy = direction
+    # The perpendicular must come from the *unflipped* axis: deriving it after
+    # negating the direction flips the side too, which would scatter ATP and
+    # ADP onto opposite banks instead of pairing them into the curved double
+    # arrow every curated map uses.
+    px, py = -uy, ux
+    if not forward:
+        ux, uy = -ux, -uy
+    base_x = ux * math.cos(STUB_ANGLE) + side * px * math.sin(STUB_ANGLE)
+    base_y = uy * math.cos(STUB_ANGLE) + side * py * math.sin(STUB_ANGLE)
+
+    out = []
+    for j in range(count):
+        offset = (j - (count - 1) / 2.0) * STUB_SPREAD
+        dx, dy = _rotate(base_x, base_y, offset)
+        out.append((anchor[0] + dx * STUB_RADIUS, anchor[1] + dy * STUB_RADIUS))
+    return out
+
+
+def _bezier_to_stub(anchor, stub, direction, forward):
+    """Cubic control points for an arc that leaves the axis tangentially.
+
+    Modelled as a quadratic whose control point sits straight back along the
+    reaction axis, then raised to a cubic -- that is the shape Escher itself
+    draws for cofactor pairs, and it reads as "this leaves the arrow" rather
+    than as another backbone edge.
+    """
+    ux, uy = direction
+    if not forward:
+        ux, uy = -ux, -uy
+    span = math.hypot(stub[0] - anchor[0], stub[1] - anchor[1])
+    qx = anchor[0] + ux * 0.85 * span
+    qy = anchor[1] + uy * 0.85 * span
+    b1 = {"x": anchor[0] + (2.0 / 3.0) * (qx - anchor[0]),
+          "y": anchor[1] + (2.0 / 3.0) * (qy - anchor[1])}
+    b2 = {"x": stub[0] + (2.0 / 3.0) * (qx - stub[0]),
+          "y": stub[1] + (2.0 / 3.0) * (qy - stub[1])}
+    return b1, b2
+
+
+def build_escher_map(cgraph, pos, map_name, author="AutoLayout", description="",
+                     routes=None):
+    """Turn primary-metabolite coordinates into a complete Escher map.
+
+    `routes` maps a reaction id to {"points": [...], "orthogonal": bool}: the
+    polyline the layered pass computed for that edge, so multi-layer edges
+    follow their dummy chain instead of cutting across intervening rows, and
+    ring arcs stay as straight chords instead of being turned into staircases.
+    """
+    builder = EscherBuilder(author=author)
+    metabolite_nodes = {}
+    occupied = [pos[n] for n in pos]
+    routes = routes or {}
+
+    for met_id, (x, y) in pos.items():
+        info = cgraph.metabolites.get(met_id, {})
+        metabolite_nodes[met_id] = builder.add_metabolite(
+            met_id, info.get("name", met_id), x, y, primary=True
+        )
+
+    for rid, rec in cgraph.reactions.items():
+        sub, prod = rec.main_sub, rec.main_prod
+        if sub not in pos and prod not in pos:
+            continue
+        _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied,
+                       routes.get(rid))
+
+    _place_labels(builder)
+    canvas = _canvas(builder)
+    _attribution(builder, canvas, author)
+    return builder.to_escher(map_name, description or f"Generated by {author}", canvas)
+
+
+def _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied, route=None):
+    sub, prod = rec.main_sub, rec.main_prod
+
+    if route is not None:
+        points = route["points"]
+        path = _route_polyline(points) if route.get("orthogonal", True) else list(points)
+        start_node = metabolite_nodes[sub]
+        end_node = metabolite_nodes[prod]
+    elif sub in pos and prod in pos:
+        path = _orthogonal_path(pos[sub], pos[prod])
+        start_node = metabolite_nodes[sub]
+        end_node = metabolite_nodes[prod]
+    else:
+        # Boundary exchange: a short stub leaving the drawing.
+        anchored = sub if sub in pos else prod
+        x, y = pos[anchored]
+        outward = 1.0 if anchored == sub else -1.0
+        path = [(x, y), (x, y + outward * 150.0)]
+        start_node = metabolite_nodes[anchored]
+        end_node = None
+
+    # Opposed reactions (kinase/phosphatase) share an axis; fan them apart so
+    # both arrows stay visible.
+    siblings = []
+    if sub in pos and prod in pos and cgraph.D.has_edge(sub, prod):
+        siblings = cgraph.D.edges[sub, prod]["rxns"]
+    if len(siblings) > 1 and rec.rid in siblings:
+        index = siblings.index(rec.rid)
+        shift = (index - (len(siblings) - 1) / 2.0) * PARALLEL_GAP
+        if abs(shift) > 1e-6:
+            path = _offset_channel(path, shift)
+
+    total = _path_length(path)
+    midpoint, direction = _walk(path, total / 2.0)
+    offset = min(MARKER_OFFSET, total / 4.0)
+    p_in, _ = _walk(path, total / 2.0 - offset)
+    p_out, _ = _walk(path, total / 2.0 + offset)
+
+    mid_id = builder.add_marker("midmarker", *midpoint)
+    in_id = builder.add_marker("multimarker", *p_in)
+    out_id = builder.add_marker("multimarker", *p_out)
+
+    segments = {}
+    seq = [0]
+
+    def segment(a, b, b1=None, b2=None):
+        seq[0] += 1
+        segments[f"{rec.rid}_s{seq[0]}"] = {
+            "from_node_id": a, "to_node_id": b, "b1": b1, "b2": b2,
+        }
+
+    # Backbone chain, with routing bends as multimarkers. Bends have to be
+    # split by arc length around the midmarker: emitting them all before it
+    # would chain a bend that lies past the midpoint back to the start, which
+    # draws the edge as a diagonal across the layers it was routed around.
+    arc = [0.0]
+    for i in range(len(path) - 1):
+        arc.append(arc[-1] + math.hypot(path[i + 1][0] - path[i][0],
+                                        path[i + 1][1] - path[i][1]))
+    half = total / 2.0
+    interior = list(zip(path[1:-1], arc[1:-1]))
+    before = [p for p, d in interior if d < half - offset]
+    after = [p for p, d in interior if d > half + offset]
+
+    upstream = start_node
+    for point in before:
+        bend = builder.add_marker("multimarker", *point)
+        segment(upstream, bend)
+        upstream = bend
+    segment(upstream, in_id)
+    segment(in_id, mid_id)
+    segment(mid_id, out_id)
+
+    if end_node is not None:
+        downstream = out_id
+        for point in after:
+            bend = builder.add_marker("multimarker", *point)
+            segment(downstream, bend)
+            downstream = bend
+        segment(downstream, end_node)
+
+    # Cofactor fans, both sides of the axis chosen once per reaction.
+    side = _cofactor_side(midpoint, direction, occupied)
+    metabolite_entries = []
+
+    for met_id, forward, anchor_id, anchor_pt in (
+        (rec.consumed, False, in_id, p_in),
+        (rec.produced, True, out_id, p_out),
+    ):
+        stubs = _stub_positions(anchor_pt, direction, side, len(met_id), forward)
+        for met, point in zip(met_id, stubs):
+            info = cgraph.metabolites.get(met, {})
+            node_id = builder.add_metabolite(
+                met, info.get("name", met), point[0], point[1], primary=False
+            )
+            occupied.append(point)
+            b1, b2 = _bezier_to_stub(anchor_pt, point, direction, forward)
+            if forward:
+                segment(anchor_id, node_id, b1, b2)
+            else:
+                segment(node_id, anchor_id, b1, b2)
+
+    for met, coefficient in rec.stoichiometry.items():
+        metabolite_entries.append({"bigg_id": met, "coefficient": float(coefficient)})
+
+    builder.reactions[rec.rid] = {
+        "name": rec.name,
+        "bigg_id": rec.rid,
+        "reversibility": bool(rec.reversible),
+        "label_x": float(midpoint[0]) + LABEL_DX,
+        "label_y": float(midpoint[1]) + LABEL_DY,
+        "gene_reaction_rule": rec.genes,
+        "genes": [],
+        "metabolites": metabolite_entries,
+        "segments": segments,
+        "_anchor": (float(midpoint[0]), float(midpoint[1])),
+    }
+
+
+# --------------------------------------------------------------------------
+# labels
+# --------------------------------------------------------------------------
+
+_CHAR_WIDTH = 17.0
+_LABEL_HEIGHT = 40.0
+_NODE_CLEARANCE = 46.0
+
+# Candidate label-box centres relative to the anchor, best first. `h` is the
+# half-width of the label, filled in per label. The ring widens twice: a label
+# that cannot sit beside its node is better placed well clear of the drawing
+# than jammed on top of a neighbouring one.
+_LABEL_CANDIDATES = []
+for _ring, _out, _up in ((1, 30.0, 56.0), (2, 120.0, 128.0), (3, 230.0, 210.0), (4, 380.0, 300.0)):
+    _LABEL_CANDIDATES += [
+        (lambda h, o=_out: h + o, -8.0),
+        (lambda h, o=_out: -h - o, -8.0),
+        (lambda h, o=_out: h + o, _up),
+        (lambda h, o=_out: -h - o, _up),
+        (lambda h, o=_out: h + o, -_up - 14.0),
+        (lambda h, o=_out: -h - o, -_up - 14.0),
+        (lambda h: 0.0, _up + 22.0),
+        (lambda h: 0.0, -_up - 36.0),
+    ]
+
+
+class _Obstacles:
+    """Uniform-grid index over nodes, edges and already-placed labels.
+
+    Label placement is quadratic without it -- a genome-scale map has thousands
+    of labels and tens of thousands of segments -- and the whole point of the
+    pass is that it can afford to check every obstacle rather than guessing.
+    """
+
+    CELL = 220.0
+
+    def __init__(self):
+        self.cells = {}
+
+    def _key(self, x, y):
+        return (int(x // self.CELL), int(y // self.CELL))
+
+    def _insert(self, x, y, item):
+        self.cells.setdefault(self._key(x, y), []).append(item)
+
+    def add_point(self, x, y, clearance):
+        self._insert(x, y, ("point", x, y, clearance))
+
+    def add_segment(self, x1, y1, x2, y2, clearance):
+        item = ("segment", (x1, y1, x2, y2), clearance)
+        steps = max(1, int(math.hypot(x2 - x1, y2 - y1) / self.CELL) + 1)
+        seen = set()
+        for i in range(steps + 1):
+            t = i / steps
+            key = self._key(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)
+            if key not in seen:
+                seen.add(key)
+                self.cells.setdefault(key, []).append(item)
+
+    def add_box(self, left, top, right, bottom):
+        item = ("box", left, top, right, bottom)
+        for cx in range(int(left // self.CELL), int(right // self.CELL) + 1):
+            for cy in range(int(top // self.CELL), int(bottom // self.CELL) + 1):
+                self.cells.setdefault((cx, cy), []).append(item)
+
+    def hits(self, left, top, right, bottom):
+        checked = set()
+        for cx in range(int((left - self.CELL) // self.CELL),
+                        int((right + self.CELL) // self.CELL) + 1):
+            for cy in range(int((top - self.CELL) // self.CELL),
+                            int((bottom + self.CELL) // self.CELL) + 1):
+                for item in self.cells.get((cx, cy), ()):
+                    if id(item) in checked:
+                        continue
+                    checked.add(id(item))
+                    if item[0] == "point":
+                        _, x, y, clearance = item
+                        if (left - clearance < x < right + clearance
+                                and top - clearance < y < bottom + clearance):
+                            return True
+                    elif item[0] == "segment":
+                        _, (x1, y1, x2, y2), clearance = item
+                        if _segment_hits_box(x1, y1, x2, y2,
+                                             left - clearance, top - clearance,
+                                             right + clearance, bottom + clearance):
+                            return True
+                    else:
+                        _, bl, bt, br, bb = item
+                        if not (right < bl or left > br or bottom < bt or top > bb):
+                            return True
+        return False
+
+
+def _segment_hits_box(x1, y1, x2, y2, left, top, right, bottom):
+    """Liang-Barsky clip test."""
+    if max(x1, x2) < left or min(x1, x2) > right:
+        return False
+    if max(y1, y2) < top or min(y1, y2) > bottom:
+        return False
+    dx, dy = x2 - x1, y2 - y1
+    t0, t1 = 0.0, 1.0
+    for p, q in ((-dx, x1 - left), (dx, right - x1), (-dy, y1 - top), (dy, bottom - y1)):
+        if abs(p) < 1e-12:
+            if q < 0:
+                return False
+            continue
+        r = q / p
+        if p < 0:
+            if r > t1:
+                return False
+            t0 = max(t0, r)
+        else:
+            if r < t0:
+                return False
+            t1 = min(t1, r)
+    return t0 <= t1
+
+
+def _spiral_search(collides, anchor_x, anchor_y, half, rings=9, step=90.0, arms=12):
+    """Last resort when the fixed candidate ring is exhausted.
+
+    Dense regions of a whole-model map can use up every preferred offset. A
+    label placed far from its node is still readable; a label sitting on top
+    of another one is not, so keep widening until something is free.
+    """
+    for ring in range(1, rings + 1):
+        radius = ring * step
+        for arm in range(arms):
+            angle = 2.0 * math.pi * arm / arms
+            cx = anchor_x + math.cos(angle) * (radius + half)
+            cy = anchor_y + math.sin(angle) * radius
+            if not collides(cx, cy, half):
+                return (cx, cy)
+    return (anchor_x + half + 30.0, anchor_y - 8.0)
+
+
+def _place_labels(builder):
+    """Move each label to the first candidate offset that hits nothing.
+
+    Labels are the only thing allowed to move at this stage: nodes and edges
+    are already final, and `constraints.md` requires that labels never overlap
+    a node, an edge, or another label. Longest labels are placed first -- they
+    are both hardest to fit and most damaging when they land on something.
+    """
+    obstacles = _Obstacles()
+    for node in builder.nodes.values():
+        clearance = _NODE_CLEARANCE if node["node_type"] == "metabolite" else 18.0
+        obstacles.add_point(node["x"], node["y"], clearance)
+    for reaction in builder.reactions.values():
+        for segment in reaction["segments"].values():
+            a = builder.nodes.get(segment["from_node_id"])
+            b = builder.nodes.get(segment["to_node_id"])
+            if a is None or b is None:
+                continue
+            clearance = 8.0 if segment.get("b1") else 16.0
+            obstacles.add_segment(a["x"], a["y"], b["x"], b["y"], clearance)
+
+    def collides(cx, cy, half_width):
+        return obstacles.hits(cx - half_width, cy - _LABEL_HEIGHT / 2.0,
+                              cx + half_width, cy + _LABEL_HEIGHT / 2.0)
+
+    targets = []
+    for node in builder.nodes.values():
+        if node["node_type"] == "metabolite":
+            targets.append((node, node["bigg_id"], node["x"], node["y"]))
+    for reaction in builder.reactions.values():
+        anchor_x, anchor_y = reaction.pop("_anchor")
+        targets.append((reaction, reaction["bigg_id"], anchor_x, anchor_y))
+    targets.sort(key=lambda t: -len(t[1]))
+
+    for holder, text, anchor_x, anchor_y in targets:
+        half = max(90.0, len(text) * _CHAR_WIDTH) / 2.0
+        placed = None
+        for dx, dy in _LABEL_CANDIDATES:
+            cx, cy = anchor_x + dx(half), anchor_y + dy
+            if not collides(cx, cy, half):
+                placed = (cx, cy)
+                break
+        if placed is None:
+            placed = _spiral_search(collides, anchor_x, anchor_y, half)
+
+        cx, cy = placed
+        holder["label_x"] = cx - half
+        holder["label_y"] = cy
+        obstacles.add_box(cx - half, cy - _LABEL_HEIGHT / 2.0,
+                          cx + half, cy + _LABEL_HEIGHT / 2.0)
+
+
+def _canvas(builder, padding=None):
+    xs = [n["x"] for n in builder.nodes.values()]
+    ys = [n["y"] for n in builder.nodes.values()]
+    if not xs:
+        return {"x": 0.0, "y": 0.0, "width": 1000.0, "height": 1000.0}
+    if padding is None:
+        # Proportional, not fixed: a flat 400 on each side is a sensible margin
+        # for a pathway map and most of the canvas for a two-node cluster.
+        padding = max(150.0, 0.06 * max(max(xs) - min(xs), max(ys) - min(ys)))
+    return {
+        "x": min(xs) - padding,
+        "y": min(ys) - padding,
+        "width": (max(xs) - min(xs)) + 2 * padding,
+        "height": (max(ys) - min(ys)) + 2 * padding,
+    }
+
+
+def _attribution(builder, canvas, author):
+    builder.text_labels["attribution"] = {
+        "x": canvas["x"] + 60.0,
+        "y": canvas["y"] + canvas["height"] - 60.0,
+        "text": f"Created by {author}",
+    }
+
+
+def save(escher_map, path):
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(escher_map, handle, indent=2)

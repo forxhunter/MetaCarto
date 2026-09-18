@@ -1,0 +1,11 @@
+cobra>=0.26.0
+networkx>=3.0
+torch>=2.0.0
+torch-geometric>=2.3.0
+numpy
+scipy
+matplotlib
+bioservices
+rdkit
+escher
+pytest

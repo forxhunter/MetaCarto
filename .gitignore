@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data
+data/
+validation_outputs/
+*.zip
+*.pth
+*.json
+*.xml
+
+# Logs and temp
+*.log
+processed_files.txt
+temp/
+.vscode/
+.idea/
+
+# Environment
+.env
+venv/
+env/
+
+# Generated layouts
+layout_output/
+
+# Published maps mirror is its own git repository with its own remote
+escher_maps_BiGG/
