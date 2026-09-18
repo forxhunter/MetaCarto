@@ -346,11 +346,84 @@ def _unique(groups, base):
 
 
 # --------------------------------------------------------------------------
+# cycle integrity
+# --------------------------------------------------------------------------
+
+def close_cycles(groups, model, cofactor_score, max_size=MAX_CLUSTER, verbose=False):
+    """Pull a split cycle back into one cluster.
+
+    A cluster boundary must not cut a ring. e_coli_core files succinate
+    dehydrogenase under oxidative phosphorylation, so the cluster named
+    "Citric Acid Cycle" holds eight reactions with no succinate -> fumarate
+    step: the ring exists in the model, but not in the map, and the TCA cycle
+    gets drawn as a straight chain under a caption promising a cycle. That is
+    the single most recognisable shape in metabolism and the one a reader
+    checks first.
+
+    So rings are detected once on the whole-model compound graph, and any ring
+    whose reactions are spread across clusters is consolidated into the cluster
+    already holding most of it.
+    """
+    from .compound import build_compound_graph
+    from .direction import orient_compound_graph
+    from .motifs import find_rings
+
+    whole = build_compound_graph(model, list(model.reactions))
+    orient_compound_graph(whole, model=model)
+    rings = find_rings(whole.D)
+    if not rings:
+        return groups
+
+    owner = {}
+    for name, reactions in groups.items():
+        for reaction in reactions:
+            owner[reaction.id] = name
+
+    groups = {name: list(reactions) for name, reactions in groups.items()}
+    moved_total = 0
+
+    for cycle in rings:
+        members = set(cycle)
+        # Reactions whose main pair is an arc of this ring.
+        arc_reactions = []
+        for u, v, data in whole.D.edges(data=True):
+            if u in members and v in members:
+                arc_reactions.extend(data["rxns"])
+
+        holders = {}
+        for rid in arc_reactions:
+            name = owner.get(rid)
+            if name is not None:
+                holders.setdefault(name, []).append(rid)
+        if len(holders) < 2:
+            continue
+
+        target = max(holders, key=lambda n: (len(holders[n]), -len(groups[n])))
+        incoming = [rid for name, rids in holders.items() if name != target
+                    for rid in rids]
+        if len(groups[target]) + len(incoming) > max_size:
+            continue
+
+        by_id = {r.id: r for r in model.reactions}
+        for rid in incoming:
+            source = owner[rid]
+            groups[source] = [r for r in groups[source] if r.id != rid]
+            groups[target].append(by_id[rid])
+            owner[rid] = target
+            moved_total += 1
+        if verbose:
+            print(f"    closed a {len(cycle)}-member ring into '{target}' "
+                  f"({len(incoming)} reactions moved)")
+
+    return {name: reactions for name, reactions in groups.items() if reactions}
+
+
+# --------------------------------------------------------------------------
 # driver
 # --------------------------------------------------------------------------
 
 def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
-             kegg_mapping=None, verbose=False):
+             kegg_mapping=None, close_rings=True, verbose=False):
     """{cluster name: [reactions]}, biological where the model allows it."""
     mapping = load_kegg_mapping() if kegg_mapping is None else kegg_mapping
 
@@ -416,6 +489,18 @@ def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
                 if is_boundary_cluster(reactions, cofactor_score)}
     merged = merge_small(sized, cofactor_score, min_size=min_size,
                          max_size=max_size, boundary=boundary)
+
+    # Ring consolidation has to see the final cluster boundaries, so it runs
+    # last -- but taking reactions out of a donor can leave the donor under the
+    # floor, so the floor is re-applied afterwards. Merging only ever grows a
+    # cluster, so it cannot re-cut a ring that was just closed.
+    if close_rings:
+        merged = close_cycles(merged, model, cofactor_score, max_size=max_size,
+                              verbose=verbose)
+        boundary = {name for name, reactions in merged.items()
+                    if is_boundary_cluster(reactions, cofactor_score)}
+        merged = merge_small(merged, cofactor_score, min_size=min_size,
+                             max_size=max_size, boundary=boundary)
 
     # After merging, boundary clusters no longer need one name per chunk.
     renamed, index = {}, 0

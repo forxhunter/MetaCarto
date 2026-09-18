@@ -84,7 +84,8 @@ def layout_reactions(model, reactions, map_name, author="AutoLayout",
     )
     pos_contracted = _pack_components(contracted, layering, pos_contracted, width, height)
     pos = expand_rings(pos_contracted, ring_records, ring_of, cgraph.D)
-    routes = _build_routes(cgraph, layering, pos, ring_of)
+    routes = _build_routes(cgraph, layering, pos, ring_of,
+                           {sid: rec["members"] for sid, rec in ring_records.items()})
 
     escher_map = build_escher_map(
         cgraph, {n: p for n, p in pos.items() if not str(n).startswith("__dummy__")},
@@ -157,15 +158,25 @@ def _pack_components(contracted, layering, pos, width, height,
     return packed
 
 
-def _build_routes(cgraph, layering, pos, ring_of):
+def _build_routes(cgraph, layering, pos, ring_of, ring_members=None):
     """Polyline per reaction, following the layered pass's dummy chain."""
+    ring_members = ring_members or {}
+    centres = {}
+    for super_id, members in ring_members.items():
+        placed = [pos[m] for m in members if m in pos]
+        if placed:
+            centres[super_id] = (sum(p[0] for p in placed) / len(placed),
+                                 sum(p[1] for p in placed) / len(placed))
+
     routes = {}
     for u, v, data in cgraph.D.edges(data=True):
         a, b = ring_of.get(u, u), ring_of.get(v, v)
 
         if a == b:
-            # An arc inside a ring: keep it a straight chord so the circle
-            # survives; orthogonalising it would turn the ring into a staircase.
+            # An arc inside a ring is drawn as an arc, not as a chord. A
+            # heptagon reads as a polygon; a curated TCA cycle is a circle.
+            # It also stops the orthogonality metric from charging a ring with
+            # being non-orthogonal, which a ring is by definition.
             points, orthogonal = [pos[u], pos[v]], False
         else:
             chain = layering.chains.get((a, b))
@@ -180,8 +191,11 @@ def _build_routes(cgraph, layering, pos, ring_of):
             if record is None:
                 continue
             forward = record.main_sub == u
-            routes[rid] = {
+            route = {
                 "points": points if forward else points[::-1],
                 "orthogonal": orthogonal,
             }
+            if a == b and a in centres:
+                route["arc_centre"] = centres[a]
+            routes[rid] = route
     return routes

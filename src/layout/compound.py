@@ -28,6 +28,23 @@ CURATED_COFACTORS = {
     "cobalt2", "hco3", "h2o2", "no", "no2", "no3", "n2", "h2", "h2s",
 }
 
+# Never drawn as nodes. Curated maps omit protons and water entirely -- t1
+# draws zero of each -- because they participate in most reactions and carry no
+# information when they do. They accounted for roughly 30% of every disc in the
+# emitted figures.
+SUPPRESSED = {"h", "h2o"}
+
+# Never drawn as a primary (large, coloured) node, whatever the main-pair
+# search decided, unless a map has no other chemistry at all. A big orange ATP
+# reads as a pathway intermediate.
+NEVER_PRIMARY = {
+    "atp", "adp", "amp", "gtp", "gdp", "gmp", "utp", "udp", "ump", "ctp",
+    "cdp", "cmp", "pi", "ppi", "pppi", "nad", "nadh", "nadp", "nadph",
+    "fad", "fadh2", "fmn", "fmnh2", "coa", "co2", "o2", "h2o2", "nh4",
+    "gthrd", "gthox", "q8", "q8h2", "mqn8", "mql8", "trdox", "trdrd",
+    "h", "h2o",
+}
+
 # Multiplicative, not additive: a cofactor pair such as ATP -> ADP shares a
 # large absolute skeleton, so an additive penalty would need retuning per
 # model. Scaling the score instead is unit-free and holds across models.

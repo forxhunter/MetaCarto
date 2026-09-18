@@ -50,6 +50,19 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
     thick = max(1, int(round(3.0 * scale)))
     thin = max(1, int(round(1.6 * scale)))
 
+    def node_radius(node):
+        if node["node_type"] == "metabolite":
+            return 30.0 if node.get("node_is_primary", True) else 16.0
+        return 11.0 if node["node_type"] == "midmarker" else 6.0
+
+    # Arrowheads. The segment chain is emitted substrate -> product, so a
+    # segment's own from/to order is the flux direction. An arrowhead short of
+    # each target metabolite is the only direction cue a rendered figure
+    # carries: Escher draws its own from the signed stoichiometry, but these
+    # PNGs are what anyone actually looks at, and without heads a reader cannot
+    # tell which way the pathway runs.
+    arrows = []
+
     for reaction in reactions.values():
         for segment in reaction["segments"].values():
             a = nodes.get(segment["from_node_id"])
@@ -57,12 +70,30 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
             if a is None or b is None:
                 continue
             p0, p3 = (a["x"], a["y"]), (b["x"], b["y"])
+
+            # Weight follows what the segment *is*, not whether it happens to
+            # be curved. Ring arcs are curved by construction, and colouring by
+            # curvature drew the TCA backbone in the thin grey reserved for
+            # cofactor stubs. A stub is the segment that touches a secondary
+            # metabolite; everything else is backbone.
+            def is_secondary(node):
+                return (node["node_type"] == "metabolite"
+                        and not node.get("node_is_primary", True))
+
+            stub = is_secondary(a) or is_secondary(b)
+            colour = STUB if stub else BACKBONE
+            weight = thin if stub else thick
+
             if segment.get("b1") and segment.get("b2"):
                 curve = _bezier(p0, (segment["b1"]["x"], segment["b1"]["y"]),
                                 (segment["b2"]["x"], segment["b2"]["y"]), p3)
-                canvas.polyline([to_px(*p) for p in curve], STUB, thin)
+                canvas.polyline([to_px(*p) for p in curve], colour, weight)
+                if b["node_type"] == "metabolite":
+                    arrows.append((curve[-2], p3, node_radius(b), colour))
             else:
-                canvas.line(*to_px(*p0), *to_px(*p3), BACKBONE, thick)
+                canvas.line(*to_px(*p0), *to_px(*p3), colour, weight)
+                if b["node_type"] == "metabolite":
+                    arrows.append((p0, p3, node_radius(b), colour))
 
     for node in nodes.values():
         x, y = to_px(node["x"], node["y"])
@@ -76,6 +107,16 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
             canvas.disc(x, y, max(2.0, 11.0 * scale), MIDMARKER)
         else:
             canvas.disc(x, y, max(1.0, 6.0 * scale), MULTIMARKER)
+
+    for tail, head, radius, colour in arrows:
+        dx, dy = head[0] - tail[0], head[1] - tail[1]
+        length = (dx * dx + dy * dy) ** 0.5
+        if length < 1e-6:
+            continue
+        ux, uy = dx / length, dy / length
+        tip = (head[0] - ux * radius, head[1] - uy * radius)
+        canvas.arrowhead(to_px(*tip), (ux, uy),
+                         max(4.0, 46.0 * scale), max(3.0, 32.0 * scale), colour)
 
     if show_labels:
         # Render each label at the size the layout reserved for it, so a
@@ -94,7 +135,7 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
                 continue
             lx, ly = to_px(node["label_x"], node["label_y"])
             colour = METABOLITE_TEXT if node.get("node_is_primary", True) else SECONDARY_EDGE
-            canvas.text(lx, ly, node["bigg_id"], colour,
+            canvas.text(lx, ly, node.get("label_text", node["bigg_id"]), colour,
                         font_scale(node, METABOLITE_FONT_FACTOR))
         for reaction in reactions.values():
             lx, ly = to_px(reaction["label_x"], reaction["label_y"])

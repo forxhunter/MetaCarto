@@ -91,6 +91,47 @@ class Canvas:
                 err += dx
                 y0 += sy
 
+    def triangle(self, apex, base_a, base_b, colour):
+        """Filled triangle by scanline. Needed for arrowheads: without a filled
+        primitive the rendered figures carry no direction cue at all."""
+        pts = [apex, base_a, base_b]
+        ys = [int(round(p[1])) for p in pts]
+        top, bottom = max(0, min(ys)), min(self.height - 1, max(ys))
+
+        def edge_x(p0, p1, y):
+            if abs(p1[1] - p0[1]) < 1e-9:
+                return None
+            t = (y - p0[1]) / (p1[1] - p0[1])
+            if t < 0.0 or t > 1.0:
+                return None
+            return p0[0] + t * (p1[0] - p0[0])
+
+        for y in range(top, bottom + 1):
+            crossings = []
+            for a, b in ((pts[0], pts[1]), (pts[1], pts[2]), (pts[2], pts[0])):
+                x = edge_x(a, b, y + 0.5)
+                if x is not None:
+                    crossings.append(x)
+            if len(crossings) < 2:
+                continue
+            x0, x1 = int(round(min(crossings))), int(round(max(crossings)))
+            for x in range(x0, x1 + 1):
+                self._blend(x, y, colour)
+
+    def arrowhead(self, tip, direction, length, width, colour):
+        """Arrowhead at `tip` pointing along the unit vector `direction`."""
+        ux, uy = direction
+        norm = (ux * ux + uy * uy) ** 0.5
+        if norm < 1e-9:
+            return
+        ux, uy = ux / norm, uy / norm
+        px, py = -uy, ux
+        back = (tip[0] - ux * length, tip[1] - uy * length)
+        self.triangle(tip,
+                      (back[0] + px * width / 2.0, back[1] + py * width / 2.0),
+                      (back[0] - px * width / 2.0, back[1] - py * width / 2.0),
+                      colour)
+
     def polyline(self, points, colour, thickness=1):
         for i in range(len(points) - 1):
             self.line(points[i][0], points[i][1],
