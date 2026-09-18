@@ -22,7 +22,10 @@ import sys
 from datetime import date
 
 DEFAULT_ROOT = "escher_maps_BiGG"
-DEFAULT_BASE_URL = "https://raw.githubusercontent.com/forxhunter/escher_maps_BiGG/main/"
+# Empty means "resolve map paths relative to wherever this index was fetched
+# from". That keeps one index file working unchanged whether it is served from
+# raw.githubusercontent, a local http.server during development, or a mirror.
+DEFAULT_BASE_URL = ""
 INDEX_NAME = "map_index.json"
 MODEL_INDEX_NAME = "model_index.json"
 
@@ -98,7 +101,7 @@ def main(argv=None):
     parser.add_argument("--root", default=DEFAULT_ROOT,
                         help="directory of {model}/{map}.json (default: %(default)s)")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL,
-                        help="URL the app resolves `path` against")
+                        help="absolute URL to resolve map paths against; empty (the default) resolves them relative to the index itself")
     parser.add_argument("--out", default=None,
                         help="output file (default: <root>/map_index.json)")
     args = parser.parse_args(argv)
