@@ -78,28 +78,38 @@ def render(escher_map, path, show_labels=True, max_pixels=MAX_PIXELS):
             canvas.disc(x, y, max(1.0, 6.0 * scale), MULTIMARKER)
 
     if show_labels:
-        # Match the per-character width the layout reserved, so a preview that
-        # looks like it has overlapping labels really does have them.
+        # Render each label at the size the layout reserved for it, so a
+        # preview that looks crowded really is crowded.
         from .raster import GLYPH_WIDTH
-        from .render import _CHAR_WIDTH
+        from .render import (CHAR_WIDTH_RATIO, ESCHER_DEFAULT_FONT_BASE,
+                             METABOLITE_FONT_FACTOR, REACTION_FONT_FACTOR)
 
-        font_scale = max(1, int(round(_CHAR_WIDTH * scale / GLYPH_WIDTH)))
+        def font_scale(holder, factor):
+            base = holder.get("font_size_base", ESCHER_DEFAULT_FONT_BASE)
+            per_char = base * factor * CHAR_WIDTH_RATIO * scale
+            return max(1, int(round(per_char / GLYPH_WIDTH)))
+
         for node in nodes.values():
             if node["node_type"] != "metabolite":
                 continue
             lx, ly = to_px(node["label_x"], node["label_y"])
             colour = METABOLITE_TEXT if node.get("node_is_primary", True) else SECONDARY_EDGE
-            canvas.text(lx, ly, node["bigg_id"], colour, font_scale)
+            canvas.text(lx, ly, node["bigg_id"], colour,
+                        font_scale(node, METABOLITE_FONT_FACTOR))
         for reaction in reactions.values():
             lx, ly = to_px(reaction["label_x"], reaction["label_y"])
-            canvas.text(lx, ly, reaction["bigg_id"], REACTION_TEXT, font_scale)
+            canvas.text(lx, ly, reaction["bigg_id"], REACTION_TEXT,
+                        font_scale(reaction, REACTION_FONT_FACTOR))
 
         # Free-standing captions: cluster titles on a composed whole-model map,
         # and the attribution line. Without these a meta-tiled map looks like
         # unlabelled islands.
         for label in body.get("text_labels", {}).values():
             lx, ly = to_px(label["x"], label["y"])
-            canvas.text(lx, ly, label.get("text", ""), TITLE_TEXT, font_scale + 1)
+            base = label.get("font_size_base", ESCHER_DEFAULT_FONT_BASE)
+            canvas.text(lx, ly, label.get("text", ""), TITLE_TEXT,
+                        max(1, int(round(base * 3.0 * CHAR_WIDTH_RATIO
+                                         * scale / GLYPH_WIDTH))))
 
     return canvas.save(path)
 

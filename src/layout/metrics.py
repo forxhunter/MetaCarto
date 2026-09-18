@@ -17,13 +17,16 @@ TARGETS = {
     "longest_run_ratio": (0.15, None),
     "min_separation_ratio": (1.0, None),
     "label_overlaps": (None, 0),
+    "label_on_node": (None, 0),
+    "label_on_edge": (None, 0),
     "hairball_index": (None, 3.0),
     "occupancy": (0.10, 0.85),
     "aspect_ratio": (0.35, 3.0),
 }
 
-_LABEL_CHAR_WIDTH = 17.0
-_LABEL_HEIGHT = 40.0
+from .render import (CHAR_WIDTH_RATIO, ESCHER_DEFAULT_FONT_BASE,
+                     LABEL_OVERLAP_TOLERANCE, LINE_HEIGHT_RATIO,
+                     METABOLITE_FONT_FACTOR, REACTION_FONT_FACTOR)
 
 
 def _straight_segments(body):
@@ -108,18 +111,118 @@ def _longest_straight_run(segments, tolerance=1.0):
 
 
 def _label_boxes(body):
+    """Label rectangles, sized from the font the map actually carries.
+
+    Labels may be emitted at a reduced `font_size_base` when the full size did
+    not fit, so measuring every label at one nominal size would both overstate
+    crowding and hide the cases where shrinking failed to resolve it.
+    """
     boxes = []
+
+    def box(holder, text, factor, anchor):
+        size = holder.get("font_size_base", ESCHER_DEFAULT_FONT_BASE) * factor
+        width = max(len(str(text)), 1) * size * CHAR_WIDTH_RATIO
+        height = size * LINE_HEIGHT_RATIO
+        left, centre_y = holder["label_x"], holder["label_y"]
+        boxes.append((left, centre_y - height / 2.0,
+                      left + width, centre_y + height / 2.0, anchor))
+
     for node in body["nodes"].values():
         if node["node_type"] != "metabolite":
             continue
-        width = max(90.0, len(node["bigg_id"]) * _LABEL_CHAR_WIDTH)
-        boxes.append((node["label_x"], node["label_y"] - _LABEL_HEIGHT / 2.0,
-                      node["label_x"] + width, node["label_y"] + _LABEL_HEIGHT / 2.0))
+        box(node, node["bigg_id"], METABOLITE_FONT_FACTOR, (node["x"], node["y"]))
     for reaction in body["reactions"].values():
-        width = max(90.0, len(reaction["bigg_id"]) * _LABEL_CHAR_WIDTH)
-        boxes.append((reaction["label_x"], reaction["label_y"] - _LABEL_HEIGHT / 2.0,
-                      reaction["label_x"] + width, reaction["label_y"] + _LABEL_HEIGHT / 2.0))
+        box(reaction, reaction["bigg_id"], REACTION_FONT_FACTOR, None)
     return boxes
+
+
+def _label_collisions(body, boxes):
+    """(label-label, label-node, label-edge) overlap counts.
+
+    Only counting label-against-label, as an earlier version did, reports zero
+    on a map whose captions are sitting on top of the network they annotate.
+    """
+    # Same tolerance the placer works to: a label box is mostly ascender and
+    # descender whitespace, so a few pixels of box overlap is not ink overlap.
+    tol = LABEL_OVERLAP_TOLERANCE
+    label_label = _count_box_overlaps(
+        [(b[0] + tol, b[1] + tol, b[2] - tol, b[3] - tol) for b in boxes]
+    )
+
+    cell = 260.0
+    node_grid = {}
+    for node in body["nodes"].values():
+        if node["node_type"] == "metabolite":
+            radius = 34.0 if node.get("node_is_primary", True) else 20.0
+        else:
+            radius = 11.0
+        x, y = node["x"], node["y"]
+        node_grid.setdefault((int(x // cell), int(y // cell)), []).append((x, y, radius))
+
+    segments = _straight_segments(body)
+    segment_grid = {}
+    for index, (x1, y1, x2, y2) in enumerate(segments):
+        steps = max(1, int(math.hypot(x2 - x1, y2 - y1) / cell) + 1)
+        for k in range(steps + 1):
+            t = k / steps
+            key = (int((x1 + (x2 - x1) * t) // cell), int((y1 + (y2 - y1) * t) // cell))
+            segment_grid.setdefault(key, set()).add(index)
+
+    node_hits = edge_hits = 0
+    for left, top, right, bottom, anchor in boxes:
+        cells = {(cx, cy)
+                 for cx in range(int(left // cell), int(right // cell) + 1)
+                 for cy in range(int(top // cell), int(bottom // cell) + 1)}
+
+        hit_node = False
+        for key in cells:
+            for x, y, radius in node_grid.get(key, ()):
+                if anchor is not None and abs(x - anchor[0]) < 1e-6 and abs(y - anchor[1]) < 1e-6:
+                    continue          # a label may touch its own node's halo
+                if left - radius < x < right + radius and top - radius < y < bottom + radius:
+                    hit_node = True
+                    break
+            if hit_node:
+                break
+        node_hits += 1 if hit_node else 0
+
+        hit_edge = False
+        for key in cells:
+            for index in segment_grid.get(key, ()):
+                x1, y1, x2, y2 = segments[index]
+                if _segment_hits_box(x1, y1, x2, y2, left, top, right, bottom):
+                    hit_edge = True
+                    break
+            if hit_edge:
+                break
+        edge_hits += 1 if hit_edge else 0
+
+    return label_label, node_hits, edge_hits
+
+
+def _segment_hits_box(x1, y1, x2, y2, left, top, right, bottom):
+    """Liang-Barsky clip test."""
+    if max(x1, x2) < left or min(x1, x2) > right:
+        return False
+    if max(y1, y2) < top or min(y1, y2) > bottom:
+        return False
+    dx, dy = x2 - x1, y2 - y1
+    t0, t1 = 0.0, 1.0
+    for p, q in ((-dx, x1 - left), (dx, right - x1), (-dy, y1 - top), (dy, bottom - y1)):
+        if abs(p) < 1e-12:
+            if q < 0:
+                return False
+            continue
+        r = q / p
+        if p < 0:
+            if r > t1:
+                return False
+            t0 = max(t0, r)
+        else:
+            if r < t0:
+                return False
+            t1 = min(t1, r)
+    return t0 <= t1
 
 
 def _count_box_overlaps(boxes, cell=400.0):
@@ -214,6 +317,10 @@ def score(escher_map, pitch=180.0):
     canvas = body["canvas"]
 
     total_length = sum(math.hypot(x2 - x1, y2 - y1) for x1, y1, x2, y2 in segments)
+    label_label, label_node, label_edge = _label_collisions(body, _label_boxes(body))
+    shrunk = sum(1 for n in nodes.values()
+                 if n["node_type"] == "metabolite" and "font_size_base" in n)
+    shrunk += sum(1 for r in body["reactions"].values() if "font_size_base" in r)
 
     return {
         "nodes": len(nodes),
@@ -222,7 +329,10 @@ def score(escher_map, pitch=180.0):
         "crossings_per_edge": (_count_crossings(segments) / len(segments)) if segments else 0.0,
         "longest_run_ratio": (_longest_straight_run(segments) / total_length) if total_length else 0.0,
         "min_separation_ratio": min_separation / pitch,
-        "label_overlaps": _count_box_overlaps(_label_boxes(body)),
+        "label_overlaps": label_label,
+        "label_on_node": label_node,
+        "label_on_edge": label_edge,
+        "label_shrunk": shrunk,
         "hairball_index": _hairball_index(metabolites),
         "occupancy": (content_w * content_h) / max(canvas["width"] * canvas["height"], 1.0),
         "aspect_ratio": content_w / content_h,

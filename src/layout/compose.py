@@ -21,6 +21,8 @@ import math
 
 import networkx as nx
 
+from .render import (CHAR_WIDTH_RATIO, ESCHER_DEFAULT_FONT_BASE, LINE_HEIGHT_RATIO,
+                     METABOLITE_FONT_FACTOR, REACTION_FONT_FACTOR)
 from .sugiyama import layered_layout
 
 TILE_GAP = 900.0           # clear space between tiles
@@ -61,19 +63,36 @@ def build_meta_graph(clusters, cofactor_score, cutoff=0.5):
 
 
 def _bbox(escher_map):
-    nodes = escher_map[1]["nodes"]
+    """Extent of a tile, including the space its labels actually occupy.
+
+    `label_x`/`label_y` is the *left edge and vertical centre* of a label, not
+    its extent. Treating it as a point understates the tile by most of a label
+    width, so tiles packed edge to edge end up with their captions overlapping
+    the neighbouring tile -- which is where this map's remaining label
+    collisions were coming from.
+    """
+    body = escher_map[1]
+    nodes = body["nodes"]
     if not nodes:
         return 0.0, 0.0, 1.0, 1.0
+
     xs, ys = [], []
+
+    def add_label(holder, text, factor):
+        size = holder.get("font_size_base", ESCHER_DEFAULT_FONT_BASE) * factor
+        width = max(len(str(text)), 1) * size * CHAR_WIDTH_RATIO
+        height = size * LINE_HEIGHT_RATIO
+        xs.extend((holder["label_x"], holder["label_x"] + width))
+        ys.extend((holder["label_y"] - height / 2.0, holder["label_y"] + height / 2.0))
+
     for node in nodes.values():
         xs.append(node["x"])
         ys.append(node["y"])
         if "label_x" in node:
-            xs.append(node["label_x"])
-            ys.append(node["label_y"])
-    for reaction in escher_map[1]["reactions"].values():
-        xs.append(reaction["label_x"])
-        ys.append(reaction["label_y"])
+            add_label(node, node.get("bigg_id", ""), METABOLITE_FONT_FACTOR)
+    for reaction in body["reactions"].values():
+        add_label(reaction, reaction.get("bigg_id", ""), REACTION_FONT_FACTOR)
+
     return min(xs), min(ys), max(xs), max(ys)
 
 
