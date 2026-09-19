@@ -71,8 +71,8 @@ python scripts/fetch_kegg_mapping.py              # -> data/kegg/kegg_mapping.js
 python scripts/prepare_repo.py
 ```
 
-`process_bigg.py` and `run_pipeline.py` are earlier demo drivers, not a production path
-(`run_pipeline.py` lays out a hardcoded 7-node mock graph).
+`experiments/process_bigg.py` and `experiments/run_pipeline.py` are earlier demo drivers, not a
+production path (`run_pipeline.py` lays out a hardcoded 7-node mock graph).
 
 ## v2 architecture (`src/layout/`)
 
@@ -207,10 +207,13 @@ destroying any alignment achieved. It is not a working orthogonalizer.
 ## Aspirational vs. live code
 
 `plan.md` describes a GNN + RL architecture. None of it is on either production path:
-`src/gnn_model.py`, `src/train_gnn.py`, `src/rl_env.py`, `src/train_rl.py`, `src/chemistry.py`,
-`src/stress_test.py` and `src/data_loader.py` are unused by both `process_subsystems.py` and
-`layout_v2.py`. `checkpoints/gnn_model.pth` and `ppo_metabolic_layout.zip` are artifacts of those
-experiments. `src/fba.py` is superseded by `src/layout/direction.py`, which uses pFBA.
+That branch is archived in `experiments/`, which has a README explaining why it was abandoned:
+`gnn_model.py`, `train_gnn.py`, `rl_env.py`, `train_rl.py`, `data_loader.py`, `stress_test.py`,
+plus the demo drivers and two superseded modules — `fba.py`, replaced by
+`src/layout/direction.py` (pFBA), and `chemistry.py`, replaced by `src/layout/formula.py`, which
+scores conserved moieties from formulas alone and needs no cheminformatics dependency.
+`checkpoints/gnn_model.pth` and `ppo_metabolic_layout.zip` are untracked artifacts of those runs.
+`plan.md` carries a banner marking it superseded.
 
 Treat `plan.md` as a roadmap, `constraints.md` as the binding requirements, and
 `layout_algorithm.md` as the v2 design.
@@ -218,7 +221,7 @@ Treat `plan.md` as a roadmap, `constraints.md` as the binding requirements, and
 ## Conventions
 
 - v1 matches currency metabolites with a hardcoded prefix list duplicated in
-  `process_subsystems.py` and `process_bigg.py` — keep both in sync. v2 uses
+  `process_subsystems.py` and `experiments/process_bigg.py` — keep both in sync. v2 uses
   `compound.compute_cofactor_scores`, which combines that list (as a prior) with whole-model
   connectivity percentiles, so it also catches `q8/q8h2`, `fad`, `ppi`, `amp` and `thf` variants.
 - v1 duplicated currency nodes are named `{met}__dup_{subsystem}_{n}`; the `"__dup_"` substring is

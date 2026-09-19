@@ -18,7 +18,8 @@ check_import("bioservices")
 
 print("\nVerifying Source Code Imports...")
 try:
-    from src import parsing, fba, chemistry
+    from src import parsing
+    from src.layout import compound, direction, sugiyama, render
     print("[OK] src modules imported successfully")
 except Exception as e:
     print(f"[FAIL] src modules: {e}")

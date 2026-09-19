@@ -1,7 +1,7 @@
 import networkx as nx
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
-from src.rl_env import MetabolicLayoutEnv
+from experiments.rl_env import MetabolicLayoutEnv
 
 import random
 import numpy as np

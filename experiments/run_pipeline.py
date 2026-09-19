@@ -44,7 +44,7 @@ def run_pipeline(output_file="output.json"):
     
     print("Step 3: Layout Synthesis (RL)...")
     # Demonstrate RL integration
-    from src.rl_env import MetabolicLayoutEnv
+    from experiments.rl_env import MetabolicLayoutEnv
     env = MetabolicLayoutEnv(G)
     # Just run a reset/step to prove it works
     env.reset()

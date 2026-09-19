@@ -1,7 +1,7 @@
 import torch
 import torch.optim as optim
-from src.gnn_model import get_model
-from src.data_loader import create_mock_data
+from experiments.gnn_model import get_model
+from experiments.data_loader import create_mock_data
 
 def train_one_epoch(model, optimizer, data, criterion):
     model.train()
@@ -17,7 +17,7 @@ def train_one_epoch(model, optimizer, data, criterion):
 import os
 import glob
 from src.parsing import parse_kgml
-from src.gnn_model import get_model
+from experiments.gnn_model import get_model
 from torch_geometric.data import Data
 import networkx as nx
 
@@ -78,7 +78,7 @@ def run_training():
     if not dataset:
         print("No data found. Please run 'python fetch_kegg.py --org eco' first.")
         # Fallback to mock for demonstration if empty
-        from src.data_loader import create_mock_data
+        from experiments.data_loader import create_mock_data
         print("Falling back to mock data...")
         dataset = [create_mock_data(10) for _ in range(5)]
     else:

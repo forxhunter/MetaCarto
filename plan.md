@@ -1,4 +1,21 @@
-# Autonomous Implementation Plan: KEGG-Style Metabolic Map Generation
+> **Superseded — historical document.**
+>
+> This was the original plan: learn layout with a graph neural network for module detection and
+> a reinforcement-learning agent for placement. **It is not what MetaCarto does, and none of the
+> architecture below is implemented.** The branch was abandoned; the code is archived in
+> `experiments/` with a note on why.
+>
+> The method actually in use is constructive and deterministic — no training data, no reward, no
+> random seed. It is specified in `layout_algorithm.md` and implemented in `src/layout/`.
+>
+> Kept because the negative result matters: the hard part of drawing a metabolic network turned
+> out to be deciding *what* to draw, not where to put it. Once a reaction is reduced to one edge
+> between its main substrate/product pair, a classical layered drawing gives clean backbones
+> directly, and the learned agent was being asked to rediscover from a reward signal a structure
+> that chemistry already specifies. The reward terms survive as the acceptance metrics in
+> `src/layout/metrics.py`.
+
+# Autonomous Implementation Plan: KEGG-Style Metabolic Map Generation (abandoned)
 
 ## 1. Project Overview
 

@@ -1,75 +1,117 @@
-# Metabolic AutoLayout
+# MetaCarto
 
-**Generative Layout Synthesis for Large-Scale Metabolic Networks**
+**Constructive layout synthesis for genome-scale metabolic networks**
 
-This repository contains the official implementation of the "AutoLayout" algorithm, designed to automatically generate aesthetically pleasing, biologically meaningful, and Escher-compatible layouts for genome-scale metabolic models (GEMs).
+MetaCarto reads a genome-scale metabolic model (BiGG / SBML) and draws it the way a curator
+would — linear pathway backbones, cycles as rings, cofactors as side branches — rather than the
+way a force-directed algorithm does. Output is schema-correct
+[Escher](https://escher.github.io) JSON, loadable in any Escher viewer.
 
-## Key Features
+The layout is **constructive and deterministic**: no annealing, no random seed, no user
+intervention. The same model always produces the same map.
 
-*   **Global Meta-Layout**: Tiles subsystems (Glycolysis, TCA, etc.) on a variable-size grid using Gravity Compaction to minimize whitespace.
-*   **Automated Decomposition**: Automatically performs community detection (Louvain) on unannotated "hairball" models to create functional clusters.
-*   **Coordinate Normalization**: Ensures zero packing drift for tight layouts.
-*   **Hybrid Optimization**: Combines Simulated Annealing (local node placement) with Grid Snapping (global alignment).
-*   **Escher Compatibility**: Exports directly to `.json` maps loadable in [Escher-FBA](https://escher.github.io).
+## The generated collection
 
-## Installation
+All 108 models in the [BiGG database](http://bigg.ucsd.edu/), drawn as **2,623 pathway maps**,
+are published under CC BY 4.0 at
+[forxhunter/escher_maps_BiGG](https://github.com/forxhunter/escher_maps_BiGG) — including
+Recon3D (10,600 reactions, 93 maps).
 
-1.  Clone the repository:
-    ```bash
-    git clone https://github.com/forxhunter/AutoLayout.git
-    cd AutoLayout
-    ```
-2.  Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
+Browse them in the viewer at **[forxhunter.github.io/escher](https://forxhunter.github.io/escher/)**
+via *Map ▸ Load map from library…*, which reads the collection directly; nothing to download.
 
-## Usage
+## How it works
 
-### v2 engine (`layout_v2.py`)
+Five ideas carry most of the quality. `layout_algorithm.md` is the design document.
 
-Structure-driven layout: each reaction is reduced to one directed edge between its main
-substrate/product pair, reversible steps are oriented by pFBA flux, cycles are drawn as rings,
-and placement is a layered (Sugiyama + Brandes-Köpf) drawing rather than an optimiser. Output is
-schema-correct Escher JSON with midmarkers, signed stoichiometry and curved cofactor arcs.
+1. **Primary-compound reduction** (`src/layout/compound.py`). A reaction such as
+   `pyruvate + CoA + NAD⁺ → acetyl-CoA + CO₂ + NADH` contributes *one* directed edge, between
+   the substrate/product pair sharing the most molecular skeleton — here pyruvate → acetyl-CoA.
+   Every other participant becomes a side branch. Without this, each reaction node has degree
+   4–8 and no clean orthogonal drawing exists, which is why naive layouts come out as
+   hairballs. Cofactor-ness is applied as a **tier**, not a score penalty: a curated or
+   high-degree cofactor is never chosen while a non-cofactor alternative exists on its side.
+   That is what stops CoA → acetyl-CoA (21 shared carbons) beating pyruvate → acetyl-CoA.
+
+2. **Direction from flux** (`src/layout/direction.py`). Reconstructions store reversible
+   reactions in whichever direction the curator wrote them, so glycolysis is often recorded
+   partly backwards. Parsimonious FBA decides the drawn direction wherever a reaction carries
+   flux; antiparallel pairs are collapsed onto one axis.
+
+3. **Cycles drawn as cycles** (`src/layout/motifs.py`). Rings are detected on the whole-model
+   graph, contracted for layering, then expanded onto a circle rotated so the entry arc faces
+   the pathway feeding it.
+
+4. **Layered placement** (`src/layout/sugiyama.py`). Greedy feedback-arc-set, layer assignment,
+   cluster-constrained crossing reduction, then **Brandes–Köpf** coordinate assignment. The
+   last step is what produces straight vertical backbones; a barycentre assignment does not.
+
+5. **Two scales** (`src/layout/compose.py`). The whole-model map runs the same layered pass one
+   level up: each cluster drawing becomes a tile, tiles are ordered by metabolic flow and
+   packed into a captioned poster.
+
+**Decomposition** (`src/layout/decompose.py`) assigns reactions to maps from the model's own
+`subsystem` annotation where it has one, then from a KEGG pathway lookup, and only failing both
+from network structure — `networkx` greedy-modularity communities on the currency-stripped
+graph. Many BiGG models carry no subsystem annotation at all, so the fallback is a normal path,
+not an edge case. Maps are then named after the metabolic function they cover, following KEGG
+BRITE top-level categories.
+
+## Install and run
+
+The working interpreter is a conda environment with `cobra`, `networkx` and `numpy`:
 
 ```bash
-python layout_v2.py --model e_coli_core --preview --combined
-python layout_v2.py --all
+python layout_v2.py --model e_coli_core --preview
+python layout_v2.py --model Recon3D --group-function --max-cluster 120
+python layout_v2.py --all --group-function --out data/bigg
 ```
 
-Every map is scored against the acceptance metrics in `layout_algorithm.md` (edge orthogonality,
-crossings, node separation, label overlaps, hairball index). Across 1795 maps from four models the
-median map is 100% axis-aligned with zero crossings and zero label overlaps.
+Useful flags: `--group-function` merges pathway clusters into functional maps, `--subsystem`
+draws one named cluster, `--combined` adds a whole-model map, `--no-fba` skips pFBA
+orientation, `--preview` writes PNG and SVG alongside the JSON.
 
-See `layout_algorithm.md` for the algorithm and why the v1 approach below cannot reach it.
+`data/` is not tracked. Populate it with `scripts/fetch_bigg.py` and `scripts/fetch_kegg.py`.
 
-### v1: Batch Processing
-To generate layouts for all BiGG models in `data/bigg/models`:
+## Quality gates
+
+`src/layout/metrics.py` scores every emitted map — edge orthogonality, crossings per edge,
+longest straight run, node separation, three kinds of label collision, local density
+(`hairball_index`), occupancy and aspect ratio. Targets and their definitions are in
+`layout_algorithm.md` §9.
 
 ```bash
-python process_subsystems.py
-```
-*   **Output**: `data/bigg/{ModelID}/{ModelID}_Combined.json`
-
-### v1: Single Model Pipeline
-To process a specific model manually:
-```bash
-python run_pipeline.py --model e_coli_core
+python scripts/iterate.py --model e_coli_core   # exits non-zero if any gate fails
 ```
 
-## Algorithm Details
+`iterate.py` adds three gates `metrics.py` does not have: print legibility (label size in
+points once the map is fitted to a journal column), title/caption collisions, and canvas
+overflow.
 
-### Functional Decomposition
-For models with `subsystem` metadata, the algorithm respects biological boundaries. For "Uncategorized" models, it uses **Greedy Modularity Community Detection** to infer functional modules from the bipartite reaction-metabolite graph.
+## Known limitations
 
-### Layout Engine
-1.  **Backbone Optimization**: simulated annealing optimizes reaction alignment.
-2.  **Hub Duplication**: Duplicate high-degree currency metabolites (ATP, NADH) to prevent "hairballs".
-3.  **Meta-Tiling**: Subsets are placed on a meta-grid.
-4.  **Gravity Compaction**: Grid tiles are pulled Up-Left to remove gaps.
+- A few reactions per genome-scale model have no drawable primary pair — typically small
+  inorganic chemistry such as catalase or CO₂ transport — and are omitted.
+- Whole-model composed maps (`--combined`) are not print figures. Tiling 10,600 reactions onto
+  one canvas leaves each reaction so little area that labels land around 0.14 pt. The
+  per-cluster maps are the readable artifact.
+- `hairball_index` still exceeds its target on most large merged function maps.
+- H⁺ and H₂O are suppressed from every map.
+- Compartments are not drawn as envelopes: the Escher schema has no region primitive.
+
+## Legacy v1 pipeline
+
+`process_subsystems.py` and `src/refinement.py` are the original simulated-annealing pipeline.
+They are kept for comparison and are **not** the production path. Their Escher output is
+schema-invalid — `node_type` is set to `"reaction"`, which is not a legal value; every segment
+has null `b1`/`b2` so edges draw as straight diagonals; stoichiometric coefficients are
+hardcoded to 1, discarding direction. `run_pipeline.py` lays out a hardcoded 7-node mock graph
+and is a demo, not a driver.
+
+`plan.md` describes a GNN + reinforcement-learning architecture that was explored and
+abandoned. None of it is on either production path; see `experiments/README.md`.
 
 ## Credits
 
-**Created by Tianyu Wu (GitHub: forxhunter)**
-Developed at University of Illinois Urbana-Champaign (UIUC).
+**Created by Tianyu Wu (GitHub: [forxhunter](https://github.com/forxhunter))**, University of
+Illinois Urbana-Champaign.

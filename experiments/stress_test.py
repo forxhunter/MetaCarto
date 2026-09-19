@@ -3,7 +3,7 @@ import glob
 import numpy as np
 import networkx as nx
 from src.parsing import parse_kgml
-from src.rl_env import MetabolicLayoutEnv
+from experiments.rl_env import MetabolicLayoutEnv
 from src.refinement import snap_to_grid
 from stable_baselines3 import PPO
 

@@ -183,22 +183,44 @@ Only after the constructive layout exists, run a short, **position-constrained**
 
 ## 9. Acceptance metric (also the RL reward, if that branch is revived)
 
-Compute on every emitted map; this is what distinguishes `t*` from `nt*` numerically:
+Compute on every emitted map. **This table is the code** (`metrics.py:14-25`); where it once
+differed from the code, the code won and this was corrected. Metric names are the dict keys
+`score()` returns.
 
-| Metric | Target |
-|---|---|
-| fraction of edges axis-aligned or ≤1 bend | > 0.9 |
-| crossings / edge | < 0.05 |
-| longest straight chain / node count | > 0.15 |
-| min node–node distance / pitch | ≥ 1.0 |
-| label overlaps | 0 |
-| hairball index (max local density / mean density, 20×20 bins) | < 3 |
-| occupancy (content bbox / canvas) | 0.5 – 0.85 |
-| aspect ratio | 0.5 – 2.0 |
+| Key | Definition | Target |
+|---|---|---|
+| `axis_aligned` | fraction of *straight* segments within 1.0 unit of horizontal or vertical | > 0.90 |
+| `crossings_per_edge` | segment crossings / segments | < 0.05 |
+| `longest_run_ratio` | longest merged axis-aligned run, **in length units**, / total segment length | > 0.15 |
+| `min_separation_ratio` | min pairwise distance between *primary* metabolites / pitch | ≥ 1.0 |
+| `label_overlaps` | overlapping label-box pairs, boxes eroded 3.0 units | 0 |
+| `label_on_node` | label boxes intersecting a node disc, excluding their own anchors | 0 |
+| `label_on_edge` | label boxes struck by a straight segment | 0 |
+| `hairball_index` | peak / mean bin count over *occupied* bins of a 20×20 histogram of metabolites | < 3 |
+| `occupancy` | content bbox area / canvas area | 0.10 – 0.85 |
+| `aspect_ratio` | content width / content height | 0.35 – 3.0 |
 
-`nt1`/`nt2` score ~0.1 axis-aligned and hairball index > 15.
+Also computed, deliberately **ungated** and reported for context only: `nodes`, `reactions`,
+`connectors`, `label_shrunk`.
 
-**[revised]** Two of these targets were wrong as first written:
+Three corrections to what this section claimed before, all in the direction of the code:
+
+- *Axis-aligned* is measured over **straight segments only** — a cofactor stub and a ring arc are
+  curved on purpose, and charging them with being non-orthogonal measures the design rather than
+  a defect. Inter-tile `link_` connectors are curved too but *are* measured, by their chord,
+  because a connector crossing the network is exactly what the gate exists to catch. The old
+  wording, "axis-aligned or ≤1 bend", described neither.
+- *Longest straight chain* is normalised by **total segment length**, not node count.
+- *Label overlaps* is **three** metrics, not one: box-vs-box, box-vs-node, box-vs-edge.
+
+**Calibration is the weak point of this table, and is being replaced.** Every threshold above
+was set from two images — `nt1`/`nt2` score ~0.1 axis-aligned and hairball > 15, the `t*` set
+scores well — with no sensitivity analysis and no sample to speak of. A threshold justified by
+two JPEGs is not publishable. `data/kegg/` holds 1,010 KGML pathways carrying human-drawn
+coordinates, which gives an empirical distribution of what curated layout actually scores;
+these targets should be re-derived from it and this note removed once they are.
+
+**[revised]** Two of these targets were also wrong as first written:
 
 - *Aspect ratio* legitimately sits near 0.15 for an unbranched pathway. Glycolysis is a tall
   column in every textbook; folding a ten-step chain to hit a target would make it worse. Folding

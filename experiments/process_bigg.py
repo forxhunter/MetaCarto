@@ -8,7 +8,7 @@ import random
 import math
 
 from src.parsing import load_sbml_model, build_bipartite_graph
-from src.gnn_model import get_model
+from experiments.gnn_model import get_model
 from src.refinement import snap_to_grid
 from src.export import serialize_results
 
