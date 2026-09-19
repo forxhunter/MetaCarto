@@ -39,6 +39,19 @@ PAPER_FIGURES = os.path.join(
     "oxford-bioinformatics-template-master", "figures")
 
 
+# fig2 is a screenshot of the map library in the browser viewer, so it is
+# captured by hand rather than built here. It is placed at the full text width
+# (172.3 mm), which sets two requirements the capture has to meet:
+#
+#   legibility  the interface type must survive the reduction. At 83 mm it
+#               sets at about 4 pt, which is why the figure is full width.
+#   resolution  >= 300 dpi at 172.3 mm needs >= 2035 px across; a 762 px
+#               capture is 117 dpi there and prints soft.
+#
+# A capture at 2x device pixel ratio, or a browser window near 2600 px wide,
+# satisfies both.
+FIGURE2_MIN_PX = 2035
+
 FIGURES = {
     "fig1": {
         "model": "Recon3D",
@@ -54,6 +67,60 @@ FIGURES = {
             "with ATP/ADP banked on one side."),
     },
 }
+
+
+def agreement_chart(out_dir, tag="fig3", width_mm=COLUMN_MM):
+    """Per-model KEGG agreement for the full method and its two ablations.
+
+    An empirical cumulative distribution rather than a bar chart: there are 104
+    models, the question is how tightly they cluster and how long the low tail
+    is, and a mean with an error bar answers neither. Reading across at 0.5
+    gives the median; the horizontal gap between curves is the effect of the
+    ablation at every quantile, not only at the centre.
+    """
+    from src.layout.chart import Chart, ecdf
+
+    with open(os.path.join("benchmarks", "results",
+                           "correctness_all.json"), encoding="utf-8") as handle:
+        data = json.load(handle)
+    floor = data["summary"]["min_scorable"]
+    models = [r for r in data["per_model"].values()
+              if r.get("scored", 0) >= floor]
+
+    series = (
+        ("full", "MetaCarto", "#1b3a5c", None),
+        ("no_cofactor_tiering", "without carrier tier", "#c0561f", (2.4, 1.6)),
+        ("no_cofactor_handling", "without cofactor handling", "#8a8f96",
+         (0.9, 1.6)),
+    )
+
+    chart = Chart(width_mm, 0.74 * width_mm)
+    chart.xlim = (35.0, 100.0)
+    chart.ylim = (0.0, 1.0)
+    chart.axes(xticks=(40, 55, 70, 85, 100), yticks=(0, 0.25, 0.5, 0.75, 1.0),
+               xlabel="agreement with curated reference (%)",
+               ylabel="fraction of models",
+               yfmt="%.2f")
+
+    for key, _label, colour, dash in series:
+        values = [100.0 * r["variants"][key]["rate"] for r in models]
+        chart.polyline(ecdf(values), colour, 1.2, dash)
+        ordered = sorted(values)
+        chart.dot(ordered[len(ordered) // 2], 0.5, colour)
+
+    chart.legend([(label, colour, dash) for _k, label, colour, dash in series],
+                 chart.ml + 6.0, chart.mb + chart.plot_h - 6.0)
+
+    stem = os.path.join(out_dir, tag)
+    chart.save(stem + ".pdf")
+
+    full = sorted(100.0 * r["variants"]["full"]["rate"] for r in models)
+    print("%s  KEGG agreement across %d models" % (tag, len(models)))
+    print("    median %.1f%%, quartiles %.1f--%.1f%%, lowest %.1f%%"
+          % (full[len(full) // 2], full[len(full) // 4],
+             full[3 * len(full) // 4], full[0]))
+    print("    placed %.0f mm wide" % width_mm)
+    return stem
 
 
 def load(model, name, root=os.path.join("data", "bigg")):

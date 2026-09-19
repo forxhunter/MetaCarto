@@ -1,0 +1,120 @@
+{
+  "commit": "32dc475",
+  "variants": [
+    "union",
+    "majority",
+    "intersection",
+    "single_r",
+    "one_to_one"
+  ],
+  "models": {
+    "iJO1366": {
+      "union": {
+        "considered": 673,
+        "agree": 640,
+        "rate": 0.950965824665676
+      },
+      "majority": {
+        "considered": 673,
+        "agree": 626,
+        "rate": 0.9301634472511144
+      },
+      "intersection": {
+        "considered": 643,
+        "agree": 594,
+        "rate": 0.9237947122861586
+      },
+      "single_r": {
+        "considered": 644,
+        "agree": 614,
+        "rate": 0.953416149068323
+      },
+      "one_to_one": {
+        "considered": 647,
+        "agree": 597,
+        "rate": 0.9227202472952086
+      }
+    },
+    "iMM904": {
+      "union": {
+        "considered": 559,
+        "agree": 537,
+        "rate": 0.960644007155635
+      },
+      "majority": {
+        "considered": 559,
+        "agree": 517,
+        "rate": 0.924865831842576
+      },
+      "intersection": {
+        "considered": 519,
+        "agree": 485,
+        "rate": 0.9344894026974951
+      },
+      "single_r": {
+        "considered": 529,
+        "agree": 510,
+        "rate": 0.9640831758034026
+      },
+      "one_to_one": {
+        "considered": 537,
+        "agree": 502,
+        "rate": 0.9348230912476723
+      }
+    },
+    "iYO844": {
+      "union": {
+        "considered": 450,
+        "agree": 426,
+        "rate": 0.9466666666666667
+      },
+      "majority": {
+        "considered": 450,
+        "agree": 414,
+        "rate": 0.92
+      },
+      "intersection": {
+        "considered": 425,
+        "agree": 391,
+        "rate": 0.92
+      },
+      "single_r": {
+        "considered": 421,
+        "agree": 402,
+        "rate": 0.9548693586698337
+      },
+      "one_to_one": {
+        "considered": 437,
+        "agree": 403,
+        "rate": 0.9221967963386728
+      }
+    },
+    "iAF692": {
+      "union": {
+        "considered": 284,
+        "agree": 263,
+        "rate": 0.926056338028169
+      },
+      "majority": {
+        "considered": 284,
+        "agree": 256,
+        "rate": 0.9014084507042254
+      },
+      "intersection": {
+        "considered": 266,
+        "agree": 239,
+        "rate": 0.8984962406015038
+      },
+      "single_r": {
+        "considered": 261,
+        "agree": 244,
+        "rate": 0.9348659003831418
+      },
+      "one_to_one": {
+        "considered": 276,
+        "agree": 249,
+        "rate": 0.9021739130434783
+      }
+    }
+  }
+}

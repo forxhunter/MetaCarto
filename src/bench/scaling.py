@@ -75,6 +75,13 @@ def main(argv=None):
     parser.add_argument("--models", default="e_coli_core,iYO844,iJO1366,RECON1")
     parser.add_argument("--model-dir", default=os.path.join("data", "bigg", "models"))
     parser.add_argument("--out", default=os.path.join("benchmarks", "results"))
+    parser.add_argument("--group-function", action="store_true", default=True,
+                        help="merge pathway clusters into function maps, as "
+                             "the released collection is drawn (default)")
+    parser.add_argument("--no-group-function", dest="group_function",
+                        action="store_false",
+                        help="time the raw pathway clusters instead")
+    parser.add_argument("--max-cluster", type=int, default=120)
     args = parser.parse_args(argv)
 
     import cobra
@@ -102,6 +109,14 @@ def main(argv=None):
 
         t0 = time.perf_counter()
         groups = clusters(model, compute_cofactor_scores(model))
+        if args.group_function:
+            # The released collection is drawn with --group-function
+            # --max-cluster 120, which merges pathway clusters into function
+            # maps. Timing the unmerged clusters reports a different number of
+            # maps than the release contains -- 305 against 93 for Recon3D --
+            # and the manuscript then quotes two populations as one.
+            from layout_v2 import merge_by_function
+            groups = merge_by_function(groups, max_size=args.max_cluster)
         decompose_s = time.perf_counter() - t0
 
         rows = time_model(model, groups)

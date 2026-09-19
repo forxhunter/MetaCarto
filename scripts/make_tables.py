@@ -41,7 +41,16 @@ METRIC_LABELS = (
 )
 
 
+# Returned by a builder whose inputs are not ready yet -- the corpus
+# correctness run writes its summary only when it finishes, and a partial
+# table is worse than no table.
+SKIPPED = object()
+
+
 def load(name):
+    path = os.path.join(RESULTS, name)
+    if not os.path.exists(path):
+        return None
     with open(os.path.join(RESULTS, name), encoding="utf-8") as handle:
         return json.load(handle)
 
@@ -259,9 +268,157 @@ def corpus_table():
         r"\end{tabular}")
 
 
+def correctness_corpus_table():
+    """KEGG agreement over every model that can be scored, not four of them.
+
+    Pooled and median are both given because they answer different questions:
+    pooled counts every scorable reaction once, so the large well-annotated
+    models dominate it, while the median weights every model equally. A model
+    contributing a handful of scorable reactions is excluded rather than
+    averaged in, and the count of those is in the caption.
+    """
+    d = load("correctness_all.json") or {}
+    # The corpus run writes per_model incrementally and the summary
+    # only at the end, so an in-progress file has no summary yet.
+    s = d.get("summary") or {}
+    if not s.get("full"):
+        return SKIPPED
+    rows_out = []
+    labels = (("full", "\\mytool"),
+              ("no_cofactor_tiering", "~~$-$ carrier tier"),
+              ("no_cofactor_handling", "~~$-$ cofactor handling"))
+    for key, label in labels:
+        v = s.get(key)
+        if not v:
+            continue
+        rows_out.append("%s & %.1f & %.1f & %.1f--%.1f \\\\"
+                        % (label, 100 * v["pooled_rate"], 100 * v["median_rate"],
+                           100 * v["min_rate"], 100 * v["max_rate"]))
+    return rows(
+        r"\begin{tabular}{@{}lrrr@{}}\toprule",
+        r"Variant & Pooled & Median & Range \\",
+        r"\midrule",
+        *rows_out,
+        r"\botrule",
+        r"\end{tabular}")
+
+
+def metdraw_corpus_table():
+    """Connectivity cloning over the same corpus, at three thresholds.
+
+    Separate from the agreement table because the quantities are different:
+    \\mytool draws one edge so its precision and recall are the same number,
+    while cloning trades one against the other and the trade is the point.
+    """
+    d = load("correctness_all.json") or {}
+    # The corpus run writes per_model incrementally and the summary
+    # only at the end, so an in-progress file has no summary yet.
+    s = d.get("summary") or {}
+    if not s.get("full"):
+        return SKIPPED
+    full = s["full"]
+    body = [r"\mytool & %.1f & %.1f & 1.00 \\"
+            % (100 * full["median_rate"], 100 * full["median_rate"])]
+    for key in ("p80", "p90", "p95"):
+        v = s.get("metdraw", {}).get(key)
+        if not v:
+            continue
+        body.append("~~clone %s & %.1f & %.1f & %.2f \\\\"
+                    % (key, 100 * v["recall_median"],
+                       100 * v["precision_median"], v["edges_median"]))
+    return rows(
+        r"\begin{tabular}{@{}lrrr@{}}\toprule",
+        r"Method & Recall & Precision & Edges/rxn \\",
+        r"\midrule",
+        *body,
+        r"\botrule",
+        r"\end{tabular}")
+
+
+def control_table():
+    """What chance scores on the agreement test, next to what MetaCarto scores.
+
+    Agreement is membership in a reference set, so the rate means nothing
+    without the size of that set and the size of the space the choice was made
+    from. Both are here, and so is the rate a uniform random choice would get.
+    """
+    d = load("correctness_control.json")["models"]
+    sens = (load("correctness_sensitivity.json") or {}).get("models", {})
+    strict_variants = ("intersection", "majority", "one_to_one")
+    body = []
+    for model in MODELS:
+        s = d.get(model)
+        if not s:
+            continue
+        # The strict column is the worst of the stricter reference definitions
+        # for this model, so the table states the floor rather than the one
+        # that happens to look best.
+        rates = [sens.get(model, {}).get(v, {}).get("rate")
+                 for v in strict_variants]
+        rates = [r for r in rates if r is not None]
+        strict = "%.1f" % (100 * min(rates)) if rates else "--"
+        body.append(
+            "%s & %d & %d & %.1f & %.1f & %s \\\\"
+            % (model, s["reactions"], s["candidates_median"],
+               100 * s["chance_mean"], 100 * s["agreement"], strict))
+    return rows(
+        r"\begin{tabular}{@{}lrrrrr@{}}\toprule",
+        r"Model & Scored & Cand. & Random & \mytool & Strict ref. \\",
+        r"\midrule",
+        *body,
+        r"\botrule",
+        r"\end{tabular}")
+
+
+def thresholds_table():
+    """The acceptance band per metric, and the curated band where one exists.
+
+    Read straight out of `metrics.TARGETS` and `metrics.CURATED_REFERENCE` so
+    the paper cannot state a threshold the code does not enforce. The third
+    column is empty for the metrics that do not transfer to KEGG drawings.
+    """
+    from src.layout import metrics
+
+    def num(v):
+        # Three decimals throughout: the curated crossings p90 is 0.115 and
+        # the gate is 0.05, and rounding either to two makes that comparison
+        # unreadable. Counts stay integers.
+        return "%d" % v if float(v).is_integer() and abs(v) < 1 else "%.3f" % v
+
+    def band(pair):
+        if pair is None:
+            return "--"
+        low, high = pair
+        if low is not None and high is not None:
+            return "%s--%s" % (num(low), num(high))
+        if low is not None:
+            return "$\\geq$ %s" % num(low)
+        return "$\\leq$ %s" % num(high)
+
+    body = []
+    for key, label in CORPUS_LABELS:
+        if key == "label_pt":
+            body.append("%s & $\\geq$ 5 & -- \\\\" % label)
+            continue
+        body.append("%s & %s & %s \\\\"
+                    % (label, band(metrics.TARGETS.get(key)),
+                       band(metrics.CURATED_REFERENCE.get(key))))
+    return rows(
+        r"\begin{tabular}{@{}lrr@{}}\toprule",
+        r"Metric & Acceptance band & Curated 10th--90th \\",
+        r"\midrule",
+        *body,
+        r"\botrule",
+        r"\end{tabular}")
+
+
 BUILDERS = {
+    "thresholds": thresholds_table,
+    "control": control_table,
     "corpus": corpus_table,
     "correctness": correctness_table,
+    "correctness_corpus": correctness_corpus_table,
+    "metdraw_corpus": metdraw_corpus_table,
     "baselines": baselines_table,
     "metdraw": metdraw_table,
     "scaling": scaling_table,
@@ -281,6 +438,9 @@ def main(argv=None):
     stale = []
     for name, build in sorted(BUILDERS.items()):
         text = build()
+        if text is SKIPPED:
+            print("%-20s skipped (inputs not ready)" % name)
+            continue
         path = os.path.join(args.out, name + ".tex")
         old = None
         if os.path.exists(path):

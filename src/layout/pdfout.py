@@ -268,7 +268,17 @@ def render(escher_map, path, show_labels=True, width_mm=180.0,
     canvas.parts.append("0 0 %.2f %.2f re f" % (page_w, page_h))
     _draw(escher_map, canvas, show_labels)
 
-    stream = ("\n".join(canvas.parts)).encode("latin-1", "replace")
+    return write_pdf(canvas.parts, page_w, page_h, path, compress=compress)
+
+
+def write_pdf(parts, page_w, page_h, path, compress=True):
+    """Assemble a one-page PDF from content-stream operators.
+
+    Split out of `render` so anything that can produce PDF operators can write
+    a file -- the manuscript's charts are drawn with the same primitives and
+    would otherwise need a second copy of the object and xref bookkeeping.
+    """
+    stream = ("\n".join(parts)).encode("latin-1", "replace")
     if compress:
         stream = zlib.compress(stream)
         extra = "/Filter /FlateDecode "

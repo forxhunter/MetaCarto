@@ -1,0 +1,73 @@
+{
+  "commit": "32dc475",
+  "models": {
+    "iJO1366": {
+      "reactions": 673,
+      "agreement": 0.950965824665676,
+      "chance_mean": 0.3054544328875681,
+      "chance_median": 0.25,
+      "candidates_median": 6,
+      "candidates_max": 20,
+      "reference_median": 1,
+      "reference_max": 4,
+      "trivial_reactions": 55,
+      "single_candidate": 35,
+      "discriminating": {
+        "reactions": 617,
+        "agreement": 0.9481361426256077,
+        "chance_mean": 0.24403700702323067
+      }
+    },
+    "iMM904": {
+      "reactions": 559,
+      "agreement": 0.960644007155635,
+      "chance_mean": 0.2849831047505466,
+      "chance_median": 0.25,
+      "candidates_median": 6,
+      "candidates_max": 20,
+      "reference_median": 1,
+      "reference_max": 8,
+      "trivial_reactions": 31,
+      "single_candidate": 17,
+      "discriminating": {
+        "reactions": 528,
+        "agreement": 0.9583333333333334,
+        "chance_mean": 0.24300294612794612
+      }
+    },
+    "iYO844": {
+      "reactions": 450,
+      "agreement": 0.9466666666666667,
+      "chance_mean": 0.32621604938271603,
+      "chance_median": 0.25,
+      "candidates_median": 4.0,
+      "candidates_max": 20,
+      "reference_median": 1.0,
+      "reference_max": 4,
+      "trivial_reactions": 46,
+      "single_candidate": 27,
+      "discriminating": {
+        "reactions": 404,
+        "agreement": 0.9405940594059405,
+        "chance_mean": 0.24949807480748074
+      }
+    },
+    "iAF692": {
+      "reactions": 284,
+      "agreement": 0.926056338028169,
+      "chance_mean": 0.30137910798122064,
+      "chance_median": 0.25,
+      "candidates_median": 6.0,
+      "candidates_max": 20,
+      "reference_median": 1.0,
+      "reference_max": 4,
+      "trivial_reactions": 23,
+      "single_candidate": 15,
+      "discriminating": {
+        "reactions": 261,
+        "agreement": 0.9195402298850575,
+        "chance_mean": 0.23981481481481481
+      }
+    }
+  }
+}
