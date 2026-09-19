@@ -1,0 +1,22 @@
+{
+  "commit": "8fdd66c",
+  "model": "iYO844",
+  "kegg_reactions_drawn": 2895,
+  "variants": {
+    "full": {
+      "considered": 450,
+      "agree": 423,
+      "rate": 0.94
+    },
+    "no_cofactor_tiering": {
+      "considered": 450,
+      "agree": 426,
+      "rate": 0.9466666666666667
+    },
+    "no_cofactor_handling": {
+      "considered": 450,
+      "agree": 415,
+      "rate": 0.9222222222222223
+    }
+  }
+}

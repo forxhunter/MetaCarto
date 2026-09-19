@@ -1,0 +1,12 @@
+{
+  "commit": "8fdd66c",
+  "model": "iJO1366",
+  "kegg_reactions_drawn": 2895,
+  "variants": {
+    "full": {
+      "considered": 673,
+      "agree": 640,
+      "rate": 0.950965824665676
+    }
+  }
+}

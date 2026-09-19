@@ -1,0 +1,12 @@
+{
+  "commit": "8fdd66c",
+  "model": "iAF692",
+  "kegg_reactions_drawn": 2895,
+  "variants": {
+    "full": {
+      "considered": 284,
+      "agree": 263,
+      "rate": 0.926056338028169
+    }
+  }
+}

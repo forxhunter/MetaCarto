@@ -143,7 +143,38 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
                 continue
             cof_s = cofactor_score.get(s, 0.0)
             cof_p = cofactor_score.get(p, 0.0)
-            tier = int(cof_s >= _COFACTOR_CUTOFF) + int(cof_p >= _COFACTOR_CUTOFF)
+            # The curated list outranks the connectivity score.
+            #
+            # `compute_cofactor_scores` is a connectivity percentile, and on a
+            # genome-scale model it saturates: in iJO1366 pyruvate and
+            # acetyl-CoA both score 1.000, exactly like NAD. Every participant
+            # of pyruvate dehydrogenase therefore landed in the same tier, the
+            # tier carried no signal, the damping cancelled, and the ranking
+            # fell back to raw shared chemistry -- which picks NAD -> NADH,
+            # because they share an entire ADP-ribose skeleton. PDH is the
+            # example this module's own docstring uses to explain why tiering
+            # exists, and it was drawing the cofactor pair as the backbone.
+            # Acetyl-CoA synthetase was drawing CoA -> acetyl-CoA for the same
+            # reason.
+            #
+            # NEVER_PRIMARY was defined here for exactly this and then consulted
+            # only by the renderer. Weighted above the score tier it degrades
+            # the same graceful way: when every participant is on the list
+            # (water transport, ion exchange) all pairs tie and raw chemistry
+            # still decides.
+            # Only the curated list tiers. The connectivity percentile stays
+            # as the damping term below, where a continuous score belongs.
+            #
+            # Tiering on it as well was measured and dropped: against the
+            # substrate/product pairs KEGG's curators drew, across four models,
+            # it cost 0.9, 0.4 and 0.7 points of agreement and gained nothing
+            # on the fourth. It saturates -- pyruvate and acetyl-CoA score
+            # 1.000 in iJO1366, the same as NAD -- so as a *threshold* it fires
+            # on ordinary metabolites and adds noise, while as a weight it
+            # still orders candidates usefully.
+            never = ((strip_compartment(s) in NEVER_PRIMARY)
+                     + (strip_compartment(p) in NEVER_PRIMARY))
+            tier = never
 
             value = moiety_score(formulas.get(s, {}), formulas.get(p, {}))
             # Soft damping still orders candidates *within* a tier.
