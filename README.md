@@ -12,10 +12,10 @@ intervention. The same model always produces the same map.
 
 ## The generated collection
 
-All 108 models in the [BiGG database](http://bigg.ucsd.edu/), drawn as **2,623 pathway maps**,
-are published under CC BY 4.0 at
-[forxhunter/escher_maps_BiGG](https://github.com/forxhunter/escher_maps_BiGG) — including
-Recon3D (10,600 reactions, 93 maps).
+All 108 models in the [BiGG database](http://bigg.ucsd.edu/), drawn as **2,621 pathway maps**
+covering 240,398 reactions, are published under CC BY 4.0 — as Escher JSON and as SVG — at
+[forxhunter/Awesome_visualization_Metabolic_Network](https://github.com/forxhunter/Awesome_visualization_Metabolic_Network)
+— including Recon3D (10,600 reactions, 93 maps).
 
 Browse them in the viewer at **[forxhunter.github.io/escher](https://forxhunter.github.io/escher/)**
 via *Map ▸ Load map from library…*, which reads the collection directly; nothing to download.

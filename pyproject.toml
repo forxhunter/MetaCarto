@@ -36,7 +36,7 @@ bench = ["scipy>=1.9", "pygraphviz>=1.9"]
 test = ["pytest>=7"]
 
 [project.urls]
-Maps = "https://github.com/forxhunter/escher_maps_BiGG"
+Maps = "https://github.com/forxhunter/Awesome_visualization_Metabolic_Network"
 Viewer = "https://forxhunter.github.io/escher/"
 
 [project.scripts]
