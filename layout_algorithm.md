@@ -2,12 +2,33 @@
 
 > **Status: implemented.** `src/layout/` and `layout_v2.py`. Sections 1-5, 7, 8 (as
 > `_enforce_separation`), 9, and §6's meta-tiling (`src/layout/compose.py`) are live; §6's
-> compartment hulls are not. Measured results are in CLAUDE.md. Where the design below turned out to be wrong once
-> tested, the correction is marked **[revised]**.
+> compartment hulls are not. Measured results are in `benchmarks/results/`. Where the design
+> below turned out to be wrong once tested, the correction is marked **[revised]**.
 
-Target: given **any** subset of a metabolic model, produce a drawing that reads like
-`templates/t1`–`t5` (curated KEGG / Escher / metro-map style) instead of `templates/nt1`–`nt2`
-(force-directed hairball).
+Target: given **any** subset of a metabolic model, produce a drawing that reads the way a
+curated KEGG or Escher map does — linear pathway backbones, cycles as rings, cofactors as side
+branches — rather than the way a force-directed layout does.
+
+## Requirements
+
+The binding requirements the implementation is held to. Code that enforces one of these cites
+this section.
+
+**Decomposition.** Cluster from the model's own pathway annotation where it has one, and only
+fall back to structural community detection where it does not. Clusters hold at most 60
+reactions and at least 6; a cluster below the floor is merged rather than drawn.
+
+**Geometry.** Edges run horizontally or vertically. Two nodes joined by an edge share an x or a
+y coordinate. Nodes do not overlap, and edges overlap as little as the drawing allows.
+
+**Labels.** A label never overlaps a node, an edge, or another label. Where a dense cluster
+leaves no free position at any size in the font ladder, a cofactor label is dropped rather than
+forced, and the collision is counted (§9) rather than hidden.
+
+**Output.** One map per cluster, plus an optional whole-model map that keeps global
+coordinates. Per-cluster maps are centred and trimmed so the canvas fits the content and its
+padding. Every map carries the attribution label
+`Created by Tianyu Wu (GitHub: forxhunter)`.
 
 ## 0. Diagnosis: why v1 fails
 

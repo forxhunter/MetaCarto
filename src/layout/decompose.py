@@ -14,7 +14,7 @@ failure modes to avoid, and both were present:
 So annotation is used wherever it exists and community detection is the last
 resort, not the first: declared subsystem, then KEGG pathway via the reaction's
 own `kegg.reaction` / `ec-code` annotation, then structure. Size limits from
-`constraints.md` are then enforced over *all* paths, and an undersized cluster
+`layout_algorithm.md` are then enforced over *all* paths, and an undersized cluster
 is merged into the neighbour it shares the most chemistry with rather than
 being swept into an "Uncategorized" bucket.
 """
@@ -25,7 +25,7 @@ import os
 import networkx as nx
 
 MAX_CLUSTER = 60
-MIN_CLUSTER = 6          # constraints.md
+MIN_CLUSTER = 6          # layout_algorithm.md, Requirements
 
 KEGG_MAPPING_FILE = os.path.join("data", "kegg", "kegg_mapping.json")
 _kegg_mapping = None

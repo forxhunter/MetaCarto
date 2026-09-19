@@ -59,6 +59,15 @@ BRITE top-level categories.
 
 ## Install and run
 
+The map collection and the Escher fork that serves it are **submodules**, so the parent
+repository records which commit of each this work was built against:
+
+```bash
+git clone --recurse-submodules https://github.com/forxhunter/MetaCarto.git
+# already cloned without them:
+git submodule update --init
+```
+
 The working interpreter is a conda environment with `cobra`, `networkx` and `numpy`:
 
 ```bash
@@ -73,7 +82,7 @@ python layout_v2.py --all --group-function --max-cluster 120 --out data/bigg
 
 Useful flags: `--group-function` merges pathway clusters into functional maps, `--subsystem`
 draws one named cluster, `--combined` adds a whole-model map, `--no-fba` skips pFBA
-orientation, `--preview` writes PNG and SVG alongside the JSON.
+orientation, `--preview` writes PNG, SVG and vector PDF alongside the JSON.
 
 `data/` is not tracked. Populate it with `scripts/fetch_bigg.py` and `scripts/fetch_kegg.py`.
 
@@ -125,6 +134,15 @@ courtesy.
 If you use MetaCarto, or maps it generated, in a paper, figure, talk, poster, database or
 derived software, please cite this repository. `CITATION.cff` carries the machine-readable
 form and GitHub renders it as *Cite this repository*.
+
+```bibtex
+@software{Wu_MetaCarto_constructive_layout,
+  author  = {Wu, Tianyu},
+  license = {CC-BY-4.0},
+  title   = {{MetaCarto: constructive layout synthesis for genome-scale metabolic networks}},
+  url     = {https://github.com/forxhunter/MetaCarto}
+}
+```
 
 Please also cite the underlying model from [BiGG Models](http://bigg.ucsd.edu/) and, where the
 maps are displayed, [Escher](https://doi.org/10.1371/journal.pcbi.1004321).

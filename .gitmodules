@@ -1,0 +1,6 @@
+[submodule "escher"]
+	path = escher
+	url = https://github.com/forxhunter/escher.git
+[submodule "escher_maps_BiGG"]
+	path = escher_maps_BiGG
+	url = https://github.com/forxhunter/escher_maps_BiGG.git

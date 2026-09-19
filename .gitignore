@@ -26,11 +26,9 @@ env/
 # Generated layouts
 layout_output/
 
-# Published maps mirror is its own git repository with its own remote
-escher_maps_BiGG/
-
-# Escher fork is its own git repository with its own remote
-escher/
+# The published maps mirror and the Escher fork are tracked as submodules, so
+# the parent records which commit of each this work was built against instead
+# of ignoring them. Cloning needs --recurse-submodules.
 
 # Generated map output from any run
 layout_output*/
@@ -54,3 +52,9 @@ hi_test.png
 
 # templates
 templates/
+# Working notes, not documentation. CLAUDE.md is assistant instructions and
+# carries this machine's conda paths; constraints.md was a requirements
+# checklist whose binding items now live in layout_algorithm.md under
+# "Requirements", which is where the code cites them from.
+CLAUDE.md
+constraints.md

@@ -808,7 +808,7 @@ def _place_labels(builder):
     """Place every label near the thing it names, shrinking it if it must.
 
     Nodes and edges are final by this point; labels are the only thing allowed
-    to move. `constraints.md` asks that a label never overlap a node, an edge,
+    to move. `layout_algorithm.md` asks that a label never overlap a node, an edge,
     or another label, and the previous version satisfied that by widening the
     search until something was free -- which left labels hundreds of pixels
     from their node, annotating nothing. Distance is capped instead, and the

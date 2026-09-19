@@ -7,7 +7,7 @@
 Writes one Escher map per subsystem plus a whole-model map, and prints the
 acceptance metrics from layout_algorithm.md S9 for each.
 
-See layout_algorithm.md for the algorithm and CLAUDE.md for how this relates
+See layout_algorithm.md for the algorithm and how this relates
 to the v1 pipeline in process_subsystems.py, which it does not replace yet.
 """
 
@@ -174,7 +174,7 @@ def main(argv=None):
                         help="do not keep subsystems contiguous in the combined map")
     parser.add_argument("--raw-subsystems", action="store_true",
                         help="use declared subsystems verbatim, skipping the "
-                             "constraints.md size limits and community fallback")
+                             "layout_algorithm.md size limits and community fallback")
     parser.add_argument("--no-clean", dest="clean", action="store_false",
                         default=True,
                         help="keep maps from previous runs. Cleaning is the "
