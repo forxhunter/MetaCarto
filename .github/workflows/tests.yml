@@ -1,0 +1,28 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install cobra networkx numpy pytest
+      # data/ is gitignored, so the BiGG model the fixtures need is fetched
+      # here rather than committed. Without it the suite skips rather than
+      # fails, which would make a green run meaningless -- so the fetch is a
+      # required step, not best-effort.
+      - name: Fetch the e_coli_core fixture
+        run: |
+          mkdir -p data/bigg/models
+          curl -sSf -o data/bigg/models/e_coli_core.json \
+            http://bigg.ucsd.edu/static/models/e_coli_core.json
+      - name: Test
+        run: python -m pytest tests/ -q
