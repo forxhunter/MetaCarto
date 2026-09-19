@@ -832,13 +832,22 @@ def _place_labels(builder):
         if node["node_type"] == "metabolite":
             targets.append((node, node.get("label_text", node["bigg_id"]),
                             node["x"], node["y"], METABOLITE_FONT_FACTOR))
+    # Primaries first: the backbone must be readable, and in a dense cluster
+    # there is not room for everything. Within each class, longest first.
+    targets.sort(key=lambda t: (not t[0].get("node_is_primary", True), -len(t[1])))
+    reaction_targets = []
     for reaction in builder.reactions.values():
         anchor_x, anchor_y = reaction.pop("_anchor")
-        targets.append((reaction, reaction["bigg_id"], anchor_x, anchor_y,
-                        REACTION_FONT_FACTOR))
-    targets.sort(key=lambda t: -len(t[1]))
+        reaction_targets.append((reaction, reaction["bigg_id"], anchor_x, anchor_y,
+                                 REACTION_FONT_FACTOR))
+    reaction_targets.sort(key=lambda t: -len(t[1]))
+    # Reaction labels rank between primary and secondary metabolites: naming
+    # the step matters more than naming its cofactors.
+    primaries = [t for t in targets if t[0].get("node_is_primary", True)]
+    secondaries = [t for t in targets if not t[0].get("node_is_primary", True)]
+    targets = primaries + reaction_targets + secondaries
 
-    crowded = 0
+    crowded = dropped = 0
     for holder, text, anchor_x, anchor_y, factor in targets:
         placed = None
         fallback = None
@@ -861,6 +870,18 @@ def _place_labels(builder):
                 break
 
         if placed is None:
+            # A cofactor label that will not fit is dropped, not forced. Curated
+            # maps label cofactors sparsely, and a label sitting on top of the
+            # network is worse than an absent one -- the stub's position and
+            # size already say "currency here", and Escher shows the identity on
+            # hover. Backbone and reaction labels are never dropped; those name
+            # the pathway.
+            droppable = (holder.get("node_type") == "metabolite"
+                         and not holder.get("node_is_primary", True))
+            if droppable:
+                holder["label_hidden"] = True
+                dropped += 1
+                continue
             placed = fallback
             crowded += 1
 
@@ -869,12 +890,13 @@ def _place_labels(builder):
         holder["label_y"] = cy
         if font_base != ESCHER_DEFAULT_FONT_BASE:
             holder["font_size_base"] = font_base
+        holder.pop("label_hidden", None)
         obstacles.add_box(cx - half_w + LABEL_OVERLAP_TOLERANCE,
                           cy - half_v + LABEL_OVERLAP_TOLERANCE,
                           cx + half_w - LABEL_OVERLAP_TOLERANCE,
                           cy + half_v - LABEL_OVERLAP_TOLERANCE)
 
-    return crowded
+    return crowded, dropped
 
 
 TEXT_LABEL_FONT_FACTOR = 3.0      # Draw.js scales a free text label by 3
@@ -927,6 +949,16 @@ TITLE_FONT_BASE = 26.0             # map title
 ATTRIBUTION_FONT_BASE = 8.0        # a credit line, not a title
 
 
+def _content_top(builder):
+    tops = [n["y"] for n in builder.nodes.values()]
+    for node in builder.nodes.values():
+        if "label_y" in node:
+            tops.append(node["label_y"])
+    for reaction in builder.reactions.values():
+        tops.append(reaction["label_y"])
+    return min(tops) if tops else 0.0
+
+
 def _title(builder, canvas, text):
     """Name the figure.
 
@@ -937,9 +969,14 @@ def _title(builder, canvas, text):
     """
     if not text:
         return
+    # Above the content, not inside the canvas padding. Placing it at a fixed
+    # offset from the canvas edge put it on top of the network whenever the
+    # proportional padding was smaller than the title itself -- free text was
+    # 20 of 207 flagged label collisions.
+    height = TITLE_FONT_BASE * TEXT_LABEL_FONT_FACTOR * LINE_HEIGHT_RATIO
     builder.text_labels["map_title"] = {
         "x": canvas["x"] + 60.0,
-        "y": canvas["y"] + 120.0,
+        "y": _content_top(builder) - height,
         "text": text,
         "font_size_base": TITLE_FONT_BASE,
     }

@@ -143,7 +143,7 @@ def render(escher_map, path, show_labels=True, max_pixels=None):
                            max(1.0, size_px), colour)
 
         for node in nodes.values():
-            if node["node_type"] != "metabolite":
+            if node["node_type"] != "metabolite" or node.get("label_hidden"):
                 continue
             lx, ly = to_px(node["label_x"], node["label_y"])
             colour = METABOLITE_TEXT if node.get("node_is_primary", True) else SECONDARY_EDGE

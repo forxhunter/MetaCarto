@@ -153,6 +153,7 @@ def _shift_point(point, dx, dy):
 STITCH_MIN_WEIGHT = 4      # shared primary metabolites before a link is drawn
 STITCH_PER_TILE = 1        # strongest links kept per tile, each direction
 STITCH_CAP = 400           # absolute ceiling on connectors drawn
+STITCH_MAX_SPAN = 0.18     # longest connector, as a fraction of canvas diagonal
 
 
 def select_links(meta_graph, per_tile=STITCH_PER_TILE,
@@ -218,6 +219,22 @@ def stitch(links, tile_prefix, nodes, reactions):
     controls so a long link reads as a connector rather than as another backbone
     edge running through the poster.
     """
+    # A connector is only worth drawing between tiles the eye can associate.
+    #
+    # Measured the hard way: drawing every selected link regardless of distance
+    # put 232 diagonals across the Recon3D poster and pushed crossings per edge
+    # from 0.139 to 0.190. At ten tiles that reads as a flow diagram; at three
+    # hundred it is a veil over the whole figure, which is why `compose`
+    # originally drew nothing. Capping the span keeps the local stitching, where
+    # a reader can actually follow the line to the other end, and drops the
+    # poster-spanning ones that only add ink.
+    span_limit = None
+    if nodes:
+        xs = [n["x"] for n in nodes.values()]
+        ys = [n["y"] for n in nodes.values()]
+        diagonal = math.hypot(max(xs) - min(xs), max(ys) - min(ys))
+        span_limit = diagonal * STITCH_MAX_SPAN
+
     indices = _primary_indices(nodes)
     drawn = 0
     for (source, target), data in links.items():
@@ -243,6 +260,8 @@ def stitch(links, tile_prefix, nodes, reactions):
         # connectors between the same pair of regions stay distinguishable.
         dx, dy = b["x"] - a["x"], b["y"] - a["y"]
         span = math.hypot(dx, dy) or 1.0
+        if span_limit is not None and span > span_limit:
+            continue
         bow_x, bow_y = -dy / span * span * 0.1, dx / span * span * 0.1
 
         key = f"link_{drawn}_{anchor}"
