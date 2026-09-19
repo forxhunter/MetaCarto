@@ -34,3 +34,8 @@ escher/
 
 # Generated map output from any run
 layout_output*/
+
+# Benchmark results are the evidence behind every number in the paper, so they
+# are tracked despite the blanket *.json rule above. They are small, and a
+# result that is not diffable cannot show a regression.
+!benchmarks/results/*.json
