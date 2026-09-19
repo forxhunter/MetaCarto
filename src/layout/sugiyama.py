@@ -514,7 +514,7 @@ def _balance(runs):
 # --------------------------------------------------------------------------
 
 def layered_layout(D, width, height, sinks=(), groups=None, x_gap=40.0, y_gap=120.0,
-                   fold_after=26,
+                   fold_after=26, max_width=None,
                    reversal_cost=None, sweeps=8):
     """Full Sugiyama pass. Returns (positions, ProperLayering).
 
@@ -545,10 +545,122 @@ def layered_layout(D, width, height, sinks=(), groups=None, x_gap=40.0, y_gap=12
             ys[v] = cursor
         cursor += tallest / 2.0 + y_gap
 
+    # Wrapping runs before folding: it changes the layer stack's height, which
+    # is the quantity folding then decides on.
+    xs, ys = wrap_wide_layers(pl, xs, ys, full_width, height, x_gap, y_gap,
+                              max_width)
     xs, ys = _fold_columns(pl, xs, ys, full_width, height, x_gap, y_gap, fold_after)
 
     pos = {v: (xs.get(v, 0.0), ys.get(v, 0.0)) for v in xs}
     return pos, pl
+
+
+def wrap_wide_layers(pl, xs, ys, width, height, x_gap, y_gap, max_width):
+    """Re-flow layers that are far wider than they are tall into sub-rows.
+
+    `_fold_columns` handles the opposite problem -- a pathway so long it becomes
+    an unreadably tall column. A merged functional map has the reverse shape:
+    few layers, each enormously wide. Lipid metabolism in Recon3D is ~3000
+    reactions at a shallow topological depth, so one layer holds a thousand
+    nodes and the drawing comes out 500,000 units wide and 135,000 tall -- a
+    horizontal smear with no readable structure, measured at 18.8:1 for the
+    worst tile.
+
+    Nodes keep their within-layer order, so the crossing reduction that ran
+    earlier is not thrown away; each over-wide layer is simply cut into
+    consecutive chunks and stacked. Layers below shift down to make room.
+
+    This is what a curated global map does with a wide pathway family -- KEGG's
+    map01100 wraps them into rectangular blocks rather than drawing one long
+    line.
+    """
+    if not max_width:
+        return xs, ys
+
+    def node_width(v):
+        return width.get(v, 0.0)
+
+    # Only re-flow components that are themselves too wide.
+    #
+    # Re-flowing a layer rebuilds its x-coordinates from the within-layer
+    # order, starting at x=0, which throws away the Brandes-Koepf assignment
+    # that aligns a reaction's substrate above its product. Done to every layer
+    # that is a fair trade on one enormous component and pure damage on a map
+    # of small ones: a substrate at order-position i in layer L and its product
+    # at position j in layer L+1 get unrelated x, so the edge becomes a
+    # diagonal and the router draws it as a wide Z. On RECON1's transport map
+    # -- 66 components, the largest 4% of nodes -- single transport reactions
+    # came out 2460 x 1820 units, and only 4 of 96 reactions were drawn
+    # vertically.
+    #
+    # Components that fit are left exactly where Brandes-Koepf put them.
+    # `_pack_components` arranges them against each other afterwards, so
+    # nothing here needs to lay them out relative to one another.
+    parent = {}
+
+    def find(a):
+        parent.setdefault(a, a)
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    for layer in pl.layers:
+        for v in layer:
+            find(v)
+            for w in pl.next.get(v, ()):
+                ra, rb = find(v), find(w)
+                if ra != rb:
+                    parent[ra] = rb
+
+    span = {}
+    for layer in pl.layers:
+        per_component = {}
+        for v in layer:
+            root = find(v)
+            per_component[root] = per_component.get(root, 0.0) + node_width(v) + x_gap
+        for root, used in per_component.items():
+            span[root] = max(span.get(root, 0.0), used)
+
+    wide = {root for root, used in span.items() if used > max_width}
+    if not wide:
+        return xs, ys
+
+    new_xs, new_ys = dict(xs), dict(ys)
+    cursor = None
+
+    for layer in pl.layers:
+        layer = [v for v in layer if find(v) in wide]
+        if not layer:
+            continue
+        ordered = sorted(layer, key=lambda v: xs[v])
+        layer_top = min(ys[v] for v in layer) if cursor is None else cursor
+
+        # Cut into chunks that each fit the width budget.
+        chunks, current, used = [], [], 0.0
+        for v in ordered:
+            w = node_width(v) + x_gap
+            if current and used + w > max_width:
+                chunks.append(current)
+                current, used = [], 0.0
+            current.append(v)
+            used += w
+        if current:
+            chunks.append(current)
+
+        row_y = layer_top
+        for chunk in chunks:
+            x = 0.0
+            row_height = max((height.get(v, 0.0) for v in chunk), default=0.0)
+            for v in chunk:
+                w = node_width(v)
+                new_xs[v] = x + w / 2.0
+                new_ys[v] = row_y + row_height / 2.0
+                x += w + x_gap
+            row_y += row_height + y_gap
+        cursor = row_y
+
+    return new_xs, new_ys
 
 
 def _fold_columns(pl, xs, ys, width, height, x_gap, y_gap, fold_after):
