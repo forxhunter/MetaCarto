@@ -24,6 +24,14 @@ SOURCE_ROOT = os.path.join("data", "bigg")
 REPO_NAME = "escher_maps_BiGG"
 SKIP = {"models", "test_model"}
 
+# What gets published alongside the JSON. SVG is here because the JSON is only
+# readable through a viewer, while an SVG opens in any browser and stays sharp
+# at any zoom -- the map collection is meant to be looked at, not only loaded.
+# PNG is deliberately absent: it is three times the size of the SVG and adds
+# most of a gigabyte for a worse picture. `scripts/render_corpus.py` writes
+# these next to the JSON; this only copies what is there.
+PUBLISHED = (".json", ".svg")
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -38,19 +46,21 @@ def main():
         os.makedirs(repo_root)
 
     copied = removed = models = 0
+    by_ext = {ext: 0 for ext in PUBLISHED}
     for item in sorted(os.listdir(args.source)):
         source_dir = os.path.join(args.source, item)
         if item in SKIP or not os.path.isdir(source_dir):
             continue
 
-        maps = sorted(f for f in os.listdir(source_dir) if f.endswith(".json"))
+        maps = sorted(f for f in os.listdir(source_dir)
+                      if f.endswith(PUBLISHED))
         if not maps:
             continue
 
         dest_dir = os.path.join(repo_root, item)
         if os.path.isdir(dest_dir):
             for stale in os.listdir(dest_dir):
-                if stale.endswith(".json") and stale not in maps:
+                if stale.endswith(PUBLISHED) and stale not in maps:
                     if not args.dry_run:
                         os.remove(os.path.join(dest_dir, stale))
                     removed += 1
@@ -62,12 +72,18 @@ def main():
                 shutil.copy2(os.path.join(source_dir, name),
                              os.path.join(dest_dir, name))
             copied += 1
+            by_ext[os.path.splitext(name)[1]] += 1
         models += 1
 
     verb = "would publish" if args.dry_run else "published"
-    print(f"{verb} {copied} maps across {models} models into {repo_root}")
+    # Counted per extension, because "maps" and "files" stopped being the same
+    # number once SVG joined the JSON and a combined count reads as twice the
+    # corpus.
+    detail = ", ".join("%d %s" % (n, ext.lstrip("."))
+                       for ext, n in sorted(by_ext.items()) if n)
+    print(f"{verb} {detail} across {models} models into {repo_root}")
     if removed:
-        print(f"{'would remove' if args.dry_run else 'removed'} {removed} stale maps")
+        print(f"{'would remove' if args.dry_run else 'removed'} {removed} stale files")
     print("README.md left untouched (maintained by hand)")
 
 

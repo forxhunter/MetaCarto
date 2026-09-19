@@ -219,7 +219,48 @@ def per_model_table():
         r"\end{tabular}")
 
 
+CORPUS_LABELS = (
+    ("axis_aligned", "Axis-aligned fraction"),
+    ("occupancy", "Occupancy"),
+    ("aspect_ratio", "Aspect ratio"),
+    ("label_overlaps", "Label--label overlaps"),
+    ("label_on_edge", "Label--edge overlaps"),
+    ("label_on_node", "Label--node overlaps"),
+    ("crossings_per_edge", "Crossings per edge"),
+    ("hairball_index", "Local density"),
+    ("min_separation_ratio", "Node separation"),
+    ("longest_run_ratio", "Longest straight run"),
+    ("label_pt", "Label size at 180\\,mm (pt)"),
+)
+
+
+def corpus_table():
+    """Every metric over every published map, ordered by how well it does.
+
+    Ordered worst-last rather than grouped, because the point of reporting all
+    eleven is that the four at the bottom are visible: a table that stops after
+    the ones that pass reads as a pass.
+    """
+    d = load("corpus.json")
+    m = d["metrics"]
+    body = []
+    for key, label in CORPUS_LABELS:
+        s = m[key]
+        share = s.get("in_band")
+        body.append("%s & %.3f & %.3f & %.3f & %s \\\\"
+                    % (label, s["p10"], s["median"], s["p90"],
+                       "%.1f" % (100 * share) if share is not None else "--"))
+    return rows(
+        r"\begin{tabular}{@{}lrrrr@{}}\toprule",
+        r"Metric & 10th & Median & 90th & In band (\%) \\",
+        r"\midrule",
+        *body,
+        r"\botrule",
+        r"\end{tabular}")
+
+
 BUILDERS = {
+    "corpus": corpus_table,
     "correctness": correctness_table,
     "baselines": baselines_table,
     "metdraw": metdraw_table,

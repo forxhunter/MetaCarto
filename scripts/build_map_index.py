@@ -21,6 +21,10 @@ import os
 import sys
 from datetime import date
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.layout import organisms                       # noqa: E402
+
 DEFAULT_ROOT = "escher_maps_BiGG"
 # Empty means "resolve map paths relative to wherever this index was fetched
 # from". That keeps one index file working unchanged whether it is served from
@@ -79,11 +83,21 @@ def build(root, base_url):
         with open(os.path.join(model_dir, MODEL_INDEX_NAME), "w", encoding="utf-8") as handle:
             json.dump({"schema": 1, "id": model_id, "maps": maps}, handle, indent=1)
 
+        # A BiGG identifier says nothing about the organism, so the picker
+        # cannot be searched by the only thing most users know: iYO844 is
+        # B. subtilis, iNJ661 is tuberculosis, iCHOv1 is CHO. The strain name
+        # comes from BiGG, the common name is curated in `organisms.py`, and
+        # `search` is the concatenation the picker matches typing against.
+        organism, binomial, common = organisms.describe(model_id)
         models.append({
             "id": model_id,
             "index": f"{model_id}/{MODEL_INDEX_NAME}",
             "map_count": len(maps),
             "reactions": sum(m["reactions"] for m in maps),
+            "organism": organism,
+            "species": binomial,
+            "common_name": common,
+            "search": organisms.search_text(model_id),
         })
 
     return {
