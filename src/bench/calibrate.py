@@ -49,6 +49,8 @@ def score_kegg(directory, limit=None):
             continue
         values["_name"] = name
         values["_reactions"] = len(chart[1]["reactions"])
+        values["_metabolites"] = sum(1 for n in chart[1]["nodes"].values()
+                                     if n["node_type"] == "metabolite")
         rows.append(values)
     return rows
 
@@ -68,7 +70,11 @@ def score_ours(root, sample=None, seed=0):
     for path in files:
         try:
             with open(path, encoding="utf-8") as handle:
-                rows.append(metrics.score(json.load(handle), pitch=180.0))
+                blob = json.load(handle)
+            values = metrics.score(blob, pitch=180.0)
+            values["_metabolites"] = sum(1 for n in blob[1]["nodes"].values()
+                                         if n["node_type"] == "metabolite")
+            rows.append(values)
         except Exception:
             continue
     return rows
@@ -88,6 +94,10 @@ def main(argv=None):
 
     curated = score_kegg(args.kegg, limit=args.limit or None)
     ours = score_ours(args.maps, sample=args.sample or None)
+    if not curated:
+        parser.error("no scorable KGML pathways in %s" % args.kegg)
+    if not ours:
+        parser.error("no scorable maps in %s" % args.maps)
     print(f"curated KEGG pathways scored: {len(curated)}")
     print(f"MetaCarto maps scored:        {len(ours)}\n")
 
@@ -137,7 +147,32 @@ def main(argv=None):
             json.dump(payload, handle, indent=2)
         print("wrote %s (commit %s)" % (target, sha))
 
-    print("\nSuggested gates, set at the curated 90th percentile:")
+    # Banded, because the pooled comparison is confounded by drawing size.
+    #
+    # hairball_index is max-bin over mean-occupied-bin on a fixed 20x20 grid,
+    # so any drawing with fewer than ~400 well-spread nodes puts one node per
+    # bin and scores exactly 1.0 by construction. KEGG pathways carry a median
+    # of ~47 metabolites against our ~260, because we draw a duplicate cofactor
+    # stub per participant and KEGG does not. Comparing pooled medians reports
+    # that size difference as a quality difference.
+    bands = [(0, 40), (40, 70), (70, 110), (110, 200), (200, 10 ** 9)]
+    print()
+    print("hairball_index by drawing size (metabolite nodes):")
+    print("  %-12s%20s%20s" % ("band", "KEGG", "ours"))
+    for low, high in bands:
+        k = [r["hairball_index"] for r in curated
+             if low <= r.get("_metabolites", 0) < high]
+        o = [r["hairball_index"] for r in ours
+             if low <= r.get("_metabolites", 0) < high]
+        label = ("%d-%d" % (low, high)) if high < 10 ** 9 else ("%d+" % low)
+        ktxt = ("%.3f (n=%d)" % (statistics.median(k), len(k))) if k else "none"
+        otxt = ("%.3f (n=%d)" % (statistics.median(o), len(o))) if o else "none"
+        print("  %-12s%20s%20s" % (label, ktxt, otxt))
+    print("  A band with no KEGG pathways cannot support a comparison.")
+
+    print()
+    print("What the curated 90th percentile would imply if adopted as gates.")
+    print("Nothing below has been applied: metrics.TARGETS is unchanged.")
     for key in kgml.comparable_metrics():
         k = quantiles([r[key] for r in curated])
         low, high = gates.get(key, (None, None))

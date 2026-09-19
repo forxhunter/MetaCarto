@@ -31,7 +31,7 @@ class LayoutResult:
 
 
 def layout_reactions(model, reactions, map_name, author="AutoLayout",
-                     use_fba=True, verbose=False, groups=None):
+                     use_fba=True, verbose=False, groups=None, render=True):
     """Lay out an arbitrary subset of a model. Returns a LayoutResult, or None
     if the subset has no drawable primary-compound structure.
 
@@ -104,10 +104,17 @@ def layout_reactions(model, reactions, map_name, author="AutoLayout",
     routes = _build_routes(cgraph, layering, pos, ring_of,
                            {sid: rec["members"] for sid, rec in ring_records.items()})
 
-    escher_map = build_escher_map(
-        cgraph, {n: p for n, p in pos.items() if not str(n).startswith("__dummy__")},
-        map_name, author=author, routes=routes,
-    )
+    # `render=False` returns the placement without drawing it. The benchmark
+    # needs that: it renders separately, under its own conditions, and timing
+    # the discarded render here inflated MetaCarto's reported seconds-per-map
+    # by about 45% against baselines that render once.
+    escher_map = None
+    if render:
+        escher_map = build_escher_map(
+            cgraph, {n: p for n, p in pos.items()
+                     if not str(n).startswith("__dummy__")},
+            map_name, author=author, routes=routes,
+        )
     return LayoutResult(escher_map, cgraph, pos, rings, layering)
 
 

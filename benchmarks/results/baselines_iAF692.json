@@ -1,0 +1,1984 @@
+{
+  "commit": "7b5c325",
+  "model": "iAF692",
+  "clusters_in_model": 33,
+  "clusters_drawn": 33,
+  "sampled": false,
+  "seed": null,
+  "methods": {
+    "metacarto": {
+      "maps": 33,
+      "median_seconds": 0.0547239999868907,
+      "metrics": {
+        "crossings_per_graph_edge": {
+          "median": 0.0,
+          "mean": 0.01571239781178929
+        },
+        "axis_aligned": {
+          "median": 0.7857142857142857,
+          "mean": 0.7788216073061933
+        },
+        "hairball_index": {
+          "median": 1.8222222222222222,
+          "mean": 1.857609732040221
+        },
+        "aspect_ratio": {
+          "median": 0.6968644200506111,
+          "mean": 0.7170613265531519
+        },
+        "occupancy": {
+          "median": 0.3892852618305419,
+          "mean": 0.39320462733996014
+        },
+        "min_separation_ratio": {
+          "median": 0.7685676896698532,
+          "mean": 0.7196099653909305
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetate transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7647058823529411,
+          "hairball_index": 2.7321428571428568,
+          "aspect_ratio": 1.003414539446145,
+          "occupancy": 0.595626834701486,
+          "min_separation_ratio": 0.7233628412252047
+        },
+        {
+          "cluster": "Acetoin transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.5357142857142857,
+          "hairball_index": 4.958083832335329,
+          "aspect_ratio": 0.9082722935560131,
+          "occupancy": 0.6352392187639371,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Alanine, aspartate and glutamate metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.2900934119182744,
+          "occupancy": 0.09089745820722823,
+          "min_separation_ratio": 0.7307692307692308
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7142857142857143,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.853692098623412,
+          "occupancy": 0.2104157366457449,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 2.3846153846153846,
+          "aspect_ratio": 0.4004708508625387,
+          "occupancy": 0.48353258637408225,
+          "min_separation_ratio": 0.7348066605593385
+        },
+        {
+          "cluster": "Ammonium transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.9122807017543859,
+          "hairball_index": 4.151515151515151,
+          "aspect_ratio": 0.5786218519909914,
+          "occupancy": 0.5781562645655682,
+          "min_separation_ratio": 0.38340394349843976
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.42857142857142855,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2921786461213356,
+          "occupancy": 0.22583604168668164,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.45454545454545453,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5201701716537973,
+          "occupancy": 0.3444063051089803,
+          "min_separation_ratio": 0.3666666666666669
+        },
+        {
+          "cluster": "Carbon monoxide transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.5833333333333334,
+          "hairball_index": 4.3578947368421055,
+          "aspect_ratio": 0.8400688726332461,
+          "occupancy": 0.6226928271540941,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_graph_edge": 0.125,
+          "axis_aligned": 0.2,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7169998010557008,
+          "occupancy": 0.2221266125564393,
+          "min_separation_ratio": 0.6694799122287391
+        },
+        {
+          "cluster": "Citrate transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7981651376146789,
+          "hairball_index": 2.727272727272727,
+          "aspect_ratio": 0.9868271386415279,
+          "occupancy": 0.6324346507722639,
+          "min_separation_ratio": 0.845762610383957
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.6666666666666666,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0904086407640168,
+          "occupancy": 0.4842178525420415,
+          "min_separation_ratio": 0.845762610383957
+        },
+        {
+          "cluster": "Dihydrodipicolinate",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.9333333333333331,
+          "aspect_ratio": 0.5877169167435854,
+          "occupancy": 0.3878441310878517,
+          "min_separation_ratio": 0.8457626103839568
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.875,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9940856534523947,
+          "occupancy": 0.3748607272472206,
+          "min_separation_ratio": 0.9999999999999993
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7142857142857143,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5116663431076613,
+          "occupancy": 0.2354585909232228,
+          "min_separation_ratio": 0.6933752452815365
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.8181818181818182,
+          "hairball_index": 1.878787878787879,
+          "aspect_ratio": 0.9601393329089822,
+          "occupancy": 0.2747999286380064,
+          "min_separation_ratio": 0.845762610383957
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_graph_edge": 0.27586206896551724,
+          "axis_aligned": 0.37142857142857144,
+          "hairball_index": 1.7752808988764044,
+          "aspect_ratio": 0.6968644200506111,
+          "occupancy": 0.5791026609404578,
+          "min_separation_ratio": 0.3666666666666671
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6352220548479754,
+          "occupancy": 0.3034978581396617,
+          "min_separation_ratio": 0.783234824381205
+        },
+        {
+          "cluster": "L-valine transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.75,
+          "hairball_index": 2.7297297297297294,
+          "aspect_ratio": 0.9880357232889352,
+          "occupancy": 0.6407178213298012,
+          "min_separation_ratio": 0.7685676896698532
+        },
+        {
+          "cluster": "Lparen rparen",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.8769230769230767,
+          "aspect_ratio": 0.31830198181095415,
+          "occupancy": 0.4167974886368511,
+          "min_separation_ratio": 0.59375
+        },
+        {
+          "cluster": "Methane metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7857142857142857,
+          "hairball_index": 1.8222222222222222,
+          "aspect_ratio": 0.45645677390449196,
+          "occupancy": 0.4346838376200029,
+          "min_separation_ratio": 0.5285167358762858
+        },
+        {
+          "cluster": "Mpts",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.9,
+          "hairball_index": 1.9107142857142858,
+          "aspect_ratio": 0.8739747032932647,
+          "occupancy": 0.617107495512996,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Nickel transport C-diamide",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0022926852560718,
+          "occupancy": 0.3892852618305419,
+          "min_separation_ratio": 0.9395422774116595
+        },
+        {
+          "cluster": "Pantothenate and CoA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.92,
+          "aspect_ratio": 0.6690063451713804,
+          "occupancy": 0.20650212491080244,
+          "min_separation_ratio": 0.7307692307692308
+        },
+        {
+          "cluster": "Phenylalanine, tyrosine and tryptophan biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7142857142857143,
+          "hairball_index": 1.9411764705882353,
+          "aspect_ratio": 0.33630739099061513,
+          "occupancy": 0.19880746936706797,
+          "min_separation_ratio": 0.9999999999999997
+        },
+        {
+          "cluster": "Porphyrin metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.8461538461538461,
+          "hairball_index": 1.7380952380952381,
+          "aspect_ratio": 0.5091775746474458,
+          "occupancy": 0.549147785811472,
+          "min_separation_ratio": 0.7832348243812045
+        },
+        {
+          "cluster": "Purine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 0.403709534028202,
+          "occupancy": 0.42023986965046006,
+          "min_separation_ratio": 0.845762610383957
+        },
+        {
+          "cluster": "Pyrimidine metabolism",
+          "crossings_per_graph_edge": 0.11764705882352941,
+          "axis_aligned": 0.7368421052631579,
+          "hairball_index": 1.96,
+          "aspect_ratio": 1.0025158413567667,
+          "occupancy": 0.5294132079364449,
+          "min_separation_ratio": 0.8210716415471233
+        },
+        {
+          "cluster": "Pyrimidinone phosphate Diamino",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.6666666666666666,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8838173175356326,
+          "occupancy": 0.14091381475234124,
+          "min_separation_ratio": 0.9999999999999997
+        },
+        {
+          "cluster": "Synthase exchange",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.75,
+          "hairball_index": 1.6666666666666667,
+          "aspect_ratio": 0.5649920366286114,
+          "occupancy": 0.35148357103880706,
+          "min_separation_ratio": 0.679721791128206
+        },
+        {
+          "cluster": "Terpenoid backbone biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.92,
+          "aspect_ratio": 0.2470575760842447,
+          "occupancy": 0.12633739400363872,
+          "min_separation_ratio": 0.8457626103839568
+        },
+        {
+          "cluster": "Thiamine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7142857142857143,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6431577357955763,
+          "occupancy": 0.38956822387102996,
+          "min_separation_ratio": 0.42985040315241535
+        },
+        {
+          "cluster": "Valine, leucine and isoleucine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8973075180836125,
+          "occupancy": 0.28360104989145984,
+          "min_separation_ratio": 0.845762610383957
+        }
+      ]
+    },
+    "dot": {
+      "maps": 33,
+      "median_seconds": 0.029670899995835498,
+      "metrics": {
+        "crossings_per_graph_edge": {
+          "median": 0.0,
+          "mean": 0.0
+        },
+        "axis_aligned": {
+          "median": 0.7857142857142857,
+          "mean": 0.7952049184802916
+        },
+        "hairball_index": {
+          "median": 1.826086956521739,
+          "mean": 1.6962009906705608
+        },
+        "aspect_ratio": {
+          "median": 0.9233683125509432,
+          "mean": 3.0999618941647236
+        },
+        "occupancy": {
+          "median": 0.30464471409764166,
+          "mean": 0.3236600096563897
+        },
+        "min_separation_ratio": {
+          "median": 0.8457626103839568,
+          "mean": 0.7236556965807114
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetate transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7058823529411765,
+          "hairball_index": 2.544642857142857,
+          "aspect_ratio": 1.2535377006012483,
+          "occupancy": 0.6022322572341153,
+          "min_separation_ratio": 0.36666666666666653
+        },
+        {
+          "cluster": "Acetoin transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.5892857142857143,
+          "hairball_index": 2.586826347305389,
+          "aspect_ratio": 8.99887162505507,
+          "occupancy": 0.28743305160866867,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "Alanine, aspartate and glutamate metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2109117365951758,
+          "occupancy": 0.14292135875958661,
+          "min_separation_ratio": 0.9999999999999999
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7142857142857143,
+          "hairball_index": 1.894736842105263,
+          "aspect_ratio": 0.44316210278892665,
+          "occupancy": 0.17826619576207797,
+          "min_separation_ratio": 0.9999999999999999
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 2.0512820512820515,
+          "aspect_ratio": 6.3517491612232915,
+          "occupancy": 0.3019122939346404,
+          "min_separation_ratio": 0.9999999999999988
+        },
+        {
+          "cluster": "Ammonium transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.9122807017543859,
+          "hairball_index": 2.6424242424242426,
+          "aspect_ratio": 8.03302999077632,
+          "occupancy": 0.30464471409764166,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.42857142857142855,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9233683125509432,
+          "occupancy": 0.18840575740657622,
+          "min_separation_ratio": 0.8
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.5909090909090909,
+          "hairball_index": 1.8461538461538463,
+          "aspect_ratio": 0.9599742798779302,
+          "occupancy": 0.4061401374167055,
+          "min_separation_ratio": 0.8802581513972382
+        },
+        {
+          "cluster": "Carbon monoxide transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.5740740740740741,
+          "hairball_index": 2.8421052631578947,
+          "aspect_ratio": 2.736710782032134,
+          "occupancy": 0.5062402467363717,
+          "min_separation_ratio": 0.3666666666666658
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.5,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.4709357902838862,
+          "occupancy": 0.18943799327105218,
+          "min_separation_ratio": 0.6944444444444444
+        },
+        {
+          "cluster": "Citrate transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7981651376146789,
+          "hairball_index": 2.3776223776223775,
+          "aspect_ratio": 10.311216337725057,
+          "occupancy": 0.24313620004883124,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.6666666666666666,
+          "hairball_index": 1.7999999999999998,
+          "aspect_ratio": 1.1604401306372623,
+          "occupancy": 0.4245964904151482,
+          "min_separation_ratio": 0.8802581513972382
+        },
+        {
+          "cluster": "Dihydrodipicolinate",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.8666666666666667,
+          "aspect_ratio": 0.27460703622015403,
+          "occupancy": 0.3278446445673287,
+          "min_separation_ratio": 0.8802581513972382
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.875,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5179726434152379,
+          "occupancy": 0.3714881516272501,
+          "min_separation_ratio": 0.9999999999999999
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7142857142857143,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.3173072083519153,
+          "occupancy": 0.34883987116151766,
+          "min_separation_ratio": 0.9999999999999999
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.8181818181818182,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5175618242409042,
+          "occupancy": 0.22181746832142157,
+          "min_separation_ratio": 0.8802581513972383
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.4714285714285714,
+          "hairball_index": 1.752808988764045,
+          "aspect_ratio": 0.44290793681328844,
+          "occupancy": 0.5178237810900579,
+          "min_separation_ratio": 0.36666666666666614
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.37908375452634896,
+          "occupancy": 0.2841874149087271,
+          "min_separation_ratio": 0.9817803724031287
+        },
+        {
+          "cluster": "L-valine transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.75,
+          "hairball_index": 2.2972972972972974,
+          "aspect_ratio": 6.358826165408065,
+          "occupancy": 0.3488868219494572,
+          "min_separation_ratio": 0.9521357074432373
+        },
+        {
+          "cluster": "Lparen rparen",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.1076923076923075,
+          "aspect_ratio": 40.170405256972316,
+          "occupancy": 0.08686418275972173,
+          "min_separation_ratio": 0.9999999999999974
+        },
+        {
+          "cluster": "Methane metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7857142857142857,
+          "hairball_index": 1.9555555555555555,
+          "aspect_ratio": 1.341910248713492,
+          "occupancy": 0.46400154842732705,
+          "min_separation_ratio": 0.3666666666666668
+        },
+        {
+          "cluster": "Mpts",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.9,
+          "hairball_index": 2.517857142857143,
+          "aspect_ratio": 1.0472104150514072,
+          "occupancy": 0.6400724904402796,
+          "min_separation_ratio": 0.36666666666666603
+        },
+        {
+          "cluster": "Nickel transport C-diamide",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5179589616327627,
+          "occupancy": 0.3155365160432684,
+          "min_separation_ratio": 0.9999999999999999
+        },
+        {
+          "cluster": "Pantothenate and CoA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6474658042690474,
+          "occupancy": 0.23741017244378665,
+          "min_separation_ratio": 0.9999999999999999
+        },
+        {
+          "cluster": "Phenylalanine, tyrosine and tryptophan biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7857142857142857,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.25928903678615245,
+          "occupancy": 0.15327821694979657,
+          "min_separation_ratio": 0.6944444444444444
+        },
+        {
+          "cluster": "Porphyrin metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.8461538461538461,
+          "hairball_index": 2.464285714285714,
+          "aspect_ratio": 0.48796736316854256,
+          "occupancy": 0.5441460156142972,
+          "min_separation_ratio": 0.4425536967836486
+        },
+        {
+          "cluster": "Purine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 0.30796560289691605,
+          "occupancy": 0.37055290036887134,
+          "min_separation_ratio": 0.6944444444444448
+        },
+        {
+          "cluster": "Pyrimidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.6842105263157895,
+          "hairball_index": 1.96,
+          "aspect_ratio": 1.407322805917708,
+          "occupancy": 0.5328310909994892,
+          "min_separation_ratio": 0.3666666666666669
+        },
+        {
+          "cluster": "Pyrimidinone phosphate Diamino",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.6666666666666666,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5902074849180857,
+          "occupancy": 0.16056121730473685,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Synthase exchange",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.75,
+          "hairball_index": 1.803921568627451,
+          "aspect_ratio": 1.308653591163063,
+          "occupancy": 0.300223865651844,
+          "min_separation_ratio": 0.3666665025955312
+        },
+        {
+          "cluster": "Terpenoid backbone biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.92,
+          "aspect_ratio": 0.24705757608424464,
+          "occupancy": 0.12633739400363872,
+          "min_separation_ratio": 0.8457626103839568
+        },
+        {
+          "cluster": "Thiamine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.7142857142857143,
+          "hairball_index": 1.826086956521739,
+          "aspect_ratio": 0.7898778359107866,
+          "occupancy": 0.39048496685063705,
+          "min_separation_ratio": 0.892928714187246
+        },
+        {
+          "cluster": "Valine, leucine and isoleucine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5132760048281937,
+          "occupancy": 0.16222489048599026,
+          "min_separation_ratio": 0.6944444444444444
+        }
+      ]
+    },
+    "neato": {
+      "maps": 33,
+      "median_seconds": 0.034207899996545166,
+      "metrics": {
+        "crossings_per_graph_edge": {
+          "median": 0.0,
+          "mean": 0.0007575757575757576
+        },
+        "axis_aligned": {
+          "median": 0.0,
+          "mean": 0.04810849930317279
+        },
+        "hairball_index": {
+          "median": 1.8392857142857144,
+          "mean": 1.699889447452021
+        },
+        "aspect_ratio": {
+          "median": 1.0504326102617774,
+          "mean": 1.0535043335058167
+        },
+        "occupancy": {
+          "median": 0.42547155464798864,
+          "mean": 0.4009812059165924
+        },
+        "min_separation_ratio": {
+          "median": 0.6924338564404422,
+          "mean": 0.6422108774249413
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetate transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.08823529411764706,
+          "hairball_index": 1.8392857142857144,
+          "aspect_ratio": 1.1660243647799726,
+          "occupancy": 0.5468961068574516,
+          "min_separation_ratio": 0.3666666666666664
+        },
+        {
+          "cluster": "Acetoin transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 4.0119760479041915,
+          "aspect_ratio": 1.0713394810852372,
+          "occupancy": 0.6060089565456973,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Alanine, aspartate and glutamate metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9815479054469076,
+          "occupancy": 0.155824638762105,
+          "min_separation_ratio": 0.9939399019639402
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7166150913857522,
+          "occupancy": 0.15632494935805977,
+          "min_separation_ratio": 0.686164159054993
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.88034188034188,
+          "aspect_ratio": 1.0504326102617774,
+          "occupancy": 0.4964285203399757,
+          "min_separation_ratio": 0.7557126043820726
+        },
+        {
+          "cluster": "Ammonium transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.03508771929824561,
+          "hairball_index": 4.303030303030303,
+          "aspect_ratio": 0.9463435067044095,
+          "occupancy": 0.5973856867029939,
+          "min_separation_ratio": 0.4052316780953825
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6615347749947111,
+          "occupancy": 0.2916238596571315,
+          "min_separation_ratio": 0.9980568067785106
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.964260149771679,
+          "occupancy": 0.3638729841820203,
+          "min_separation_ratio": 0.7732750294561251
+        },
+        {
+          "cluster": "Carbon monoxide transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.05555555555555555,
+          "hairball_index": 2.863157894736842,
+          "aspect_ratio": 1.1272693779903793,
+          "occupancy": 0.5930743909507151,
+          "min_separation_ratio": 0.36666666666666653
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.1,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2969187904076351,
+          "occupancy": 0.2784857356316517,
+          "min_separation_ratio": 0.9478645874908126
+        },
+        {
+          "cluster": "Citrate transport",
+          "crossings_per_graph_edge": 0.025,
+          "axis_aligned": 0.1926605504587156,
+          "hairball_index": 2.6223776223776225,
+          "aspect_ratio": 1.0379815089027593,
+          "occupancy": 0.5553933415169442,
+          "min_separation_ratio": 0.36666666666666653
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.08333333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.3920574464421913,
+          "occupancy": 0.37815433474565624,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Dihydrodipicolinate",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0114512305989034,
+          "occupancy": 0.4335863471545858,
+          "min_separation_ratio": 0.8457775344153252
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0529619603402116,
+          "occupancy": 0.3448914629522951,
+          "min_separation_ratio": 0.6447327134819242
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1577951836830676,
+          "occupancy": 0.24852554948889816,
+          "min_separation_ratio": 0.8080349829821897
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.878787878787879,
+          "aspect_ratio": 1.3338033894162518,
+          "occupancy": 0.4931458480129004,
+          "min_separation_ratio": 0.8457276917169924
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.02857142857142857,
+          "hairball_index": 1.8876404494382022,
+          "aspect_ratio": 0.502213382827943,
+          "occupancy": 0.5310649045959883,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2954258412989492,
+          "occupancy": 0.42547155464798864,
+          "min_separation_ratio": 0.7832507449526454
+        },
+        {
+          "cluster": "L-valine transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.8918918918918919,
+          "aspect_ratio": 1.111029285943041,
+          "occupancy": 0.5744938358208082,
+          "min_separation_ratio": 0.47640536092520513
+        },
+        {
+          "cluster": "Lparen rparen",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.9130434782608695,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0,
+          "occupancy": 0.43991364839537495,
+          "min_separation_ratio": 0.944203441472699
+        },
+        {
+          "cluster": "Methane metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0576650711998805,
+          "occupancy": 0.4396953617541769,
+          "min_separation_ratio": 0.36666666666666653
+        },
+        {
+          "cluster": "Mpts",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 2.598214285714286,
+          "aspect_ratio": 1.0898068031328938,
+          "occupancy": 0.6052528675365076,
+          "min_separation_ratio": 0.36666666666666614
+        },
+        {
+          "cluster": "Nickel transport C-diamide",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9354838709677418,
+          "aspect_ratio": 1.2798825540861802,
+          "occupancy": 0.3371777293133544,
+          "min_separation_ratio": 0.7233628412252036
+        },
+        {
+          "cluster": "Pantothenate and CoA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.92,
+          "aspect_ratio": 1.0014012638450611,
+          "occupancy": 0.23889125196436536,
+          "min_separation_ratio": 0.8448573299468639
+        },
+        {
+          "cluster": "Phenylalanine, tyrosine and tryptophan biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9411764705882353,
+          "aspect_ratio": 0.8801035059686797,
+          "occupancy": 0.34973472639026904,
+          "min_separation_ratio": 0.9732606361904228
+        },
+        {
+          "cluster": "Porphyrin metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.038461538461538464,
+          "hairball_index": 1.9285714285714286,
+          "aspect_ratio": 1.2127273847424798,
+          "occupancy": 0.5137203033579948,
+          "min_separation_ratio": 0.47102955810343783
+        },
+        {
+          "cluster": "Purine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 0.4825748496271174,
+          "occupancy": 0.4620608625142376,
+          "min_separation_ratio": 0.7008381499003623
+        },
+        {
+          "cluster": "Pyrimidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.05263157894736842,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0229114004081175,
+          "occupancy": 0.4350632579602448,
+          "min_separation_ratio": 0.6924338564404422
+        },
+        {
+          "cluster": "Pyrimidinone phosphate Diamino",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.9918401795777965,
+          "occupancy": 0.2267655867877845,
+          "min_separation_ratio": 0.9997034023866769
+        },
+        {
+          "cluster": "Synthase exchange",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 2.7647058823529416,
+          "aspect_ratio": 1.0175542054524742,
+          "occupancy": 0.33100665417702146,
+          "min_separation_ratio": 0.36666666661021396
+        },
+        {
+          "cluster": "Terpenoid backbone biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.3560492949782585,
+          "occupancy": 0.18621667590759583,
+          "min_separation_ratio": 0.8457626103839565
+        },
+        {
+          "cluster": "Thiamine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7726458910447469,
+          "occupancy": 0.3124377673361266,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Valine, leucine and isoleucine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9130434782608696,
+          "aspect_ratio": 1.7234753193464813,
+          "occupancy": 0.28379009392862875,
+          "min_separation_ratio": 0.3666666666666668
+        }
+      ]
+    },
+    "fdp": {
+      "maps": 33,
+      "median_seconds": 0.040657600009581074,
+      "metrics": {
+        "crossings_per_graph_edge": {
+          "median": 0.023255813953488372,
+          "mean": 0.0765012952616762
+        },
+        "axis_aligned": {
+          "median": 0.0,
+          "mean": 0.049569693385625904
+        },
+        "hairball_index": {
+          "median": 1.0,
+          "mean": 1.5583314842058251
+        },
+        "aspect_ratio": {
+          "median": 1.0228393962561366,
+          "mean": 1.0578829536717107
+        },
+        "occupancy": {
+          "median": 0.3623156145014713,
+          "mean": 0.38006757524232654
+        },
+        "min_separation_ratio": {
+          "median": 0.6248235384048348,
+          "mean": 0.6341420861058322
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetate transport",
+          "crossings_per_graph_edge": 0.17647058823529413,
+          "axis_aligned": 0.014705882352941176,
+          "hairball_index": 2.7589285714285716,
+          "aspect_ratio": 1.0228393962561366,
+          "occupancy": 0.546741542874619,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Acetoin transport",
+          "crossings_per_graph_edge": 0.06818181818181818,
+          "axis_aligned": 0.19642857142857142,
+          "hairball_index": 3.305389221556886,
+          "aspect_ratio": 0.9617895438077674,
+          "occupancy": 0.6012293095672845,
+          "min_separation_ratio": 0.3666666666666669
+        },
+        {
+          "cluster": "Alanine, aspartate and glutamate metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9079394883442007,
+          "occupancy": 0.14904431147357422,
+          "min_separation_ratio": 0.8918998923275304
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_graph_edge": 0.14285714285714285,
+          "axis_aligned": 0.07142857142857142,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9201977940951528,
+          "occupancy": 0.1689324312413676,
+          "min_separation_ratio": 0.9326172126454635
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.8461538461538463,
+          "aspect_ratio": 1.0252116957101451,
+          "occupancy": 0.5143014570937977,
+          "min_separation_ratio": 0.8639194136458832
+        },
+        {
+          "cluster": "Ammonium transport",
+          "crossings_per_graph_edge": 0.023255813953488372,
+          "axis_aligned": 0.017543859649122806,
+          "hairball_index": 2.6,
+          "aspect_ratio": 0.9174819095191611,
+          "occupancy": 0.6234871240238818,
+          "min_separation_ratio": 0.3666666666666664
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2804497066288427,
+          "occupancy": 0.23378871123867995,
+          "min_separation_ratio": 0.9465062269449318
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_graph_edge": 0.09090909090909091,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8541992023728242,
+          "occupancy": 0.33048493785263516,
+          "min_separation_ratio": 0.3820416557708605
+        },
+        {
+          "cluster": "Carbon monoxide transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.009259259259259259,
+          "hairball_index": 3.0526315789473686,
+          "aspect_ratio": 0.9807407923809001,
+          "occupancy": 0.5721886381151511,
+          "min_separation_ratio": 0.36666666666666653
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_graph_edge": 0.5,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1511207312053122,
+          "occupancy": 0.2471541832389236,
+          "min_separation_ratio": 0.6914533064512169
+        },
+        {
+          "cluster": "Citrate transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.1926605504587156,
+          "hairball_index": 2.727272727272727,
+          "aspect_ratio": 1.0449217482047493,
+          "occupancy": 0.5924346682802778,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.041666666666666664,
+          "hairball_index": 1.9500000000000002,
+          "aspect_ratio": 0.9890150285583846,
+          "occupancy": 0.3623156145014713,
+          "min_separation_ratio": 0.8457634518368328
+        },
+        {
+          "cluster": "Dihydrodipicolinate",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.4833006175137795,
+          "occupancy": 0.40313643329104265,
+          "min_separation_ratio": 0.4011828987942901
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_graph_edge": 0.125,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2978798707892862,
+          "occupancy": 0.3171530917831917,
+          "min_separation_ratio": 0.9191747886279141
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.03851986375232,
+          "occupancy": 0.2461152488910813,
+          "min_separation_ratio": 0.9469002508131013
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_graph_edge": 0.09090909090909091,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0827489500027179,
+          "occupancy": 0.29422596238889137,
+          "min_separation_ratio": 0.4708575783808167
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_graph_edge": 0.034482758620689655,
+          "axis_aligned": 0.014285714285714285,
+          "hairball_index": 1.842696629213483,
+          "aspect_ratio": 1.0320054588610024,
+          "occupancy": 0.5206239539981241,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.1,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.165086742873411,
+          "occupancy": 0.41849632135717696,
+          "min_separation_ratio": 0.9215885108216954
+        },
+        {
+          "cluster": "L-valine transport",
+          "crossings_per_graph_edge": 0.02857142857142857,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.8738738738738738,
+          "aspect_ratio": 0.9233051853400456,
+          "occupancy": 0.5331151074279098,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Lparen rparen",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.9130434782608695,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9896907216494846,
+          "occupancy": 0.4257181766471902,
+          "min_separation_ratio": 0.9204467514322717
+        },
+        {
+          "cluster": "Methane metabolism",
+          "crossings_per_graph_edge": 0.23076923076923078,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9555555555555555,
+          "aspect_ratio": 1.079600958099001,
+          "occupancy": 0.4112545656648104,
+          "min_separation_ratio": 0.38040871749207195
+        },
+        {
+          "cluster": "Mpts",
+          "crossings_per_graph_edge": 0.05263157894736842,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.8214285714285712,
+          "aspect_ratio": 1.1492869497718317,
+          "occupancy": 0.5876403330939258,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "Nickel transport C-diamide",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8293624696642065,
+          "occupancy": 0.28468059286177666,
+          "min_separation_ratio": 0.6850224372749683
+        },
+        {
+          "cluster": "Pantothenate and CoA biosynthesis",
+          "crossings_per_graph_edge": 0.14285714285714285,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8874725477022775,
+          "occupancy": 0.21102243963984793,
+          "min_separation_ratio": 0.7439434453866265
+        },
+        {
+          "cluster": "Phenylalanine, tyrosine and tryptophan biosynthesis",
+          "crossings_per_graph_edge": 0.21428571428571427,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.7147713768025825,
+          "occupancy": 0.2625937775666022,
+          "min_separation_ratio": 0.7722916772595416
+        },
+        {
+          "cluster": "Porphyrin metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.038461538461538464,
+          "hairball_index": 1.9523809523809523,
+          "aspect_ratio": 1.0236475831450078,
+          "occupancy": 0.5312840635755126,
+          "min_separation_ratio": 0.6248235384048348
+        },
+        {
+          "cluster": "Purine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 0.995564070101596,
+          "occupancy": 0.4379089094622828,
+          "min_separation_ratio": 0.8525897674161931
+        },
+        {
+          "cluster": "Pyrimidine metabolism",
+          "crossings_per_graph_edge": 0.11764705882352941,
+          "axis_aligned": 0.02631578947368421,
+          "hairball_index": 1.92,
+          "aspect_ratio": 0.9532269191581847,
+          "occupancy": 0.4201577415140004,
+          "min_separation_ratio": 0.728597867130395
+        },
+        {
+          "cluster": "Pyrimidinone phosphate Diamino",
+          "crossings_per_graph_edge": 0.2,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8493744629576113,
+          "occupancy": 0.16094655140433134,
+          "min_separation_ratio": 0.9971912449320258
+        },
+        {
+          "cluster": "Synthase exchange",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9019607843137254,
+          "aspect_ratio": 1.031716215155618,
+          "occupancy": 0.30686126116983825,
+          "min_separation_ratio": 0.40054106755503394
+        },
+        {
+          "cluster": "Terpenoid backbone biosynthesis",
+          "crossings_per_graph_edge": 0.2857142857142857,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9281807043762096,
+          "occupancy": 0.21460406517294073,
+          "min_separation_ratio": 0.5524588630235002
+        },
+        {
+          "cluster": "Thiamine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0029638538578127,
+          "occupancy": 0.3524542088455846,
+          "min_separation_ratio": 0.5794821857326976
+        },
+        {
+          "cluster": "Valine, leucine and isoleucine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.3965249125088892,
+          "occupancy": 0.26013424773905147,
+          "min_separation_ratio": 0.5416527580584326
+        }
+      ]
+    },
+    "spring": {
+      "maps": 33,
+      "median_seconds": 0.02978599999914877,
+      "metrics": {
+        "crossings_per_graph_edge": {
+          "median": 0.0,
+          "mean": 0.006897334003764159
+        },
+        "axis_aligned": {
+          "median": 0.0,
+          "mean": 0.0525928496114209
+        },
+        "hairball_index": {
+          "median": 1.7916666666666667,
+          "mean": 2.1039616683791285
+        },
+        "aspect_ratio": {
+          "median": 1.0586862516782358,
+          "mean": 1.141576137202188
+        },
+        "occupancy": {
+          "median": 0.6230424452438039,
+          "mean": 0.5735053595535885
+        },
+        "min_separation_ratio": {
+          "median": 0.7631800196480709,
+          "mean": 0.6983224349728817
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetate transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 3.857142857142857,
+          "aspect_ratio": 1.0080429678215967,
+          "occupancy": 0.6663805775423121,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Acetoin transport",
+          "crossings_per_graph_edge": 0.022727272727272728,
+          "axis_aligned": 0.0,
+          "hairball_index": 6.119760479041917,
+          "aspect_ratio": 1.0446276292940724,
+          "occupancy": 0.6786325023591567,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Alanine, aspartate and glutamate metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0685752226415666,
+          "occupancy": 0.4621350962485061,
+          "min_separation_ratio": 0.9987244962838433
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0586862516782358,
+          "occupancy": 0.4768951221101588,
+          "min_separation_ratio": 0.7631800196480709
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_graph_edge": 0.05,
+          "axis_aligned": 0.05,
+          "hairball_index": 3.282051282051282,
+          "aspect_ratio": 1.0365733676858542,
+          "occupancy": 0.6791170915692101,
+          "min_separation_ratio": 0.5298087735026333
+        },
+        {
+          "cluster": "Ammonium transport",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.043859649122807015,
+          "hairball_index": 3.6484848484848484,
+          "aspect_ratio": 0.9976741086008722,
+          "occupancy": 0.6885294367797531,
+          "min_separation_ratio": 0.6934984130176808
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2581494453080935,
+          "occupancy": 0.3508712031771903,
+          "min_separation_ratio": 0.8364612331329944
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.045454545454545456,
+          "hairball_index": 2.076923076923077,
+          "aspect_ratio": 1.1173741480101484,
+          "occupancy": 0.6555586260018887,
+          "min_separation_ratio": 0.8272508362848534
+        },
+        {
+          "cluster": "Carbon monoxide transport",
+          "crossings_per_graph_edge": 0.024390243902439025,
+          "axis_aligned": 0.018518518518518517,
+          "hairball_index": 4.110526315789474,
+          "aspect_ratio": 0.9795653812405811,
+          "occupancy": 0.6775489831407777,
+          "min_separation_ratio": 0.588226415289893
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.7536043380174304,
+          "occupancy": 0.2810658391471394,
+          "min_separation_ratio": 0.8541815697064661
+        },
+        {
+          "cluster": "Citrate transport",
+          "crossings_per_graph_edge": 0.025,
+          "axis_aligned": 0.26605504587155965,
+          "hairball_index": 4.13986013986014,
+          "aspect_ratio": 1.0047981478891115,
+          "occupancy": 0.680604957529055,
+          "min_separation_ratio": 0.7568600751711759
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.8499999999999999,
+          "aspect_ratio": 1.1115242651182222,
+          "occupancy": 0.6413030623156624,
+          "min_separation_ratio": 0.7782324277427111
+        },
+        {
+          "cluster": "Dihydrodipicolinate",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9333333333333331,
+          "aspect_ratio": 0.7761286922699854,
+          "occupancy": 0.5491195874261632,
+          "min_separation_ratio": 0.8628296177209148
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.9366460029876549,
+          "occupancy": 0.5277206609746712,
+          "min_separation_ratio": 0.7464747092013184
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9225437686361321,
+          "occupancy": 0.6182846314756573,
+          "min_separation_ratio": 0.851062779786573
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.5178954237122126,
+          "occupancy": 0.5123427091363998,
+          "min_separation_ratio": 0.6362996658139332
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 2.393258426966292,
+          "aspect_ratio": 0.823717530822939,
+          "occupancy": 0.6230424452438039,
+          "min_separation_ratio": 0.44392605232022964
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 1.8276434877017045,
+          "occupancy": 0.5189287384131237,
+          "min_separation_ratio": 0.7852701522226757
+        },
+        {
+          "cluster": "L-valine transport",
+          "crossings_per_graph_edge": 0.02857142857142857,
+          "axis_aligned": 0.05555555555555555,
+          "hairball_index": 2.7927927927927927,
+          "aspect_ratio": 0.9853242633540068,
+          "occupancy": 0.6794403252279648,
+          "min_separation_ratio": 0.5691403898070558
+        },
+        {
+          "cluster": "Lparen rparen",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.9130434782608695,
+          "hairball_index": 1.9384615384615382,
+          "aspect_ratio": 1.0057739413720812,
+          "occupancy": 0.5901896719618631,
+          "min_separation_ratio": 0.34019520100607603
+        },
+        {
+          "cluster": "Methane metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.6,
+          "aspect_ratio": 1.1360426337819542,
+          "occupancy": 0.6461660052628486,
+          "min_separation_ratio": 0.8453898959905539
+        },
+        {
+          "cluster": "Mpts",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0625,
+          "hairball_index": 2.428571428571429,
+          "aspect_ratio": 0.9847297677397887,
+          "occupancy": 0.6725306087406404,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Nickel transport C-diamide",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.05555555555555555,
+          "hairball_index": 1.7419354838709677,
+          "aspect_ratio": 0.9082609520429844,
+          "occupancy": 0.613641147095523,
+          "min_separation_ratio": 0.7653449242225968
+        },
+        {
+          "cluster": "Pantothenate and CoA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9020314270457691,
+          "occupancy": 0.6030090783150409,
+          "min_separation_ratio": 0.7661277456874581
+        },
+        {
+          "cluster": "Phenylalanine, tyrosine and tryptophan biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.948588501830081,
+          "occupancy": 0.5110901716892956,
+          "min_separation_ratio": 0.8310530805914454
+        },
+        {
+          "cluster": "Porphyrin metabolism",
+          "crossings_per_graph_edge": 0.07692307692307693,
+          "axis_aligned": 0.038461538461538464,
+          "hairball_index": 3.1904761904761902,
+          "aspect_ratio": 1.1881855172785099,
+          "occupancy": 0.6439140967113034,
+          "min_separation_ratio": 0.546229093469335
+        },
+        {
+          "cluster": "Purine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.7916666666666667,
+          "aspect_ratio": 1.1734173975899231,
+          "occupancy": 0.6316500784017599,
+          "min_separation_ratio": 0.845386762443037
+        },
+        {
+          "cluster": "Pyrimidine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.05263157894736842,
+          "hairball_index": 1.5599999999999998,
+          "aspect_ratio": 1.0685282197807713,
+          "occupancy": 0.6716818217959958,
+          "min_separation_ratio": 0.7453150382545881
+        },
+        {
+          "cluster": "Pyrimidinone phosphate Diamino",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.3563439081837907,
+          "occupancy": 0.27261069228028084,
+          "min_separation_ratio": 0.9990037922446415
+        },
+        {
+          "cluster": "Synthase exchange",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0625,
+          "hairball_index": 4.0588235294117645,
+          "aspect_ratio": 0.9930082367589282,
+          "occupancy": 0.6231087833212086,
+          "min_separation_ratio": 0.3666666666666651
+        },
+        {
+          "cluster": "Terpenoid backbone biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.07142857142857142,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5793534848143523,
+          "occupancy": 0.26186687076546217,
+          "min_separation_ratio": 0.8455261536259885
+        },
+        {
+          "cluster": "Thiamine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1387738237081628,
+          "occupancy": 0.5871913963483927,
+          "min_separation_ratio": 0.7767018301548395
+        },
+        {
+          "cluster": "Valine, leucine and isoleucine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0598802729546846,
+          "occupancy": 0.6295048467602119,
+          "min_separation_ratio": 0.7502725430948476
+        }
+      ]
+    },
+    "kamada_kawai": {
+      "maps": 33,
+      "median_seconds": 0.048308600002201274,
+      "metrics": {
+        "crossings_per_graph_edge": {
+          "median": 0.1,
+          "mean": 0.6718271862233056
+        },
+        "axis_aligned": {
+          "median": 0.0,
+          "mean": 0.05777437892287212
+        },
+        "hairball_index": {
+          "median": 1.7999999999999998,
+          "mean": 1.9084503484228108
+        },
+        "aspect_ratio": {
+          "median": 0.9241830436854993,
+          "mean": 1.196342291718774
+        },
+        "occupancy": {
+          "median": 0.4121645346665092,
+          "mean": 0.4417839612439578
+        },
+        "min_separation_ratio": {
+          "median": 0.3521803081665233,
+          "mean": 0.4210973386273764
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetate transport",
+          "crossings_per_graph_edge": 0.38235294117647056,
+          "axis_aligned": 0.11764705882352941,
+          "hairball_index": 2.3839285714285716,
+          "aspect_ratio": 1.4047239320949187,
+          "occupancy": 0.592418531285896,
+          "min_separation_ratio": 0.1259421549343793
+        },
+        {
+          "cluster": "Acetoin transport",
+          "crossings_per_graph_edge": 3.272727272727273,
+          "axis_aligned": 0.017857142857142856,
+          "hairball_index": 4.790419161676647,
+          "aspect_ratio": 0.8971448907169266,
+          "occupancy": 0.6740211769344244,
+          "min_separation_ratio": 0.09032444387502979
+        },
+        {
+          "cluster": "Alanine, aspartate and glutamate metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1689917014891185,
+          "occupancy": 0.18134434048097306,
+          "min_separation_ratio": 0.6017515163330545
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_graph_edge": 0.14285714285714285,
+          "axis_aligned": 0.07142857142857142,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7064259133409019,
+          "occupancy": 0.14644349112583702,
+          "min_separation_ratio": 0.5724691334212115
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_graph_edge": 1.6,
+          "axis_aligned": 0.05,
+          "hairball_index": 2.52991452991453,
+          "aspect_ratio": 0.7406515411103591,
+          "occupancy": 0.6445704962990702,
+          "min_separation_ratio": 0.9966847082111889
+        },
+        {
+          "cluster": "Ammonium transport",
+          "crossings_per_graph_edge": 6.651162790697675,
+          "axis_aligned": 0.043859649122807015,
+          "hairball_index": 3.9878787878787882,
+          "aspect_ratio": 0.9432620728893918,
+          "occupancy": 0.6805781297402639,
+          "min_separation_ratio": 0.04822171823747248
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.1217927569879618,
+          "occupancy": 0.342480715028079,
+          "min_separation_ratio": 0.999989865418874
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 3.5897435897435894,
+          "aspect_ratio": 1.0389727687306818,
+          "occupancy": 0.49379837082352096,
+          "min_separation_ratio": 0.04244582015350449
+        },
+        {
+          "cluster": "Carbon monoxide transport",
+          "crossings_per_graph_edge": 1.853658536585366,
+          "axis_aligned": 0.0,
+          "hairball_index": 3.5,
+          "aspect_ratio": 0.3275478505005705,
+          "occupancy": 0.5110020143957615,
+          "min_separation_ratio": 0.13563911502194828
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1633228226774306,
+          "occupancy": 0.2560314434883947,
+          "min_separation_ratio": 0.9481508288472305
+        },
+        {
+          "cluster": "Citrate transport",
+          "crossings_per_graph_edge": 3.125,
+          "axis_aligned": 0.21100917431192662,
+          "hairball_index": 2.972027972027972,
+          "aspect_ratio": 0.9241830436854993,
+          "occupancy": 0.6772265099410198,
+          "min_separation_ratio": 0.220437822931173
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_graph_edge": 0.45454545454545453,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7212823925313322,
+          "occupancy": 0.41017833542065874,
+          "min_separation_ratio": 0.35993167937701287
+        },
+        {
+          "cluster": "Dihydrodipicolinate",
+          "crossings_per_graph_edge": 0.1,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.7999999999999998,
+          "aspect_ratio": 7.150211043476823,
+          "occupancy": 0.32140248526875914,
+          "min_separation_ratio": 0.24226086637914593
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_graph_edge": 0.25,
+          "axis_aligned": 0.125,
+          "hairball_index": 1.923076923076923,
+          "aspect_ratio": 0.7746599688049223,
+          "occupancy": 0.3408806795311312,
+          "min_separation_ratio": 0.517491078995544
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.4652684665722693,
+          "occupancy": 0.4121645346665092,
+          "min_separation_ratio": 0.3853917225630682
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7150191223668513,
+          "occupancy": 0.39745679114090626,
+          "min_separation_ratio": 0.8457615262493519
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_graph_edge": 0.06896551724137931,
+          "axis_aligned": 0.02857142857142857,
+          "hairball_index": 1.8651685393258426,
+          "aspect_ratio": 2.0665716932628455,
+          "occupancy": 0.5528451412289732,
+          "min_separation_ratio": 0.08398515292062127
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_graph_edge": 0.1,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.8333333333333335,
+          "aspect_ratio": 0.8998397685607998,
+          "occupancy": 0.37538085108422037,
+          "min_separation_ratio": 0.09645347312412268
+        },
+        {
+          "cluster": "L-valine transport",
+          "crossings_per_graph_edge": 2.0285714285714285,
+          "axis_aligned": 0.027777777777777776,
+          "hairball_index": 3.099099099099099,
+          "aspect_ratio": 1.2907309039509762,
+          "occupancy": 0.6494629495020903,
+          "min_separation_ratio": 0.3090782672123652
+        },
+        {
+          "cluster": "Lparen rparen",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 1.0,
+          "hairball_index": 1.7538461538461538,
+          "aspect_ratio": 1.034840721766077,
+          "occupancy": 0.6489837480219612,
+          "min_separation_ratio": 1.4681533622693618e-05
+        },
+        {
+          "cluster": "Methane metabolism",
+          "crossings_per_graph_edge": 0.46153846153846156,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.911111111111111,
+          "aspect_ratio": 1.6804157595368576,
+          "occupancy": 0.5433244026877871,
+          "min_separation_ratio": 0.5770010191218913
+        },
+        {
+          "cluster": "Mpts",
+          "crossings_per_graph_edge": 1.0263157894736843,
+          "axis_aligned": 0.025,
+          "hairball_index": 2.8214285714285716,
+          "aspect_ratio": 1.4951952843915632,
+          "occupancy": 0.6196017728761376,
+          "min_separation_ratio": 0.0488697647225127
+        },
+        {
+          "cluster": "Nickel transport C-diamide",
+          "crossings_per_graph_edge": 0.125,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.303640432188085,
+          "occupancy": 0.36409509684442115,
+          "min_separation_ratio": 0.4196559403506236
+        },
+        {
+          "cluster": "Pantothenate and CoA biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8423603598652086,
+          "occupancy": 0.22119557322412986,
+          "min_separation_ratio": 0.3361429346110945
+        },
+        {
+          "cluster": "Phenylalanine, tyrosine and tryptophan biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7913485009482423,
+          "occupancy": 0.3328713459724277,
+          "min_separation_ratio": 0.971464442449578
+        },
+        {
+          "cluster": "Porphyrin metabolism",
+          "crossings_per_graph_edge": 0.19230769230769232,
+          "axis_aligned": 0.019230769230769232,
+          "hairball_index": 2.4285714285714284,
+          "aspect_ratio": 0.7624206879103285,
+          "occupancy": 0.6085823754672798,
+          "min_separation_ratio": 0.34199231480796294
+        },
+        {
+          "cluster": "Purine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.7916666666666667,
+          "aspect_ratio": 0.6461163671221347,
+          "occupancy": 0.48588636345184133,
+          "min_separation_ratio": 0.23258257802496532
+        },
+        {
+          "cluster": "Pyrimidine metabolism",
+          "crossings_per_graph_edge": 0.23529411764705882,
+          "axis_aligned": 0.02631578947368421,
+          "hairball_index": 1.8800000000000001,
+          "aspect_ratio": 0.7680320929576213,
+          "occupancy": 0.6002321977389177,
+          "min_separation_ratio": 0.08033326332546403
+        },
+        {
+          "cluster": "Pyrimidinone phosphate Diamino",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.4735478800316809,
+          "occupancy": 0.15928008453976353,
+          "min_separation_ratio": 0.9999848590476353
+        },
+        {
+          "cluster": "Synthase exchange",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 2.1176470588235294,
+          "aspect_ratio": 1.0696491420004894,
+          "occupancy": 0.47141764595600627,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Terpenoid backbone biosynthesis",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.636568725084859,
+          "occupancy": 0.3009975450571832,
+          "min_separation_ratio": 0.845762419128776
+        },
+        {
+          "cluster": "Thiamine metabolism",
+          "crossings_per_graph_edge": 0.0,
+          "axis_aligned": 0.14285714285714285,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9400647323689602,
+          "occupancy": 0.3427755758477626,
+          "min_separation_ratio": 0.3521803081665233
+        },
+        {
+          "cluster": "Valine, leucine and isoleucine biosynthesis",
+          "crossings_per_graph_edge": 0.1,
+          "axis_aligned": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.514492286796851,
+          "occupancy": 0.21994000597849966,
+          "min_separation_ratio": 0.701150088539807
+        }
+      ]
+    }
+  }
+}

@@ -127,7 +127,11 @@ def load(path, canvas_padding=40.0):
         nodes[mid_id] = {"node_type": "midmarker", "x": mx, "y": my}
 
         segments = {}
-        for i, member in enumerate(subs + prods):
+        # Tagged, not re-tested with `member in subs`. A compound that is both
+        # substrate and product of the same reaction (two cases in this corpus)
+        # was visited twice and drawn as compound -> midmarker both times.
+        participants = ([(m, True) for m in subs] + [(m, False) for m in prods])
+        for i, (member, is_substrate) in enumerate(participants):
             entry, (x, y) = entries[member]
             nodes.setdefault(member, {
                 "node_type": "metabolite",
@@ -146,7 +150,7 @@ def load(path, canvas_padding=40.0):
             used.add(member)
             # substrate -> midmarker -> product, matching how the metrics walk
             # an Escher reaction.
-            a, b = (member, mid_id) if member in subs else (mid_id, member)
+            a, b = (member, mid_id) if is_substrate else (mid_id, member)
             segments["s%d" % i] = {
                 "from_node_id": a, "to_node_id": b, "b1": None, "b2": None,
             }
@@ -201,14 +205,34 @@ def load(path, canvas_padding=40.0):
     return [header, body]
 
 
-def load_all(directory, limit=None):
-    """Every KGML file in `directory` that draws at least one reaction."""
-    out = []
+def load_all(directory, limit=None, deduplicate=True):
+    """Every KGML pathway in `directory` that draws at least one reaction.
+
+    De-duplicated by pathway number by default, and that matters a great deal
+    to any statistic computed downstream. KEGG draws one reference map per
+    pathway and reuses those coordinates for every organism, so `eco00010`,
+    `hsa00010`, `mmu00010` and `sce00010` are the *same picture*. This corpus
+    holds four organisms (eco 137, hsa 369, mmu 365, sce 139), and counting
+    the files gives 332 scorable pathways where there are only 117 distinct
+    drawings -- roughly two thirds literal repeats, weighted by how many
+    organisms KEGG happens to publish each map for. Quantiles computed on that
+    are not quantiles over curated practice.
+
+    The first organism alphabetically wins, which is arbitrary but stable.
+    """
+    out, seen = [], set()
     names = sorted(n for n in os.listdir(directory) if n.endswith(".xml"))
     for name in names:
+        if deduplicate:
+            digits = "".join(c for c in os.path.splitext(name)[0] if c.isdigit())
+            if digits in seen:
+                continue
         chart = load(os.path.join(directory, name))
-        if chart is not None:
-            out.append((name, chart))
-            if limit and len(out) >= limit:
-                break
+        if chart is None:
+            continue
+        if deduplicate:
+            seen.add(digits)
+        out.append((name, chart))
+        if limit and len(out) >= limit:
+            break
     return out

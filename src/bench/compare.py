@@ -20,8 +20,11 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))))
 
+import contextlib                                    # noqa: E402
+
 from src.bench import adapters                       # noqa: E402
 from src.layout import metrics                       # noqa: E402
+from src.layout import render as _render             # noqa: E402
 from src.layout.compound import build_compound_graph  # noqa: E402
 from src.layout.direction import orient_compound_graph  # noqa: E402
 from src.layout.engine import layout_reactions       # noqa: E402
@@ -30,35 +33,83 @@ from src.layout.render import build_escher_map       # noqa: E402
 # Only the metrics that survive being compared across methods. `axis_aligned`
 # and `longest_run_ratio` describe edge routing, and no route hints are passed
 # here, so they would measure the shared renderer rather than the placement.
-REPORTED = ("crossings_per_edge", "hairball_index", "aspect_ratio",
-            "occupancy", "min_separation_ratio")
+# axis_aligned is back in, and is meaningful now. It was excluded while the
+# shared orthogonal router was applied to everyone, because it then measured
+# the router: a kamada-kawai drawing scored 0.97. With straight edges it
+# measures what it should -- the share of edges whose endpoints the placement
+# actually lined up -- and force-directed layouts score ~0.00 as they should.
+REPORTED = ("crossings_per_graph_edge", "axis_aligned", "hairball_index",
+            "aspect_ratio", "occupancy", "min_separation_ratio")
 
 METHODS = ("metacarto", "dot", "neato", "fdp", "spring", "kamada_kawai")
 
 
+@contextlib.contextmanager
+def straight_edges():
+    """Draw every edge as a straight segment, for every method.
+
+    `render._orthogonal_path` returns a vertical-horizontal-vertical dogleg
+    whenever an edge's endpoints are not already aligned, adding two bend
+    multimarkers and two segments. Brandes-Koepf aligns MetaCarto's nodes so it
+    mostly takes the 2-point branch; continuous force-directed coordinates
+    never do. Two things went wrong as a result.
+
+    The shared renderer *orthogonalised the competitors*: on iAF1260 a
+    kamada-kawai drawing scored 0.969 axis-aligned, which is not a
+    kamada-kawai drawing and is not what MetExploreViz would put on screen.
+    And the segment count became method-dependent -- a force-directed drawing
+    of the same graph carried ~20% more segments than a layered one -- so
+    `crossings_per_edge` was divided by a denominator that grew with how badly
+    a method placed its nodes.
+
+    Straight edges for everyone removes both. It also removes MetaCarto's
+    orthogonal routing, which is a real feature of the shipped maps and is not
+    represented here at all: this measures placement, not the product.
+    """
+    original = _render._orthogonal_path
+    _render._orthogonal_path = lambda p0, p1: [p0, p1]
+    try:
+        yield
+    finally:
+        _render._orthogonal_path = original
+
+
 def draw(model, reactions, name, method, use_fba=True):
-    """One map, drawn by one method. Returns (escher_map, seconds)."""
+    """One map, drawn by one method. Returns (chart, seconds, graph_edges).
+
+    Every method -- MetaCarto included -- goes through `adapters._normalise`.
+    That symmetry is not cosmetic. `min_separation_ratio` is
+    `min_pairwise_distance / pitch` with pitch = 180, `_normalise` puts every
+    layout's *median* nearest-neighbour distance at exactly 180, and the
+    minimum can never exceed the median. So any normalised layout is capped
+    below 1.0 by construction, and the first version of this exempted
+    MetaCarto: it scored up to 1.78 while no competitor could pass ~0.9. The
+    "decisive win on node separation" was that exemption, not a property of
+    the layouts.
+    """
     start = time.perf_counter()
     if method == "metacarto":
-        result = layout_reactions(model, reactions, name, use_fba=use_fba)
+        result = layout_reactions(model, reactions, name, use_fba=use_fba,
+                                  render=False)
         if result is None:
-            return None, 0.0
-        # Rendered from positions alone, with no route hints, so MetaCarto is
-        # judged on placement under the same renderer as everything else.
+            return None, 0.0, 0
         pos = {n: p for n, p in result.pos.items()
                if not str(n).startswith("__dummy__")}
-        chart = build_escher_map(result.cgraph, pos, name)
-        return chart, time.perf_counter() - start
+        pos = adapters.normalise(pos)
+        with straight_edges():
+            chart = build_escher_map(result.cgraph, pos, name)
+        return chart, time.perf_counter() - start, result.cgraph.D.number_of_edges()
 
     cgraph = build_compound_graph(model, reactions)
     if cgraph.D.number_of_nodes() == 0:
-        return None, 0.0
+        return None, 0.0, 0
     orient_compound_graph(cgraph, model=model, use_fba=use_fba, verbose=False)
     pos = adapters.place(cgraph.D, method)
     if not pos:
-        return None, 0.0
-    chart = build_escher_map(cgraph, pos, name)
-    return chart, time.perf_counter() - start
+        return None, 0.0, 0
+    with straight_edges():
+        chart = build_escher_map(cgraph, pos, name)
+    return chart, time.perf_counter() - start, cgraph.D.number_of_edges()
 
 
 def main(argv=None):
@@ -68,7 +119,11 @@ def main(argv=None):
     parser.add_argument("--max-cluster", type=int, default=None)
     parser.add_argument("--min-cluster", type=int, default=None)
     parser.add_argument("--limit", type=int, default=0,
-                        help="cap on the number of clusters drawn (0 = all)")
+                        help="draw a random sample of this many clusters "
+                             "(0 = every cluster, which is the default and "
+                             "what should be reported)")
+    parser.add_argument("--seed", type=int, default=0,
+                        help="seed for --limit sampling, so it is reproducible")
     parser.add_argument("--group-function", action="store_true")
     parser.add_argument("--no-fba", action="store_true")
     parser.add_argument("--methods", default=",".join(METHODS))
@@ -100,10 +155,24 @@ def main(argv=None):
     groups = clusters(model, compute_cofactor_scores(model), **size_limits)
     if args.group_function:
         groups = layout_v2.merge_by_function(groups, max_size=args.max_cluster)
-    names = sorted(groups)
-    if args.limit:
-        names = names[:args.limit]
-    print("%s: %d clusters, drawing %d" % (args.model, len(groups), len(names)))
+    population = sorted(groups)
+    names = population
+    if args.limit and args.limit < len(population):
+        # A seeded random sample, not the alphabetical head.
+        #
+        # This used to be `population[:limit]`, which for iAF1260 meant every
+        # cluster from "Acetaldehyde transport periplasm" to "N-c 3" and not
+        # one from O-Z -- no oxidative phosphorylation, no pentose phosphate,
+        # no purine or pyrimidine metabolism. "We evaluated on the
+        # alphabetically first 40 clusters" is not a sampling statement anyone
+        # should accept, and the saved result recorded only the sample size, so
+        # it did not even disclose that sampling had happened.
+        import random as _random
+        names = sorted(_random.Random(args.seed).sample(population, args.limit))
+    sampled = len(names) < len(population)
+    print("%s: %d clusters, drawing %d%s" % (
+        args.model, len(population), len(names),
+        " (random sample, seed %d)" % args.seed if sampled else " (all)"))
 
     methods = [m for m in args.methods.split(",") if m]
     ready = adapters.available()
@@ -118,8 +187,9 @@ def main(argv=None):
         reactions = groups[name]
         for method in methods:
             try:
-                chart, seconds = draw(model, reactions, name, method,
-                                      use_fba=not args.no_fba)
+                chart, seconds, graph_edges = draw(model, reactions, name,
+                                                   method,
+                                                   use_fba=not args.no_fba)
             except Exception as exc:
                 print("  %-14s %-34s FAILED %s" % (method, name[:34], exc))
                 continue
@@ -130,6 +200,17 @@ def main(argv=None):
             except Exception as exc:
                 print("  %-14s %-34s SCORE FAILED %s" % (method, name[:34], exc))
                 continue
+            # Per *graph* edge, not per rendered segment. The shared
+            # renderer emits a 4-point dogleg with two extra multimarkers
+            # whenever an edge is not already axis-aligned, so a force-directed
+            # drawing of the same graph carries ~20% more segments than a
+            # layered one. Dividing by segments makes the denominator depend on
+            # the method being measured.
+            segs = len(metrics._straight_segments(chart[1]))
+            raw = values["crossings_per_edge"] * max(segs, 1)
+            values["crossings_per_graph_edge"] = raw / max(graph_edges, 1)
+            values["_graph_edges"] = graph_edges
+            values["_segments"] = segs
             values["_cluster"] = name
             rows[method].append(values)
             timings[method].append(seconds)
@@ -158,7 +239,10 @@ def main(argv=None):
     payload = {
         "commit": sha,
         "model": args.model,
-        "clusters": len(names),
+        "clusters_in_model": len(population),
+        "clusters_drawn": len(names),
+        "sampled": sampled,
+        "seed": args.seed if sampled else None,
         "methods": {
             m: {
                 "maps": len(rows[m]),

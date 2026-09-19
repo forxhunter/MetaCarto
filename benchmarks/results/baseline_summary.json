@@ -1,172 +1,424 @@
 {
   "models": [
-    "e_coli_core",
-    "iAF1260",
+    "RECON1",
+    "iAF692",
+    "iCHOv1",
     "iJO1366",
-    "iMM904"
+    "iMM904",
+    "iNJ661",
+    "iSB619",
+    "iYO844"
   ],
   "reference": "metacarto",
+  "tests": 30,
   "metrics": {
-    "crossings_per_edge": {
-      "metacarto": {
-        "median": 0.007273274478330658,
-        "p_holm": null,
-        "cliffs_delta": null
-      },
+    "crossings_per_graph_edge": {
       "dot": {
-        "median": 0.010281690140845071,
-        "p_holm": 0.3493447265880424,
-        "cliffs_delta": 0.011904761904761904
+        "median": 0.0,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.9259329239489844,
+        "p_holm": 6.703519565883551e-21,
+        "pairs": 676,
+        "pairs_used": 145,
+        "verdict": "WORSE"
       },
       "fdp": {
-        "median": 0.08786764705882352,
-        "p_holm": 4.7302412442882733e-07,
-        "cliffs_delta": -0.3482615268329554
+        "median": 0.0,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": -0.18300227938782157,
+        "p_holm": 0.019260091374263842,
+        "pairs": 676,
+        "pairs_used": 332,
+        "verdict": "better"
       },
       "kamada_kawai": {
-        "median": 0.09512061403508772,
-        "p_holm": 1.2882959242373935e-07,
-        "cliffs_delta": -0.37729906777525823
+        "median": 0.19139194139194138,
+        "median_paired_diff": -0.14285714285714285,
+        "ci95": [
+          -0.18181818181818182,
+          -0.1111111111111111
+        ],
+        "rank_biserial": -0.6937617814421366,
+        "p_holm": 5.91801489300457e-38,
+        "pairs": 676,
+        "pairs_used": 476,
+        "verdict": "better"
       },
       "neato": {
-        "median": 0.05,
-        "p_holm": 0.005386067833364181,
-        "cliffs_delta": -0.2166792642983119
+        "median": 0.0,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.8334072431633407,
+        "p_holm": 3.362502782131671e-19,
+        "pairs": 676,
+        "pairs_used": 164,
+        "verdict": "WORSE"
       },
       "spring": {
-        "median": 0.05735930735930736,
-        "p_holm": 0.02743844606297539,
-        "cliffs_delta": -0.195578231292517
+        "median": 0.0,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.6576711903035326,
+        "p_holm": 1.9823618641801982e-14,
+        "pairs": 676,
+        "pairs_used": 196,
+        "verdict": "WORSE"
+      }
+    },
+    "axis_aligned": {
+      "dot": {
+        "median": 0.6666666666666666,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.668859357696567,
+        "p_holm": 1.8051904174830236e-22,
+        "pairs": 676,
+        "pairs_used": 300,
+        "verdict": "WORSE"
+      },
+      "fdp": {
+        "median": 0.0,
+        "median_paired_diff": -0.5555555555555556,
+        "ci95": [
+          -0.5813953488372093,
+          -0.5
+        ],
+        "rank_biserial": -0.9935592723004695,
+        "p_holm": 1.423941697522485e-103,
+        "pairs": 676,
+        "pairs_used": 639,
+        "verdict": "better"
+      },
+      "kamada_kawai": {
+        "median": 0.008333333333333333,
+        "median_paired_diff": -0.5254237288135594,
+        "ci95": [
+          -0.5590277777777778,
+          -0.5
+        ],
+        "rank_biserial": -0.9895025641025641,
+        "p_holm": 2.477488936232616e-100,
+        "pairs": 676,
+        "pairs_used": 624,
+        "verdict": "better"
+      },
+      "neato": {
+        "median": 0.0,
+        "median_paired_diff": -0.5345238095238095,
+        "ci95": [
+          -0.5714285714285714,
+          -0.5
+        ],
+        "rank_biserial": -0.9985486211901307,
+        "p_holm": 4.132694705051656e-104,
+        "pairs": 676,
+        "pairs_used": 636,
+        "verdict": "better"
+      },
+      "spring": {
+        "median": 0.018518518518518517,
+        "median_paired_diff": -0.53125,
+        "ci95": [
+          -0.5555555555555556,
+          -0.5
+        ],
+        "rank_biserial": -0.9913780800480307,
+        "p_holm": 8.750010136571409e-103,
+        "pairs": 676,
+        "pairs_used": 637,
+        "verdict": "better"
       }
     },
     "hairball_index": {
-      "metacarto": {
-        "median": 1.7936507936507935,
-        "p_holm": null,
-        "cliffs_delta": null
-      },
       "dot": {
-        "median": 1.7249114521841795,
-        "p_holm": 0.5624237346664366,
-        "cliffs_delta": 0.017132779037540943
+        "median": 1.795073692711488,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.2161618583339993,
+        "p_holm": 0.0018291148588562996,
+        "pairs": 676,
+        "pairs_used": 387,
+        "verdict": "WORSE"
       },
       "fdp": {
         "median": 1.0,
-        "p_holm": 0.09054397110074403,
-        "cliffs_delta": 0.07501889644746787
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.3488368794326241,
+        "p_holm": 4.7966334105197695e-08,
+        "pairs": 676,
+        "pairs_used": 375,
+        "verdict": "WORSE"
       },
       "kamada_kawai": {
-        "median": 1.8333333333333335,
-        "p_holm": 0.2268145142206552,
-        "cliffs_delta": -0.0810657596371882
+        "median": 1.8716540837336995,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": -0.3662502681225294,
+        "p_holm": 2.770158429442516e-10,
+        "pairs": 676,
+        "pairs_used": 442,
+        "verdict": "better"
       },
       "neato": {
-        "median": 1.0,
-        "p_holm": 0.00022067919010630428,
-        "cliffs_delta": 0.15117157974300832
+        "median": 1.783152123408605,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.19458488741538887,
+        "p_holm": 0.0070848633587251445,
+        "pairs": 676,
+        "pairs_used": 380,
+        "verdict": "WORSE"
       },
       "spring": {
-        "median": 1.9666666666666668,
-        "p_holm": 8.106506413751943e-09,
-        "cliffs_delta": -0.29931972789115646
+        "median": 1.9411764705882353,
+        "median_paired_diff": -0.27239003709591925,
+        "ci95": [
+          -0.4761904761904763,
+          -0.0723311546840959
+        ],
+        "rank_biserial": -0.7388417413169889,
+        "p_holm": 1.783173485398067e-45,
+        "pairs": 676,
+        "pairs_used": 504,
+        "verdict": "better"
       }
     },
     "aspect_ratio": {
-      "metacarto": {
-        "median": 0.6773305494033837,
-        "p_holm": null,
-        "cliffs_delta": null
-      },
       "dot": {
-        "median": 2.467026034953024,
-        "p_holm": 6.114896987413217e-10,
-        "cliffs_delta": -0.42693373645754595
+        "median": 1.506730578541175,
+        "median_paired_diff": -0.34130560583748737,
+        "ci95": [
+          -0.403776242478951,
+          -0.27325855596534715
+        ],
+        "rank_biserial": -0.6650186280955511,
+        "p_holm": 2.832660128527074e-49,
+        "pairs": 676,
+        "pairs_used": 675,
+        "verdict": "better"
       },
       "fdp": {
-        "median": 1.0117536473622089,
-        "p_holm": 3.005416182856005e-10,
-        "cliffs_delta": 0.5697908793146889
+        "median": 1.0137589223076753,
+        "median_paired_diff": 0.17646974662631051,
+        "ci95": [
+          0.14222731791328105,
+          0.21981415915928573
+        ],
+        "rank_biserial": 0.7651315846975432,
+        "p_holm": 3.65313310957457e-65,
+        "pairs": 676,
+        "pairs_used": 676,
+        "verdict": "WORSE"
       },
       "kamada_kawai": {
-        "median": 1.000000006403484,
-        "p_holm": 3.103868610581272e-06,
-        "cliffs_delta": 0.35903250188964475
+        "median": 1.0000000007113548,
+        "median_paired_diff": 0.08449589954628978,
+        "ci95": [
+          0.050350968071025556,
+          0.11257363231502286
+        ],
+        "rank_biserial": 0.3397865627157753,
+        "p_holm": 2.5388893228018765e-13,
+        "pairs": 676,
+        "pairs_used": 676,
+        "verdict": "WORSE"
       },
       "neato": {
-        "median": 0.9684606779241614,
-        "p_holm": 3.005416182856005e-10,
-        "cliffs_delta": 0.5075585789871504
+        "median": 1.0174490640159908,
+        "median_paired_diff": 0.13473301704582782,
+        "ci95": [
+          0.09397011481443428,
+          0.16577481913234798
+        ],
+        "rank_biserial": 0.5680560775436357,
+        "p_holm": 3.650591367920162e-36,
+        "pairs": 676,
+        "pairs_used": 676,
+        "verdict": "WORSE"
       },
       "spring": {
-        "median": 0.999734861717292,
-        "p_holm": 9.81187346508386e-10,
-        "cliffs_delta": 0.5304862685815067
+        "median": 1.0152361089003348,
+        "median_paired_diff": 0.12711278211370958,
+        "ci95": [
+          0.09951608791657515,
+          0.16666974634930531
+        ],
+        "rank_biserial": 0.5675841032050554,
+        "p_holm": 3.9864256903037665e-36,
+        "pairs": 676,
+        "pairs_used": 676,
+        "verdict": "WORSE"
       }
     },
     "occupancy": {
-      "metacarto": {
-        "median": 0.4840649319956002,
-        "p_holm": null,
-        "cliffs_delta": null
-      },
       "dot": {
-        "median": 0.311744013739785,
-        "p_holm": 5.479885979600002e-18,
-        "cliffs_delta": -0.5345175107079869
+        "median": 0.32248259607177987,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": -0.8491704374057315,
+        "p_holm": 1.1781053977571109e-06,
+        "pairs": 676,
+        "pairs_used": 51,
+        "verdict": "better"
       },
       "fdp": {
-        "median": 0.4953058157007653,
-        "p_holm": 1.0,
-        "cliffs_delta": -0.006172839506172839
+        "median": 0.3922944933421233,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.6524216524216524,
+        "p_holm": 0.0159643292427063,
+        "pairs": 676,
+        "pairs_used": 26,
+        "verdict": "WORSE"
       },
       "kamada_kawai": {
-        "median": 0.5144584341364558,
-        "p_holm": 1.0,
-        "cliffs_delta": 0.02834467120181406
+        "median": 0.5059941787347928,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.09523809523809523,
+        "p_holm": 0.7621403954648378,
+        "pairs": 676,
+        "pairs_used": 27,
+        "verdict": "n.s."
       },
       "neato": {
-        "median": 0.4640000453199742,
-        "p_holm": 0.001556863171208231,
-        "cliffs_delta": -0.1326530612244898
+        "median": 0.4098170448091535,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.33004926108374383,
+        "p_holm": 0.5258752107620239,
+        "pairs": 676,
+        "pairs_used": 28,
+        "verdict": "n.s."
       },
       "spring": {
-        "median": 0.6228759996924297,
-        "p_holm": 3.714170388219032e-14,
-        "cliffs_delta": 0.4708994708994709
+        "median": 0.6242510474108537,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "rank_biserial": 0.2512315270935961,
+        "p_holm": 0.7621403954648378,
+        "pairs": 676,
+        "pairs_used": 28,
+        "verdict": "n.s."
       }
     },
     "min_separation_ratio": {
-      "metacarto": {
-        "median": 0.9913745508939928,
-        "p_holm": null,
-        "cliffs_delta": null
-      },
       "dot": {
-        "median": 0.845762610383957,
-        "p_holm": 2.8747291565594197e-10,
-        "cliffs_delta": -0.25806248425296047
+        "median": 0.8802581513972378,
+        "median_paired_diff": 0.0,
+        "ci95": [
+          -1.1102230246251565e-16,
+          0.0
+        ],
+        "rank_biserial": -0.05240325783867279,
+        "p_holm": 0.7621403954648378,
+        "pairs": 676,
+        "pairs_used": 631,
+        "verdict": "n.s."
       },
       "fdp": {
-        "median": 0.7619371346079664,
-        "p_holm": 8.855605332571598e-11,
-        "cliffs_delta": -0.3512849584278156
+        "median": 0.7318765781343683,
+        "median_paired_diff": -0.0391045318162494,
+        "ci95": [
+          -0.056933971844149944,
+          -0.01573799219959593
+        ],
+        "rank_biserial": -0.4604998043818466,
+        "p_holm": 1.2208955614805151e-22,
+        "pairs": 676,
+        "pairs_used": 639,
+        "verdict": "better"
       },
       "kamada_kawai": {
-        "median": 0.4128228266067778,
-        "p_holm": 2.1618994077373233e-18,
-        "cliffs_delta": -0.5726883345930965
+        "median": 0.3583759048730645,
+        "median_paired_diff": -0.2500738074812383,
+        "ci95": [
+          -0.28355493322379405,
+          -0.2125395801651211
+        ],
+        "rank_biserial": -0.8617154907623894,
+        "p_holm": 1.4351170743513498e-80,
+        "pairs": 676,
+        "pairs_used": 660,
+        "verdict": "better"
       },
       "neato": {
-        "median": 0.9038447939015004,
-        "p_holm": 3.765072289744269e-10,
-        "cliffs_delta": -0.24792139077853365
+        "median": 0.7257596864088429,
+        "median_paired_diff": -0.008083831127079555,
+        "ci95": [
+          -0.02491480353935771,
+          -0.00147493961212819
+        ],
+        "rank_biserial": -0.40801706834628526,
+        "p_holm": 5.344148500786526e-18,
+        "pairs": 676,
+        "pairs_used": 641,
+        "verdict": "better"
       },
       "spring": {
-        "median": 0.7110193222710457,
-        "p_holm": 6.216397802809131e-15,
-        "cliffs_delta": -0.37326782564877803
+        "median": 0.7560228643891012,
+        "median_paired_diff": -0.02311009262041852,
+        "ci95": [
+          -0.04419249294010025,
+          -0.004995279292503874
+        ],
+        "rank_biserial": -0.3111538839793754,
+        "p_holm": 6.762356297659472e-11,
+        "pairs": 676,
+        "pairs_used": 653,
+        "verdict": "better"
       }
     }
   },
-  "commit": "32e1b32"
+  "commit": "7b5c325",
+  "counts": {
+    "better": 14,
+    "worse": 12,
+    "not_significant": 4
+  }
 }
