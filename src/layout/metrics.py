@@ -24,6 +24,33 @@ TARGETS = {
     "aspect_ratio": (0.35, 3.0),
 }
 
+# What curated practice actually measures, from the 117 distinct KEGG pathway
+# drawings in `benchmarks/results/kegg_calibration.json` (p10/p90).
+#
+# This is a *reference band, not a gate*, and the distinction is deliberate.
+# TARGETS above are engineering thresholds, and where they differ from curation
+# they have been left alone rather than moved to whatever flatters the output:
+#
+#   crossings_per_edge  our gate 0.05 is STRICTER than the curated p90 of
+#                       0.115. Loosening it to match would make our maps pass
+#                       more easily, which is not a calibration.
+#   hairball_index      our gate 3.0 is LOOSER than the curated p90 of 1.964.
+#                       Tightening it would be the honest direction and our
+#                       own median of 2.95 would then fail -- which is a real
+#                       limitation, recorded here rather than gated away.
+#   aspect_ratio        our band is wider than curation at both ends, because
+#                       an unbranched pathway legitimately draws as a tall
+#                       column and folding it to hit a target would be worse.
+#
+# An earlier commit was titled "calibrate the acceptance gates against 332
+# curated KEGG pathways" and changed no gate at all. Nothing here is calibrated
+# against anything; this constant is the measurement that claim implied.
+CURATED_REFERENCE = {
+    "crossings_per_edge": (0.000, 0.115),
+    "hairball_index": (1.000, 1.964),
+    "aspect_ratio": (0.703, 2.039),
+}
+
 from .render import (CHAR_WIDTH_RATIO, ESCHER_DEFAULT_FONT_BASE,
                      LABEL_OVERLAP_TOLERANCE, LINE_HEIGHT_RATIO,
                      METABOLITE_FONT_FACTOR, REACTION_FONT_FACTOR)

@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metacarto"
+version = "0.1.0"
+description = "Constructive layout synthesis for genome-scale metabolic networks, emitting Escher-compatible maps"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Tianyu Wu" }]
+keywords = ["metabolic-network", "layout", "escher", "bigg", "systems-biology"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3",
+]
+
+# Pinned to lower bounds that are actually exercised. networkx >= 3.1 is not
+# cosmetic: `nx.simple_cycles` on a directed graph, which ring detection
+# depends on, changed signature before that.
+dependencies = [
+    "cobra>=0.26",
+    "networkx>=3.1",
+    "numpy>=1.22",
+]
+
+[project.optional-dependencies]
+# What the benchmark needs, which a user drawing maps does not. pygraphviz is
+# here because the baseline comparison runs Graphviz, the engine MetDraw uses;
+# it needs system Graphviz headers and is the one dependency likely to fail to
+# build, so it stays out of the default install.
+bench = ["scipy>=1.9", "pygraphviz>=1.9"]
+test = ["pytest>=7"]
+
+[project.urls]
+Maps = "https://github.com/forxhunter/escher_maps_BiGG"
+Viewer = "https://forxhunter.github.io/escher/"
+
+[project.scripts]
+metacarto = "layout_v2:main"
+
+[tool.setuptools]
+# The drivers are top-level modules rather than a package, which is how the
+# project grew. Listed explicitly so a build does not silently ship half of it.
+py-modules = ["layout_v2"]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
