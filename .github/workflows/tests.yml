@@ -22,8 +22,17 @@ jobs:
       - name: Fetch the e_coli_core fixture
         run: |
           mkdir -p data/bigg/models
-          curl -sSf -o data/bigg/models/e_coli_core.json \
-            http://bigg.ucsd.edu/static/models/e_coli_core.json
+          # -L because bigg.ucsd.edu 301s http to https, and curl without it
+          # writes the redirect's HTML body to the file. `-f` does not catch
+          # that: a 301 is not a failure status, so the download "succeeded"
+          # and thirteen tests failed later trying to parse
+          # "<html><title>301 Moved Permanently</title>" as a COBRA model.
+          curl -sSfL -o data/bigg/models/e_coli_core.json \
+            https://bigg.ucsd.edu/static/models/e_coli_core.json
+          # Fail here rather than in the fixtures if it is ever not JSON again.
+          python -c "import json; m = json.load(open('data/bigg/models/e_coli_core.json')); \
+            assert len(m['reactions']) > 90, m.keys(); \
+            print('fixture ok:', len(m['reactions']), 'reactions')"
       - name: Test
         run: python -m pytest tests/ -q
 
