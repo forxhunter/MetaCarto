@@ -20,7 +20,7 @@ import traceback
 
 import cobra
 
-from src.layout import metrics, preview, render, svgout
+from src.layout import metrics, pdfout, preview, render, svgout
 from src.layout.compose import build_meta_graph, compose
 from src.layout.compound import compute_cofactor_scores
 from src.layout.decompose import clusters
@@ -147,6 +147,10 @@ def save_map(escher_map, out_dir, name, want_preview, pitch, verbose=True):
         # copy stays sharp at any magnification, prints at any DPI, and costs
         # about as much to write as the PNG does.
         svgout.render(escher_map, stem + ".svg")
+        # PDF as well, because it is the one of the three a reader can drop
+        # into a manuscript: vector like the SVG, but LaTeX and Word read it
+        # directly, and it is the smallest of the three on disk.
+        pdfout.render(escher_map, stem + ".pdf", width_mm=180.0)
     values = metrics.score(escher_map, pitch=pitch)
     if verbose:
         print(f"  {name}: {values['reactions']} reactions, {values['nodes']} nodes")

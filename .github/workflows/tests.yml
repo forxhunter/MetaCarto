@@ -26,3 +26,9 @@ jobs:
             http://bigg.ucsd.edu/static/models/e_coli_core.json
       - name: Test
         run: python -m pytest tests/ -q
+
+      # `scripts/make_tables.py --check` belongs here by rights -- it catches a
+      # manuscript table that no longer matches the run it came from -- but the
+      # manuscript tree is gitignored, so on a fresh clone there is nothing to
+      # compare against and the step would report every table stale. It stays a
+      # local pre-submission check.

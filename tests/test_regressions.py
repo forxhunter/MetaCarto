@@ -112,6 +112,38 @@ def test_carriers_are_only_a_backbone_when_nothing_else_is_available(core_model)
         % avoidable[:5])
 
 
+def test_the_tiering_ablation_actually_disables_tiering(core_model):
+    """An ablation that measures nothing must not report that as "no effect".
+
+    `no_cofactor_tiering` patched `_COFACTOR_CUTOFF`, which stopped being read
+    when the tier moved to NEVER_PRIMARY membership. The patch was therefore a
+    no-op, and the ablation reported agreement with KEGG identical to the full
+    method -- to the reaction, on iJO1366 and iYO844 -- which reads as "the
+    carrier constraint is worth nothing". Corrected, it is worth 3.9-6.3
+    points. Every variant has to be shown to bite before its number means
+    anything.
+    """
+    from src.bench import ablate
+    from src.layout.compound import _candidate_pairs
+    from src.layout.formula import parse_formula
+
+    rxn = core_model.reactions.get_by_id("PDH")
+    formulas = {m.id: parse_formula(m.formula) for m in core_model.metabolites}
+    saturated = {m.id: 1.0 for m in rxn.metabolites}
+    degrees = {m.id: 100 for m in rxn.metabolites}
+
+    def chosen():
+        s, p, _ = _candidate_pairs(rxn, formulas, saturated, degrees)[0]
+        return s, p
+
+    assert chosen() == ("pyr_c", "accoa_c")
+    with ablate.no_cofactor_tiering():
+        assert chosen() == ("nad_c", "nadh_c"), (
+            "no_cofactor_tiering left the carrier constraint in force, so the "
+            "ablation measures nothing")
+    assert chosen() == ("pyr_c", "accoa_c"), "patch was not undone"
+
+
 # --------------------------------------------------------------------------
 # Escher schema. v1 emitted node_type "reaction", null b1/b2 and a hardcoded
 # coefficient of 1; Escher will not render any of that.
@@ -187,6 +219,34 @@ def test_layout_is_deterministic(core_model, core_clusters):
     second = layout_reactions(core_model, core_clusters[name], name)
     assert json.dumps(first.escher_map, sort_keys=True) == \
            json.dumps(second.escher_map, sort_keys=True)
+
+
+def test_node_numbering_does_not_depend_on_dict_order(core_model, core_clusters):
+    """Determinism has to survive leaving the process, not just the call.
+
+    Node ids come from a counter, so they follow the order metabolites are
+    added, and that order used to be `pos`'s -- which inherits from the layered
+    pass and passes through a set upstream, so it varied with PYTHONHASHSEED.
+    Two runs of `layout_v2.py` in separate processes produced maps that were
+    geometrically identical and byte-different, while the in-process test above
+    passed. Feeding the same positions in a different order reproduces that
+    without spawning an interpreter.
+    """
+    from src.layout.engine import layout_reactions
+    from src.layout.render import build_escher_map
+
+    name = sorted(core_clusters)[0]
+    result = layout_reactions(core_model, core_clusters[name], name, render=False)
+    assert result is not None and len(result.pos) > 2
+
+    forward = build_escher_map(result.cgraph, dict(result.pos), name)
+    reversed_pos = dict(reversed(list(result.pos.items())))
+    backward = build_escher_map(result.cgraph, reversed_pos, name)
+
+    assert json.dumps(forward, sort_keys=True) == \
+           json.dumps(backward, sort_keys=True), (
+        "node numbering follows the order positions arrive in, so the emitted "
+        "JSON is not reproducible across processes")
 
 
 # --------------------------------------------------------------------------

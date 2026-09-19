@@ -1,5 +1,5 @@
 {
-  "commit": "8e04215",
+  "commit": "9e3067a",
   "model": "iYO844",
   "clusters": 49,
   "cells": [
@@ -8,8 +8,8 @@
       "variant": "no_cofactor_tiering",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": 0.0,
-      "pairs": 0,
+      "effect": 1.0,
+      "pairs": 2,
       "p_holm": null
     },
     {
@@ -17,9 +17,9 @@
       "variant": "no_cofactor_handling",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": 0.2,
-      "pairs": 4,
-      "p_holm": null
+      "effect": 0.42857142857142855,
+      "pairs": 6,
+      "p_holm": 1.0
     },
     {
       "metric": "crossings_per_graph_edge",
@@ -35,9 +35,9 @@
       "variant": "no_bk",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": 0.0,
-      "pairs": 4,
-      "p_holm": null
+      "effect": -0.6,
+      "pairs": 5,
+      "p_holm": 1.0
     },
     {
       "metric": "crossings_per_graph_edge",
@@ -53,51 +53,51 @@
       "variant": "no_fba",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": -0.6,
-      "pairs": 4,
-      "p_holm": null
+      "effect": -0.23809523809523808,
+      "pairs": 6,
+      "p_holm": 1.0
     },
     {
       "metric": "axis_aligned",
       "variant": "no_cofactor_tiering",
-      "full": 0.7264957264957265,
-      "ablated": 0.7368421052631579,
-      "effect": 0.4,
-      "pairs": 4,
-      "p_holm": null
+      "full": 0.7142857142857143,
+      "ablated": 0.7264957264957265,
+      "effect": 0.1111111111111111,
+      "pairs": 9,
+      "p_holm": 1.0
     },
     {
       "metric": "axis_aligned",
       "variant": "no_cofactor_handling",
-      "full": 0.7264957264957265,
-      "ablated": 0.7241379310344828,
-      "effect": 0.2086021505376344,
-      "pairs": 30,
+      "full": 0.7142857142857143,
+      "ablated": 0.7142857142857143,
+      "effect": 0.2727272727272727,
+      "pairs": 32,
       "p_holm": 1.0
     },
     {
       "metric": "axis_aligned",
       "variant": "no_rings",
-      "full": 0.7264957264957265,
-      "ablated": 0.7264957264957265,
+      "full": 0.7142857142857143,
+      "ablated": 0.7142857142857143,
       "effect": 1.0,
-      "pairs": 2,
+      "pairs": 3,
       "p_holm": null
     },
     {
       "metric": "axis_aligned",
       "variant": "no_bk",
-      "full": 0.7264957264957265,
-      "ablated": 0.35,
-      "effect": -0.96996996996997,
+      "full": 0.7142857142857143,
+      "ablated": 0.3,
+      "effect": -0.972972972972973,
       "pairs": 36,
-      "p_holm": 2.2526364773511887e-08
+      "p_holm": 2.112938091158867e-08
     },
     {
       "metric": "axis_aligned",
       "variant": "no_gap_filling",
-      "full": 0.7264957264957265,
-      "ablated": 0.7264957264957265,
+      "full": 0.7142857142857143,
+      "ablated": 0.7142857142857143,
       "effect": 0.0,
       "pairs": 0,
       "p_holm": null
@@ -105,19 +105,19 @@
     {
       "metric": "axis_aligned",
       "variant": "no_fba",
-      "full": 0.7264957264957265,
+      "full": 0.7142857142857143,
       "ablated": 0.6666666666666666,
-      "effect": -0.7246376811594203,
-      "pairs": 23,
-      "p_holm": 0.021876096725463867
+      "effect": -0.6758893280632411,
+      "pairs": 22,
+      "p_holm": 0.07887554168701172
     },
     {
       "metric": "hairball_index",
       "variant": "no_cofactor_tiering",
       "full": 1.0,
       "ablated": 1.0,
-      "effect": 0.3333333333333333,
-      "pairs": 6,
+      "effect": 0.23636363636363636,
+      "pairs": 10,
       "p_holm": 1.0
     },
     {
@@ -125,7 +125,7 @@
       "variant": "no_cofactor_handling",
       "full": 1.0,
       "ablated": 1.0,
-      "effect": -0.28,
+      "effect": -0.38666666666666666,
       "pairs": 24,
       "p_holm": 1.0
     },
@@ -143,7 +143,7 @@
       "variant": "no_bk",
       "full": 1.0,
       "ablated": 1.0,
-      "effect": 0.10822510822510822,
+      "effect": -0.26406926406926406,
       "pairs": 21,
       "p_holm": 1.0
     },
@@ -151,9 +151,9 @@
       "metric": "hairball_index",
       "variant": "no_gap_filling",
       "full": 1.0,
-      "ablated": 1.878787878787879,
-      "effect": 0.06493506493506493,
-      "pairs": 21,
+      "ablated": 1.875,
+      "effect": -0.06666666666666667,
+      "pairs": 20,
       "p_holm": 1.0
     },
     {
@@ -161,25 +161,25 @@
       "variant": "no_fba",
       "full": 1.0,
       "ablated": 1.0,
-      "effect": 0.5294117647058824,
-      "pairs": 16,
-      "p_holm": 0.7847900390625
+      "effect": -0.08333333333333333,
+      "pairs": 15,
+      "p_holm": 1.0
     },
     {
       "metric": "aspect_ratio",
       "variant": "no_cofactor_tiering",
       "full": 0.6783160754937454,
-      "ablated": 0.7883331591092535,
-      "effect": 0.2777777777777778,
-      "pairs": 8,
+      "ablated": 0.6783160754937454,
+      "effect": -0.28205128205128205,
+      "pairs": 12,
       "p_holm": 1.0
     },
     {
       "metric": "aspect_ratio",
       "variant": "no_cofactor_handling",
       "full": 0.6783160754937454,
-      "ablated": 0.816223957124186,
-      "effect": -0.17386489479512734,
+      "ablated": 0.8240657847310086,
+      "effect": -0.10963455149501661,
       "pairs": 42,
       "p_holm": 1.0
     },
@@ -187,9 +187,9 @@
       "metric": "aspect_ratio",
       "variant": "no_rings",
       "full": 0.6783160754937454,
-      "ablated": 0.7883331591092535,
-      "effect": -0.3333333333333333,
-      "pairs": 2,
+      "ablated": 0.6783160754937454,
+      "effect": -0.6666666666666666,
+      "pairs": 3,
       "p_holm": null
     },
     {
@@ -197,25 +197,25 @@
       "variant": "no_bk",
       "full": 0.6783160754937454,
       "ablated": 0.7544261980389573,
-      "effect": -0.14935988620199148,
-      "pairs": 37,
+      "effect": -0.16869095816464239,
+      "pairs": 38,
       "p_holm": 1.0
     },
     {
       "metric": "aspect_ratio",
       "variant": "no_gap_filling",
       "full": 0.6783160754937454,
-      "ablated": 0.5561507624102516,
-      "effect": -1.0,
-      "pairs": 29,
-      "p_holm": 6.332993507385254e-08
+      "ablated": 0.5712819383091737,
+      "effect": -0.9802955665024631,
+      "pairs": 28,
+      "p_holm": 1.0952353477478027e-06
     },
     {
       "metric": "aspect_ratio",
       "variant": "no_fba",
       "full": 0.6783160754937454,
-      "ablated": 0.9228640373657985,
-      "effect": 0.06552706552706553,
+      "ablated": 0.8756469151317458,
+      "effect": -0.05982905982905983,
       "pairs": 26,
       "p_holm": 1.0
     },
@@ -224,35 +224,35 @@
       "variant": "no_cofactor_tiering",
       "full": 0.8457626103839568,
       "ablated": 0.8457626103839568,
-      "effect": -0.7777777777777778,
-      "pairs": 8,
-      "p_holm": 0.7109375
+      "effect": 0.05454545454545454,
+      "pairs": 10,
+      "p_holm": 1.0
     },
     {
       "metric": "min_separation_ratio",
       "variant": "no_cofactor_handling",
       "full": 0.8457626103839568,
       "ablated": 0.7421258869002658,
-      "effect": -0.4096728307254623,
-      "pairs": 37,
-      "p_holm": 0.4008204730635043
+      "effect": -0.4523809523809524,
+      "pairs": 35,
+      "p_holm": 0.32846269360743463
     },
     {
       "metric": "min_separation_ratio",
       "variant": "no_rings",
       "full": 0.8457626103839568,
       "ablated": 0.8457626103839568,
-      "effect": 0.3333333333333333,
-      "pairs": 2,
+      "effect": 0.0,
+      "pairs": 3,
       "p_holm": null
     },
     {
       "metric": "min_separation_ratio",
       "variant": "no_bk",
       "full": 0.8457626103839568,
-      "ablated": 0.8453925182517291,
-      "effect": -0.10526315789473684,
-      "pairs": 37,
+      "ablated": 0.8123237335915898,
+      "effect": -0.05668016194331984,
+      "pairs": 38,
       "p_holm": 1.0
     },
     {
@@ -260,17 +260,17 @@
       "variant": "no_gap_filling",
       "full": 0.8457626103839568,
       "ablated": 0.6876590005945971,
-      "effect": -0.8857142857142857,
-      "pairs": 20,
-      "p_holm": 0.00213623046875
+      "effect": -0.8631578947368421,
+      "pairs": 19,
+      "p_holm": 0.0067138671875
     },
     {
       "metric": "min_separation_ratio",
       "variant": "no_fba",
       "full": 0.8457626103839568,
       "ablated": 0.845762610383957,
-      "effect": 0.34782608695652173,
-      "pairs": 22,
+      "effect": 0.32857142857142857,
+      "pairs": 20,
       "p_holm": 1.0
     }
   ]

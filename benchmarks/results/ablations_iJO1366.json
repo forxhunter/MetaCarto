@@ -1,5 +1,5 @@
 {
-  "commit": "8e04215",
+  "commit": "9e3067a",
   "model": "iJO1366",
   "clusters": 93,
   "cells": [
@@ -8,17 +8,17 @@
       "variant": "no_cofactor_tiering",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": 0.0,
-      "pairs": 0,
-      "p_holm": null
+      "effect": -0.23809523809523808,
+      "pairs": 6,
+      "p_holm": 1.0
     },
     {
       "metric": "crossings_per_graph_edge",
       "variant": "no_cofactor_handling",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": 0.48333333333333334,
-      "pairs": 15,
+      "effect": 0.4095238095238095,
+      "pairs": 14,
       "p_holm": 1.0
     },
     {
@@ -26,8 +26,8 @@
       "variant": "no_rings",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": 1.0,
-      "pairs": 1,
+      "effect": -0.3333333333333333,
+      "pairs": 2,
       "p_holm": null
     },
     {
@@ -35,45 +35,45 @@
       "variant": "no_bk",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": -0.44664031620553357,
-      "pairs": 22,
-      "p_holm": 0.8213310241699219
+      "effect": 0.058823529411764705,
+      "pairs": 17,
+      "p_holm": 1.0
     },
     {
       "metric": "crossings_per_graph_edge",
       "variant": "no_gap_filling",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": -0.8666666666666667,
-      "pairs": 15,
-      "p_holm": 0.02593994140625
+      "effect": -1.0,
+      "pairs": 12,
+      "p_holm": 0.00927734375
     },
     {
       "metric": "crossings_per_graph_edge",
       "variant": "no_fba",
       "full": 0.0,
       "ablated": 0.0,
-      "effect": -0.06666666666666667,
-      "pairs": 9,
+      "effect": -0.24242424242424243,
+      "pairs": 11,
       "p_holm": 1.0
     },
     {
       "metric": "axis_aligned",
       "variant": "no_cofactor_tiering",
       "full": 0.6101694915254238,
-      "ablated": 0.6111111111111112,
-      "effect": 0.4065934065934066,
-      "pairs": 13,
-      "p_holm": 1.0
+      "ablated": 0.6153846153846154,
+      "effect": 0.7083333333333334,
+      "pairs": 15,
+      "p_holm": 0.22613525390625
     },
     {
       "metric": "axis_aligned",
       "variant": "no_cofactor_handling",
       "full": 0.6101694915254238,
-      "ablated": 0.719626168224299,
-      "effect": 0.6296992481203008,
-      "pairs": 56,
-      "p_holm": 0.0007880252706388819
+      "ablated": 0.7192982456140351,
+      "effect": 0.6674459380479252,
+      "pairs": 58,
+      "p_holm": 0.00019646327037259112
     },
     {
       "metric": "axis_aligned",
@@ -81,7 +81,7 @@
       "full": 0.6101694915254238,
       "ablated": 0.6101694915254238,
       "effect": 1.0,
-      "pairs": 2,
+      "pairs": 3,
       "p_holm": null
     },
     {
@@ -89,9 +89,9 @@
       "variant": "no_bk",
       "full": 0.6101694915254238,
       "ablated": 0.2631578947368421,
-      "effect": -0.8931924882629108,
+      "effect": -0.8971048513302035,
       "pairs": 71,
-      "p_holm": 1.400871411748309e-09
+      "p_holm": 1.2060499689358822e-09
     },
     {
       "metric": "axis_aligned",
@@ -106,170 +106,170 @@
       "metric": "axis_aligned",
       "variant": "no_fba",
       "full": 0.6101694915254238,
-      "ablated": 0.5416666666666666,
-      "effect": -0.8853658536585366,
+      "ablated": 0.5151515151515151,
+      "effect": -0.8292682926829268,
       "pairs": 40,
-      "p_holm": 8.29257260193117e-07
+      "p_holm": 1.1612755770329386e-05
     },
     {
       "metric": "hairball_index",
       "variant": "no_cofactor_tiering",
-      "full": 1.8412698412698412,
-      "ablated": 1.8412698412698412,
-      "effect": 0.34502923976608185,
-      "pairs": 18,
+      "full": 1.8666666666666667,
+      "ablated": 1.849462365591398,
+      "effect": 0.3368421052631579,
+      "pairs": 19,
       "p_holm": 1.0
     },
     {
       "metric": "hairball_index",
       "variant": "no_cofactor_handling",
-      "full": 1.8412698412698412,
+      "full": 1.8666666666666667,
       "ablated": 1.894736842105263,
-      "effect": -0.36065573770491804,
-      "pairs": 60,
-      "p_holm": 0.24202329244805165
+      "effect": -0.3407364114552893,
+      "pairs": 58,
+      "p_holm": 0.336198003905078
     },
     {
       "metric": "hairball_index",
       "variant": "no_rings",
-      "full": 1.8412698412698412,
-      "ablated": 1.8412698412698412,
-      "effect": -1.0,
+      "full": 1.8666666666666667,
+      "ablated": 1.8666666666666667,
+      "effect": 0.3333333333333333,
       "pairs": 2,
       "p_holm": null
     },
     {
       "metric": "hairball_index",
       "variant": "no_bk",
-      "full": 1.8412698412698412,
-      "ablated": 1.8297872340425534,
-      "effect": -0.132890365448505,
-      "pairs": 42,
+      "full": 1.8666666666666667,
+      "ablated": 1.86013986013986,
+      "effect": 0.046464646464646465,
+      "pairs": 44,
       "p_holm": 1.0
     },
     {
       "metric": "hairball_index",
       "variant": "no_gap_filling",
-      "full": 1.8412698412698412,
+      "full": 1.8666666666666667,
       "ablated": 1.8666666666666667,
-      "effect": 0.14772727272727273,
+      "effect": 0.011363636363636364,
       "pairs": 32,
       "p_holm": 1.0
     },
     {
       "metric": "hairball_index",
       "variant": "no_fba",
-      "full": 1.8412698412698412,
-      "ablated": 1.7916666666666667,
-      "effect": 0.35333333333333333,
-      "pairs": 24,
+      "full": 1.8666666666666667,
+      "ablated": 1.8074074074074074,
+      "effect": 0.16748768472906403,
+      "pairs": 28,
       "p_holm": 1.0
     },
     {
       "metric": "aspect_ratio",
       "variant": "no_cofactor_tiering",
-      "full": 0.8073071696354528,
-      "ablated": 0.7897052541428435,
-      "effect": -0.45588235294117646,
-      "pairs": 16,
+      "full": 0.7897052541428435,
+      "ablated": 0.7837470132212312,
+      "effect": -0.42857142857142855,
+      "pairs": 20,
       "p_holm": 1.0
     },
     {
       "metric": "aspect_ratio",
       "variant": "no_cofactor_handling",
-      "full": 0.8073071696354528,
-      "ablated": 0.6124259073755812,
-      "effect": -0.3080397470641373,
+      "full": 0.7897052541428435,
+      "ablated": 0.6038430306707591,
+      "effect": -0.3224932249322493,
       "pairs": 81,
-      "p_holm": 0.24202329244805165
+      "p_holm": 0.1987763482653
     },
     {
       "metric": "aspect_ratio",
       "variant": "no_rings",
-      "full": 0.8073071696354528,
-      "ablated": 0.8073071696354528,
+      "full": 0.7897052541428435,
+      "ablated": 0.7897052541428435,
+      "effect": 0.0,
+      "pairs": 3,
+      "p_holm": null
+    },
+    {
+      "metric": "aspect_ratio",
+      "variant": "no_bk",
+      "full": 0.7897052541428435,
+      "ablated": 0.8382275478529867,
+      "effect": 0.31790123456790126,
+      "pairs": 80,
+      "p_holm": 0.21612776711160478
+    },
+    {
+      "metric": "aspect_ratio",
+      "variant": "no_gap_filling",
+      "full": 0.7897052541428435,
+      "ablated": 0.6525493460563556,
+      "effect": -0.7448979591836735,
+      "pairs": 48,
+      "p_holm": 3.197460659976059e-05
+    },
+    {
+      "metric": "aspect_ratio",
+      "variant": "no_fba",
+      "full": 0.7897052541428435,
+      "ablated": 0.8166052389819042,
+      "effect": 0.22702104097452935,
+      "pairs": 42,
+      "p_holm": 1.0
+    },
+    {
+      "metric": "min_separation_ratio",
+      "variant": "no_cofactor_tiering",
+      "full": 0.845762610383957,
+      "ablated": 0.8457626103839566,
+      "effect": -0.477124183006536,
+      "pairs": 17,
+      "p_holm": 1.0
+    },
+    {
+      "metric": "min_separation_ratio",
+      "variant": "no_cofactor_handling",
+      "full": 0.845762610383957,
+      "ablated": 0.7285869675815521,
+      "effect": -0.41770623742454727,
+      "pairs": 70,
+      "p_holm": 0.04289851914525982
+    },
+    {
+      "metric": "min_separation_ratio",
+      "variant": "no_rings",
+      "full": 0.845762610383957,
+      "ablated": 0.845762610383957,
       "effect": 0.3333333333333333,
       "pairs": 2,
       "p_holm": null
     },
     {
-      "metric": "aspect_ratio",
+      "metric": "min_separation_ratio",
       "variant": "no_bk",
-      "full": 0.8073071696354528,
-      "ablated": 0.8282604224633277,
-      "effect": 0.17658227848101266,
-      "pairs": 79,
-      "p_holm": 1.0
-    },
-    {
-      "metric": "aspect_ratio",
-      "variant": "no_gap_filling",
-      "full": 0.8073071696354528,
-      "ablated": 0.610387119913638,
-      "effect": -0.7490196078431373,
-      "pairs": 50,
-      "p_holm": 1.5446938768093332e-05
-    },
-    {
-      "metric": "aspect_ratio",
-      "variant": "no_fba",
-      "full": 0.8073071696354528,
-      "ablated": 0.8073071696354528,
-      "effect": 0.3178294573643411,
-      "pairs": 42,
-      "p_holm": 0.8213310241699219
-    },
-    {
-      "metric": "min_separation_ratio",
-      "variant": "no_cofactor_tiering",
-      "full": 0.845762610383957,
-      "ablated": 0.8454028957078178,
-      "effect": -0.7692307692307693,
-      "pairs": 12,
-      "p_holm": 0.24202329244805165
-    },
-    {
-      "metric": "min_separation_ratio",
-      "variant": "no_cofactor_handling",
-      "full": 0.845762610383957,
-      "ablated": 0.6935402532952334,
-      "effect": -0.4812206572769953,
-      "pairs": 71,
-      "p_holm": 0.007652534796988933
-    },
-    {
-      "metric": "min_separation_ratio",
-      "variant": "no_rings",
       "full": 0.845762610383957,
       "ablated": 0.845762610383957,
-      "effect": -0.3333333333333333,
-      "pairs": 2,
-      "p_holm": null
-    },
-    {
-      "metric": "min_separation_ratio",
-      "variant": "no_bk",
-      "full": 0.845762610383957,
-      "ablated": 0.8457626103839557,
-      "effect": -0.307026307026307,
-      "pairs": 77,
-      "p_holm": 0.25017553135054105
+      "effect": -0.2949419002050581,
+      "pairs": 76,
+      "p_holm": 0.336198003905078
     },
     {
       "metric": "min_separation_ratio",
       "variant": "no_gap_filling",
       "full": 0.845762610383957,
-      "ablated": 0.6308161333406435,
-      "effect": -0.9838709677419355,
-      "pairs": 31,
-      "p_holm": 1.434236764907837e-07
+      "ablated": 0.678571428571429,
+      "effect": -1.0,
+      "pairs": 33,
+      "p_holm": 5.3551048040390015e-09
     },
     {
       "metric": "min_separation_ratio",
       "variant": "no_fba",
       "full": 0.845762610383957,
       "ablated": 0.845762610383957,
-      "effect": 0.0665024630541872,
+      "effect": 0.15763546798029557,
       "pairs": 28,
       "p_holm": 1.0
     }

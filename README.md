@@ -64,7 +64,11 @@ The working interpreter is a conda environment with `cobra`, `networkx` and `num
 ```bash
 python layout_v2.py --model e_coli_core --preview
 python layout_v2.py --model Recon3D --group-function --max-cluster 120
-python layout_v2.py --all --group-function --out data/bigg
+
+# The published collection, in one command. `--max-cluster 120` is part of it:
+# without it the same models give roughly a third as many, larger maps, and
+# the collection on disk was built with a mix of the two.
+python layout_v2.py --all --group-function --max-cluster 120 --out data/bigg
 ```
 
 Useful flags: `--group-function` merges pathway clusters into functional maps, `--subsystem`

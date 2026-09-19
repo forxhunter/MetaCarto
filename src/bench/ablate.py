@@ -90,15 +90,25 @@ def _patch(target, name, value):
 
 @contextlib.contextmanager
 def no_cofactor_tiering():
-    """Cofactor-ness as a score penalty only, which is what the tier replaced."""
-    with _patch(_compound, "_COFACTOR_CUTOFF", float("inf")):
+    """Cofactor-ness as a score penalty only, which is what the tier replaced.
+
+    Both of these patched `_COFACTOR_CUTOFF` until it was noticed that nothing
+    reads it: the tier is taken from membership of the curated `NEVER_PRIMARY`
+    list, and the cutoff has been a dead constant since that became true. So
+    `no_cofactor_tiering` was a no-op -- it reported agreement identical to the
+    full method on iJO1366 and iYO844 to the reaction, which is what exposed it
+    -- and `no_cofactor_handling` was removing the damping alone while leaving
+    the tier in place. Emptying the list is what actually drops every candidate
+    into one tier and leaves damped chemistry to decide.
+    """
+    with _patch(_compound, "NEVER_PRIMARY", frozenset()):
         yield
 
 
 @contextlib.contextmanager
 def no_cofactor_handling():
     """No tier and no damping: the main pair chosen on raw shared chemistry."""
-    with _patch(_compound, "_COFACTOR_CUTOFF", float("inf")), \
+    with _patch(_compound, "NEVER_PRIMARY", frozenset()), \
          _patch(_compound, "_COFACTOR_DAMPING", 0.0):
         yield
 

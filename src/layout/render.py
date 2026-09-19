@@ -278,7 +278,15 @@ def build_escher_map(cgraph, pos, map_name, author="AutoLayout", description="",
     occupied = [pos[n] for n in pos]
     routes = routes or {}
 
-    for met_id, (x, y) in pos.items():
+    # Sorted, not in `pos` order. Node ids come from a counter, so they follow
+    # insertion order, and `pos` inherits its order from the layered pass --
+    # which passes through a set somewhere upstream and therefore varies with
+    # PYTHONHASHSEED between processes. The drawing was identical either way
+    # (same coordinates, same pairs, same metrics) but the emitted JSON was not
+    # byte-identical across runs, which is weaker than the determinism this
+    # project claims. Sorting here pins the numbering wherever the upstream
+    # order came from.
+    for met_id, (x, y) in sorted(pos.items()):
         info = cgraph.metabolites.get(met_id, {})
         node_id = builder.add_metabolite(
             met_id, info.get("name", met_id), x, y, primary=True

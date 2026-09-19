@@ -112,7 +112,12 @@ def compute_cofactor_scores(model):
     return scores
 
 
-_COFACTOR_CUTOFF = 0.5
+# `_COFACTOR_CUTOFF = 0.5` used to live here, from when the tier was a
+# threshold on the connectivity score. The tier has been membership of
+# NEVER_PRIMARY since, and nothing read the constant -- but the ablation
+# harness went on patching it, so `no_cofactor_tiering` silently measured
+# nothing and reported the carrier constraint as worth zero. It is deleted
+# rather than left in place so that cannot happen again.
 
 
 def _candidate_pairs(rxn, formulas, cofactor_score, degrees):

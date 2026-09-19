@@ -1,5 +1,5 @@
 {
-  "commit": "e2d32c5",
+  "commit": "9e3067a",
   "model": "iJO1366",
   "kegg_reactions_drawn": 2895,
   "variants": {
@@ -7,6 +7,16 @@
       "considered": 673,
       "agree": 640,
       "rate": 0.950965824665676
+    },
+    "no_cofactor_tiering": {
+      "considered": 673,
+      "agree": 609,
+      "rate": 0.9049034175334324
+    },
+    "no_cofactor_handling": {
+      "considered": 673,
+      "agree": 398,
+      "rate": 0.5913818722139673
     }
   },
   "metdraw": {
