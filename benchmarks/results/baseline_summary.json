@@ -1,0 +1,172 @@
+{
+  "models": [
+    "e_coli_core",
+    "iAF1260",
+    "iJO1366",
+    "iMM904"
+  ],
+  "reference": "metacarto",
+  "metrics": {
+    "crossings_per_edge": {
+      "metacarto": {
+        "median": 0.007273274478330658,
+        "p_holm": null,
+        "cliffs_delta": null
+      },
+      "dot": {
+        "median": 0.010281690140845071,
+        "p_holm": 0.3493447265880424,
+        "cliffs_delta": 0.011904761904761904
+      },
+      "fdp": {
+        "median": 0.08786764705882352,
+        "p_holm": 4.7302412442882733e-07,
+        "cliffs_delta": -0.3482615268329554
+      },
+      "kamada_kawai": {
+        "median": 0.09512061403508772,
+        "p_holm": 1.2882959242373935e-07,
+        "cliffs_delta": -0.37729906777525823
+      },
+      "neato": {
+        "median": 0.05,
+        "p_holm": 0.005386067833364181,
+        "cliffs_delta": -0.2166792642983119
+      },
+      "spring": {
+        "median": 0.05735930735930736,
+        "p_holm": 0.02743844606297539,
+        "cliffs_delta": -0.195578231292517
+      }
+    },
+    "hairball_index": {
+      "metacarto": {
+        "median": 1.7936507936507935,
+        "p_holm": null,
+        "cliffs_delta": null
+      },
+      "dot": {
+        "median": 1.7249114521841795,
+        "p_holm": 0.5624237346664366,
+        "cliffs_delta": 0.017132779037540943
+      },
+      "fdp": {
+        "median": 1.0,
+        "p_holm": 0.09054397110074403,
+        "cliffs_delta": 0.07501889644746787
+      },
+      "kamada_kawai": {
+        "median": 1.8333333333333335,
+        "p_holm": 0.2268145142206552,
+        "cliffs_delta": -0.0810657596371882
+      },
+      "neato": {
+        "median": 1.0,
+        "p_holm": 0.00022067919010630428,
+        "cliffs_delta": 0.15117157974300832
+      },
+      "spring": {
+        "median": 1.9666666666666668,
+        "p_holm": 8.106506413751943e-09,
+        "cliffs_delta": -0.29931972789115646
+      }
+    },
+    "aspect_ratio": {
+      "metacarto": {
+        "median": 0.6773305494033837,
+        "p_holm": null,
+        "cliffs_delta": null
+      },
+      "dot": {
+        "median": 2.467026034953024,
+        "p_holm": 6.114896987413217e-10,
+        "cliffs_delta": -0.42693373645754595
+      },
+      "fdp": {
+        "median": 1.0117536473622089,
+        "p_holm": 3.005416182856005e-10,
+        "cliffs_delta": 0.5697908793146889
+      },
+      "kamada_kawai": {
+        "median": 1.000000006403484,
+        "p_holm": 3.103868610581272e-06,
+        "cliffs_delta": 0.35903250188964475
+      },
+      "neato": {
+        "median": 0.9684606779241614,
+        "p_holm": 3.005416182856005e-10,
+        "cliffs_delta": 0.5075585789871504
+      },
+      "spring": {
+        "median": 0.999734861717292,
+        "p_holm": 9.81187346508386e-10,
+        "cliffs_delta": 0.5304862685815067
+      }
+    },
+    "occupancy": {
+      "metacarto": {
+        "median": 0.4840649319956002,
+        "p_holm": null,
+        "cliffs_delta": null
+      },
+      "dot": {
+        "median": 0.311744013739785,
+        "p_holm": 5.479885979600002e-18,
+        "cliffs_delta": -0.5345175107079869
+      },
+      "fdp": {
+        "median": 0.4953058157007653,
+        "p_holm": 1.0,
+        "cliffs_delta": -0.006172839506172839
+      },
+      "kamada_kawai": {
+        "median": 0.5144584341364558,
+        "p_holm": 1.0,
+        "cliffs_delta": 0.02834467120181406
+      },
+      "neato": {
+        "median": 0.4640000453199742,
+        "p_holm": 0.001556863171208231,
+        "cliffs_delta": -0.1326530612244898
+      },
+      "spring": {
+        "median": 0.6228759996924297,
+        "p_holm": 3.714170388219032e-14,
+        "cliffs_delta": 0.4708994708994709
+      }
+    },
+    "min_separation_ratio": {
+      "metacarto": {
+        "median": 0.9913745508939928,
+        "p_holm": null,
+        "cliffs_delta": null
+      },
+      "dot": {
+        "median": 0.845762610383957,
+        "p_holm": 2.8747291565594197e-10,
+        "cliffs_delta": -0.25806248425296047
+      },
+      "fdp": {
+        "median": 0.7619371346079664,
+        "p_holm": 8.855605332571598e-11,
+        "cliffs_delta": -0.3512849584278156
+      },
+      "kamada_kawai": {
+        "median": 0.4128228266067778,
+        "p_holm": 2.1618994077373233e-18,
+        "cliffs_delta": -0.5726883345930965
+      },
+      "neato": {
+        "median": 0.9038447939015004,
+        "p_holm": 3.765072289744269e-10,
+        "cliffs_delta": -0.24792139077853365
+      },
+      "spring": {
+        "median": 0.7110193222710457,
+        "p_holm": 6.216397802809131e-15,
+        "cliffs_delta": -0.37326782564877803
+      }
+    }
+  },
+  "commit": "32e1b32"
+}

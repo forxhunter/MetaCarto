@@ -1,0 +1,2095 @@
+{
+  "commit": "32e1b32",
+  "model": "iAF1260",
+  "clusters": 40,
+  "methods": {
+    "metacarto": {
+      "maps": 40,
+      "median_seconds": 0.025872049998724833,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.0,
+          "mean": 0.07703127055119113
+        },
+        "hairball_index": {
+          "median": 1.6851851851851851,
+          "mean": 1.598800008899523
+        },
+        "aspect_ratio": {
+          "median": 0.6438775414725957,
+          "mean": 0.7065396896129598
+        },
+        "occupancy": {
+          "median": 0.4534751355948094,
+          "mean": 0.45005530060386806
+        },
+        "min_separation_ratio": {
+          "median": 1.0584714770706334,
+          "mean": 1.047203435795878
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetaldehyde transport periplasm",
+          "crossings_per_edge": 0.058823529411764705,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.7171587606008158,
+          "occupancy": 0.27685786818918395,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Aerobactin transport",
+          "crossings_per_edge": 0.3157894736842105,
+          "hairball_index": 2.526315789473684,
+          "aspect_ratio": 0.5265398955869394,
+          "occupancy": 0.5518392133996615,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Alpha-d-mannosyl d-glycerate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.29017857142857145,
+          "occupancy": 0.4367045044222763,
+          "min_separation_ratio": 1.7777777777777777
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_edge": 0.0967741935483871,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0785915712363265,
+          "occupancy": 0.43561914087164677,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.7235772357723576,
+          "aspect_ratio": 0.44908971622117844,
+          "occupancy": 0.5256530627525133,
+          "min_separation_ratio": 1.0613873985857112
+        },
+        {
+          "cluster": "Amp exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.2708333333333333,
+          "occupancy": 0.4384594458511736,
+          "min_separation_ratio": 1.7777777777777777
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_edge": 0.011363636363636364,
+          "hairball_index": 2.727272727272727,
+          "aspect_ratio": 0.8247440716331386,
+          "occupancy": 0.598690791861733,
+          "min_separation_ratio": 0.8808800455254888
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.923076923076923,
+          "aspect_ratio": 0.4116063204719361,
+          "occupancy": 0.41827026357181435,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Asparagine exchange",
+          "crossings_per_edge": 0.16129032258064516,
+          "hairball_index": 2.241379310344828,
+          "aspect_ratio": 0.4648811125641862,
+          "occupancy": 0.36406015125112673,
+          "min_separation_ratio": 0.3925569871589017
+        },
+        {
+          "cluster": "Biosynthesis of various nucleotide sugars",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.26774751266706803,
+          "occupancy": 0.2715238143109892,
+          "min_separation_ratio": 1.0555555555555556
+        },
+        {
+          "cluster": "Copper exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.29464285714285715,
+          "occupancy": 0.43682337904136825,
+          "min_separation_ratio": 1.7777777777777777
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_edge": 0.05952380952380952,
+          "hairball_index": 1.9148936170212765,
+          "aspect_ratio": 0.5324682249454495,
+          "occupancy": 0.5517703097455865,
+          "min_separation_ratio": 0.6623036450917401
+        },
+        {
+          "cluster": "D-fructose phosphate transport",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.8170731707317076,
+          "aspect_ratio": 0.4532401643496738,
+          "occupancy": 0.547752476859767,
+          "min_separation_ratio": 0.6009252125773316
+        },
+        {
+          "cluster": "D-galactose transport",
+          "crossings_per_edge": 0.125,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7978368224231893,
+          "occupancy": 0.3007022982131776,
+          "min_separation_ratio": 1.5555555555555556
+        },
+        {
+          "cluster": "Fatty acid biosynthesis",
+          "crossings_per_edge": 0.003968253968253968,
+          "hairball_index": 2.25,
+          "aspect_ratio": 1.067363679672905,
+          "occupancy": 0.6537610747835185,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Fatty acid degradation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.7241379310344829,
+          "aspect_ratio": 0.4880323656042341,
+          "occupancy": 0.5363393166890312,
+          "min_separation_ratio": 0.3333333333333333
+        },
+        {
+          "cluster": "Fatty acid elongation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.423501691467458,
+          "occupancy": 0.48450216130061374,
+          "min_separation_ratio": 1.0555555555555556
+        },
+        {
+          "cluster": "Fe-enterobactin Enterochelin",
+          "crossings_per_edge": 0.32142857142857145,
+          "hairball_index": 1.885714285714286,
+          "aspect_ratio": 0.7505580734855751,
+          "occupancy": 0.4427835174665478,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 0.4994381431146947,
+          "occupancy": 0.4193656073721873,
+          "min_separation_ratio": 0.8808800455254884
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9730143528773704,
+          "occupancy": 0.5915577313252741,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Galactose metabolism",
+          "crossings_per_edge": 0.06578947368421052,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.3381609714526765,
+          "occupancy": 0.4675037721320312,
+          "min_separation_ratio": 1.0613873985857112
+        },
+        {
+          "cluster": "Glycerol phosphate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.29017857142857145,
+          "occupancy": 0.4424796675534191,
+          "min_separation_ratio": 1.7777777777777777
+        },
+        {
+          "cluster": "Glycerolipid metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.6666666666666667,
+          "aspect_ratio": 0.44856196260783615,
+          "occupancy": 0.508415664174946,
+          "min_separation_ratio": 0.36666666666666625
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9024390243902438,
+          "aspect_ratio": 0.8383157632618191,
+          "occupancy": 0.6368989956024204,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9375,
+          "aspect_ratio": 0.22446647413136578,
+          "occupancy": 0.2909806993566864,
+          "min_separation_ratio": 1.0555555555555556
+        },
+        {
+          "cluster": "Glyoxylate and dicarboxylate metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.3565240506373706,
+          "occupancy": 0.464166753723071,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Hexanoate transport",
+          "crossings_per_edge": 0.06666666666666667,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1074344435004349,
+          "occupancy": 0.2572956337249105,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6839351402559118,
+          "occupancy": 0.3544412461359235,
+          "min_separation_ratio": 0.9827491017879852
+        },
+        {
+          "cluster": "L-proline transport",
+          "crossings_per_edge": 0.425,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1715745554775199,
+          "occupancy": 0.282278981507067,
+          "min_separation_ratio": 1.548097822259288
+        },
+        {
+          "cluster": "L-threonine transport",
+          "crossings_per_edge": 0.13333333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8099383563975407,
+          "occupancy": 0.1722357270055576,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Lipid transport",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.7037037037037035,
+          "aspect_ratio": 0.6707259585508554,
+          "occupancy": 0.4881910443275511,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Lipopolysaccharide biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.20270438306661667,
+          "occupancy": 0.22195550939333206,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "Lps core Antigen",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.5794392523364484,
+          "aspect_ratio": 0.3789171761676984,
+          "occupancy": 0.5170592715826803,
+          "min_separation_ratio": 0.36666666666666636
+        },
+        {
+          "cluster": "Lysine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7163788814354988,
+          "occupancy": 0.4308322171100223,
+          "min_separation_ratio": 0.9827491017879852
+        },
+        {
+          "cluster": "Malate Transport periplasm",
+          "crossings_per_edge": 0.21296296296296297,
+          "hairball_index": 1.9024390243902438,
+          "aspect_ratio": 1.4596122429399743,
+          "occupancy": 0.5758408507308703,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Maltohexaose transport Abc system periplasm",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6170291243943361,
+          "occupancy": 0.12443385282506118,
+          "min_separation_ratio": 1.4444444444444444
+        },
+        {
+          "cluster": "Murein",
+          "crossings_per_edge": 0.14772727272727273,
+          "hairball_index": 1.945945945945946,
+          "aspect_ratio": 1.127085617891562,
+          "occupancy": 0.6048462512444756,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "N-c",
+          "crossings_per_edge": 0.5185185185185185,
+          "hairball_index": 2.6288659793814433,
+          "aspect_ratio": 0.9879188417940327,
+          "occupancy": 0.6138998982300736,
+          "min_separation_ratio": 0.36666666666666636
+        },
+        {
+          "cluster": "N-c 2",
+          "crossings_per_edge": 0.15140845070422534,
+          "hairball_index": 2.440298507462687,
+          "aspect_ratio": 0.8660283094702877,
+          "occupancy": 0.6606067331174958,
+          "min_separation_ratio": 0.366666666666666
+        },
+        {
+          "cluster": "N-c 3",
+          "crossings_per_edge": 0.20588235294117646,
+          "hairball_index": 2.5945945945945947,
+          "aspect_ratio": 1.3846295188295827,
+          "occupancy": 0.6048131253979381,
+          "min_separation_ratio": 0.4008873396161598
+        }
+      ]
+    },
+    "dot": {
+      "maps": 40,
+      "median_seconds": 0.016952949998085387,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.0,
+          "mean": 0.061491226190418954
+        },
+        "hairball_index": {
+          "median": 1.8384591488039765,
+          "mean": 1.660850892171921
+        },
+        "aspect_ratio": {
+          "median": 2.078324954647999,
+          "mean": 10.032323553766686
+        },
+        "occupancy": {
+          "median": 0.3093227369056901,
+          "mean": 0.3127721065749684
+        },
+        "min_separation_ratio": {
+          "median": 0.8840830061334572,
+          "mean": 0.7811199970325351
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetaldehyde transport periplasm",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.6079930514867462,
+          "occupancy": 0.20724031147161648,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Aerobactin transport",
+          "crossings_per_edge": 0.30927835051546393,
+          "hairball_index": 2.5894736842105264,
+          "aspect_ratio": 2.101884308691314,
+          "occupancy": 0.4700026615183475,
+          "min_separation_ratio": 0.9953071617667046
+        },
+        {
+          "cluster": "Alpha-d-mannosyl d-glycerate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.3333333333333333,
+          "aspect_ratio": 69.90216796874999,
+          "occupancy": 0.05172988346557761,
+          "min_separation_ratio": 0.8333333333333334
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_edge": 0.03333333333333333,
+          "hairball_index": 1.9333333333333331,
+          "aspect_ratio": 1.2381287431548378,
+          "occupancy": 0.3913202602040234,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.8536585365853657,
+          "aspect_ratio": 14.477336804450383,
+          "occupancy": 0.19896464354793889,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Amp exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.3333333333333333,
+          "aspect_ratio": 69.68136363636364,
+          "occupancy": 0.05159974828119852,
+          "min_separation_ratio": 0.7474747474747447
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_edge": 0.023809523809523808,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.1882250653634236,
+          "occupancy": 0.4499865791356654,
+          "min_separation_ratio": 0.6689845842459679
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.923076923076923,
+          "aspect_ratio": 0.4573849570366257,
+          "occupancy": 0.31853966551914814,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Asparagine exchange",
+          "crossings_per_edge": 0.16129032258064516,
+          "hairball_index": 1.8390804597701151,
+          "aspect_ratio": 3.6225741313713486,
+          "occupancy": 0.2957535097801076,
+          "min_separation_ratio": 0.3680793403334229
+        },
+        {
+          "cluster": "Biosynthesis of various nucleotide sugars",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 3.116395897036317,
+          "occupancy": 0.4380893253410759,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Copper exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.3333333333333333,
+          "aspect_ratio": 68.81617819148936,
+          "occupancy": 0.05394183054616507,
+          "min_separation_ratio": 0.8404255319148939
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_edge": 0.1282051282051282,
+          "hairball_index": 1.957446808510638,
+          "aspect_ratio": 1.8205425616873803,
+          "occupancy": 0.4561132430051109,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "D-fructose phosphate transport",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.6585365853658538,
+          "aspect_ratio": 24.497869135011854,
+          "occupancy": 0.13459562417499027,
+          "min_separation_ratio": 0.8089887640449439
+        },
+        {
+          "cluster": "D-galactose transport",
+          "crossings_per_edge": 0.125,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9690001392597869,
+          "occupancy": 0.22560725933025166,
+          "min_separation_ratio": 0.9480969183421574
+        },
+        {
+          "cluster": "Fatty acid biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.9625,
+          "aspect_ratio": 0.7229066905852244,
+          "occupancy": 0.6342522030718301,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Fatty acid degradation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.8965517241379313,
+          "aspect_ratio": 6.310425800810819,
+          "occupancy": 0.3232965916966077,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Fatty acid elongation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9148936170212765,
+          "aspect_ratio": 8.685432181151247,
+          "occupancy": 0.2584880366185479,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Fe-enterobactin Enterochelin",
+          "crossings_per_edge": 0.3375,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.5668387405372066,
+          "occupancy": 0.25513404976861054,
+          "min_separation_ratio": 0.9953071617667054
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 0.5300949781791575,
+          "occupancy": 0.3349282492932181,
+          "min_separation_ratio": 0.8457626103839568
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.0547656006046844,
+          "occupancy": 0.44222658438256696,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Galactose metabolism",
+          "crossings_per_edge": 0.09722222222222222,
+          "hairball_index": 1.9000000000000001,
+          "aspect_ratio": 3.7036428366825125,
+          "occupancy": 0.4066410941815148,
+          "min_separation_ratio": 0.6964099736576954
+        },
+        {
+          "cluster": "Glycerol phosphate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.3333333333333333,
+          "aspect_ratio": 69.52019758064516,
+          "occupancy": 0.051694676662779875,
+          "min_separation_ratio": 0.8602150537634417
+        },
+        {
+          "cluster": "Glycerolipid metabolism",
+          "crossings_per_edge": 0.041666666666666664,
+          "hairball_index": 1.6666666666666667,
+          "aspect_ratio": 9.034954617753987,
+          "occupancy": 0.2608571699429386,
+          "min_separation_ratio": 0.3897421019181656
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_edge": 0.04807692307692308,
+          "hairball_index": 2.231707317073171,
+          "aspect_ratio": 2.798383316320206,
+          "occupancy": 0.4934613326811685,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9375,
+          "aspect_ratio": 6.073414728534843,
+          "occupancy": 0.31928853172674143,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Glyoxylate and dicarboxylate metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9259259259259258,
+          "aspect_ratio": 6.1937696646535425,
+          "occupancy": 0.272611245687294,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Hexanoate transport",
+          "crossings_per_edge": 0.23333333333333334,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8970538976228892,
+          "occupancy": 0.19173669702647037,
+          "min_separation_ratio": 0.9991330730923521
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7825637344050244,
+          "occupancy": 0.2760167622064614,
+          "min_separation_ratio": 0.7832348243812047
+        },
+        {
+          "cluster": "L-proline transport",
+          "crossings_per_edge": 0.07894736842105263,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.083712957310437,
+          "occupancy": 0.21848171827160084,
+          "min_separation_ratio": 0.9999035633345557
+        },
+        {
+          "cluster": "L-threonine transport",
+          "crossings_per_edge": 0.13333333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9572551809179197,
+          "occupancy": 0.13844918171308548,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Lipid transport",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.6933788441828883,
+          "occupancy": 0.41049684670097425,
+          "min_separation_ratio": 0.36666666666666653
+        },
+        {
+          "cluster": "Lipopolysaccharide biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.2770751615476642,
+          "occupancy": 0.19560400898496166,
+          "min_separation_ratio": 0.3666666666666672
+        },
+        {
+          "cluster": "Lps core Antigen",
+          "crossings_per_edge": 0.0058823529411764705,
+          "hairball_index": 2.5233644859813085,
+          "aspect_ratio": 0.4502067896852409,
+          "occupancy": 0.4743373148988918,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Lysine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9130434782608696,
+          "aspect_ratio": 0.6250405462917369,
+          "occupancy": 0.3001058082922321,
+          "min_separation_ratio": 0.9079509585034728
+        },
+        {
+          "cluster": "Malate Transport periplasm",
+          "crossings_per_edge": 0.10185185185185185,
+          "hairball_index": 2.8536585365853657,
+          "aspect_ratio": 1.8264309484450705,
+          "occupancy": 0.45980096310288615,
+          "min_separation_ratio": 0.4029314078352231
+        },
+        {
+          "cluster": "Maltohexaose transport Abc system periplasm",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7647258230338053,
+          "occupancy": 0.10775398438064752,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Murein",
+          "crossings_per_edge": 0.09090909090909091,
+          "hairball_index": 1.945945945945946,
+          "aspect_ratio": 3.1772517638275923,
+          "occupancy": 0.4656924714527999,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "N-c",
+          "crossings_per_edge": 0.15048543689320387,
+          "hairball_index": 2.4123711340206184,
+          "aspect_ratio": 3.356652939685182,
+          "occupancy": 0.4609710580303163,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "N-c 2",
+          "crossings_per_edge": 0.19285714285714287,
+          "hairball_index": 2.5074626865671643,
+          "aspect_ratio": 3.1537242974179396,
+          "occupancy": 0.46807490293778053,
+          "min_separation_ratio": 0.4735187712084616
+        },
+        {
+          "cluster": "N-c 3",
+          "crossings_per_edge": 0.16666666666666666,
+          "hairball_index": 1.837837837837838,
+          "aspect_ratio": 1.5559979386824319,
+          "occupancy": 0.5469982339645925,
+          "min_separation_ratio": 0.48000000000000004
+        }
+      ]
+    },
+    "neato": {
+      "maps": 40,
+      "median_seconds": 0.019114349997835234,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.04134697357203751,
+          "mean": 0.09022373271710117
+        },
+        "hairball_index": {
+          "median": 1.0,
+          "mean": 1.41905060590706
+        },
+        "aspect_ratio": {
+          "median": 0.9526632321837342,
+          "mean": 0.9787068358552187
+        },
+        "occupancy": {
+          "median": 0.4586851176134651,
+          "mean": 0.4180928345054534
+        },
+        "min_separation_ratio": {
+          "median": 0.9217420960458631,
+          "mean": 0.7955123413731708
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetaldehyde transport periplasm",
+          "crossings_per_edge": 0.029411764705882353,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.9956535610364854,
+          "occupancy": 0.2016322877813857,
+          "min_separation_ratio": 0.9834045284387929
+        },
+        {
+          "cluster": "Aerobactin transport",
+          "crossings_per_edge": 0.21904761904761905,
+          "hairball_index": 2.5894736842105264,
+          "aspect_ratio": 0.8811342788746924,
+          "occupancy": 0.5184699092775282,
+          "min_separation_ratio": 0.9998766124161561
+        },
+        {
+          "cluster": "Alpha-d-mannosyl d-glycerate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9882973760932943,
+          "occupancy": 0.5146004785857451,
+          "min_separation_ratio": 0.913373465615035
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_edge": 0.046875,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6017066379408419,
+          "occupancy": 0.24243998114964935,
+          "min_separation_ratio": 0.9439401854051542
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.6341463414634148,
+          "aspect_ratio": 0.9927660759904919,
+          "occupancy": 0.5724530473134191,
+          "min_separation_ratio": 0.9999890663575828
+        },
+        {
+          "cluster": "Amp exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.98891796875,
+          "occupancy": 0.533698217146644,
+          "min_separation_ratio": 0.9602505599267229
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_edge": 0.03333333333333333,
+          "hairball_index": 1.9272727272727272,
+          "aspect_ratio": 0.8659190285218791,
+          "occupancy": 0.4867622204321847,
+          "min_separation_ratio": 0.7647092049063953
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7035369552089356,
+          "occupancy": 0.436509685611981,
+          "min_separation_ratio": 0.996664112642616
+        },
+        {
+          "cluster": "Asparagine exchange",
+          "crossings_per_edge": 0.05128205128205128,
+          "hairball_index": 1.8390804597701151,
+          "aspect_ratio": 0.8954199625126203,
+          "occupancy": 0.33387841919170214,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Biosynthesis of various nucleotide sugars",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9523809523809523,
+          "aspect_ratio": 0.9647870689215206,
+          "occupancy": 0.3814609719564554,
+          "min_separation_ratio": 0.9966934087487556
+        },
+        {
+          "cluster": "Copper exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9710372023809524,
+          "occupancy": 0.5085325363627982,
+          "min_separation_ratio": 0.8968861001232268
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_edge": 0.05555555555555555,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7403714116921127,
+          "occupancy": 0.43290905719120276,
+          "min_separation_ratio": 0.4592120184607223
+        },
+        {
+          "cluster": "D-fructose phosphate transport",
+          "crossings_per_edge": 0.0048543689320388345,
+          "hairball_index": 1.9512195121951221,
+          "aspect_ratio": 1.025079945799458,
+          "occupancy": 0.5419819296296259,
+          "min_separation_ratio": 0.8987117407128623
+        },
+        {
+          "cluster": "D-galactose transport",
+          "crossings_per_edge": 0.15789473684210525,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.3852254816398097,
+          "occupancy": 0.2309175481699818,
+          "min_separation_ratio": 0.9391003005802162
+        },
+        {
+          "cluster": "Fatty acid biosynthesis",
+          "crossings_per_edge": 0.11333333333333333,
+          "hairball_index": 2.55,
+          "aspect_ratio": 0.571700057307475,
+          "occupancy": 0.5892759794948979,
+          "min_separation_ratio": 0.957235069968658
+        },
+        {
+          "cluster": "Fatty acid degradation",
+          "crossings_per_edge": 0.022222222222222223,
+          "hairball_index": 1.9310344827586206,
+          "aspect_ratio": 0.9201586039865556,
+          "occupancy": 0.48684567632781267,
+          "min_separation_ratio": 0.9999890663575826
+        },
+        {
+          "cluster": "Fatty acid elongation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9761607058591995,
+          "occupancy": 0.5183062042616039,
+          "min_separation_ratio": 0.9961038604155305
+        },
+        {
+          "cluster": "Fe-enterobactin Enterochelin",
+          "crossings_per_edge": 0.24390243902439024,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6093800564556602,
+          "occupancy": 0.27172285703395366,
+          "min_separation_ratio": 0.9592155522456347
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6325615332120679,
+          "occupancy": 0.37659478284696957,
+          "min_separation_ratio": 0.5045328412097769
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_edge": 0.0641025641025641,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6898634568092065,
+          "occupancy": 0.4532062724050937,
+          "min_separation_ratio": 0.9965005040389735
+        },
+        {
+          "cluster": "Galactose metabolism",
+          "crossings_per_edge": 0.043478260869565216,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8269214677009137,
+          "occupancy": 0.4707672073200356,
+          "min_separation_ratio": 0.7852707612885393
+        },
+        {
+          "cluster": "Glycerol phosphate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0304166666666668,
+          "occupancy": 0.5040835276099117,
+          "min_separation_ratio": 0.879028281718859
+        },
+        {
+          "cluster": "Glycerolipid metabolism",
+          "crossings_per_edge": 0.0392156862745098,
+          "hairball_index": 1.9696969696969697,
+          "aspect_ratio": 0.8510393026862482,
+          "occupancy": 0.5399430024248045,
+          "min_separation_ratio": 0.48849436548436337
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_edge": 0.08333333333333333,
+          "hairball_index": 1.9024390243902438,
+          "aspect_ratio": 0.9817385591949195,
+          "occupancy": 0.5621545528553991,
+          "min_separation_ratio": 0.9999143529203635
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9405393954459478,
+          "occupancy": 0.4867422900468661,
+          "min_separation_ratio": 0.9999743060062891
+        },
+        {
+          "cluster": "Glyoxylate and dicarboxylate metabolism",
+          "crossings_per_edge": 0.05,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2606663255539379,
+          "occupancy": 0.2573639016071764,
+          "min_separation_ratio": 0.924775479734933
+        },
+        {
+          "cluster": "Hexanoate transport",
+          "crossings_per_edge": 0.11764705882352941,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9245515115795027,
+          "occupancy": 0.17017853603107286,
+          "min_separation_ratio": 0.9187087123567932
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_edge": 0.020833333333333332,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.6291098563902755,
+          "occupancy": 0.39790588525706805,
+          "min_separation_ratio": 0.673893522891814
+        },
+        {
+          "cluster": "L-proline transport",
+          "crossings_per_edge": 0.4375,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.3318479913932757,
+          "occupancy": 0.1507874174677679,
+          "min_separation_ratio": 0.9994371932558666
+        },
+        {
+          "cluster": "L-threonine transport",
+          "crossings_per_edge": 0.7647058823529411,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.540541878966153,
+          "occupancy": 0.12160190632201416,
+          "min_separation_ratio": 0.9532813363266092
+        },
+        {
+          "cluster": "Lipid transport",
+          "crossings_per_edge": 0.020833333333333332,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.203875440830884,
+          "occupancy": 0.36031297736447065,
+          "min_separation_ratio": 0.8252613115909235
+        },
+        {
+          "cluster": "Lipopolysaccharide biosynthesis",
+          "crossings_per_edge": 0.03333333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.9879526904969642,
+          "occupancy": 0.40664399887880914,
+          "min_separation_ratio": 0.4499375449154673
+        },
+        {
+          "cluster": "Lps core Antigen",
+          "crossings_per_edge": 0.013392857142857142,
+          "hairball_index": 2.5233644859813085,
+          "aspect_ratio": 0.9812631450398532,
+          "occupancy": 0.6322777272030667,
+          "min_separation_ratio": 0.4286506271200432
+        },
+        {
+          "cluster": "Lysine biosynthesis",
+          "crossings_per_edge": 0.023809523809523808,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.420803906394044,
+          "occupancy": 0.38933480099503515,
+          "min_separation_ratio": 0.9966423695402364
+        },
+        {
+          "cluster": "Malate Transport periplasm",
+          "crossings_per_edge": 0.18518518518518517,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8263575432627536,
+          "occupancy": 0.4253924383369568,
+          "min_separation_ratio": 0.46738996737430344
+        },
+        {
+          "cluster": "Maltohexaose transport Abc system periplasm",
+          "crossings_per_edge": 0.08333333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0354214950803746,
+          "occupancy": 0.10370676015421364,
+          "min_separation_ratio": 0.9999212301717428
+        },
+        {
+          "cluster": "Murein",
+          "crossings_per_edge": 0.11458333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9394268716654605,
+          "occupancy": 0.5180258105954241,
+          "min_separation_ratio": 0.4038383580150255
+        },
+        {
+          "cluster": "N-c",
+          "crossings_per_edge": 0.17117117117117117,
+          "hairball_index": 2.6288659793814433,
+          "aspect_ratio": 0.9127271132520434,
+          "occupancy": 0.5492926847426619,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "N-c 2",
+          "crossings_per_edge": 0.16129032258064516,
+          "hairball_index": 2.552238805970149,
+          "aspect_ratio": 1.0192810475920129,
+          "occupancy": 0.5808359300129112,
+          "min_separation_ratio": 0.36666666666666614
+        },
+        {
+          "cluster": "N-c 3",
+          "crossings_per_edge": 0.20348837209302326,
+          "hairball_index": 1.8108108108108107,
+          "aspect_ratio": 1.1041138560232555,
+          "occupancy": 0.4641639628218364,
+          "min_separation_ratio": 0.35968573564426926
+        }
+      ]
+    },
+    "fdp": {
+      "maps": 40,
+      "median_seconds": 0.019210450001992285,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.07784090909090909,
+          "mean": 0.09795432320682501
+        },
+        "hairball_index": {
+          "median": 1.0,
+          "mean": 1.4899516094349685
+        },
+        "aspect_ratio": {
+          "median": 1.0248250020854188,
+          "mean": 1.170052874831265
+        },
+        "occupancy": {
+          "median": 0.49419006966971624,
+          "mean": 0.4545079920531965
+        },
+        "min_separation_ratio": {
+          "median": 0.7939203747018795,
+          "mean": 0.722400664547207
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetaldehyde transport periplasm",
+          "crossings_per_edge": 0.1111111111111111,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.3428460363606796,
+          "occupancy": 0.2859405644372488,
+          "min_separation_ratio": 0.9990873593469384
+        },
+        {
+          "cluster": "Aerobactin transport",
+          "crossings_per_edge": 0.16203703703703703,
+          "hairball_index": 2.4,
+          "aspect_ratio": 0.9209462703382321,
+          "occupancy": 0.604217016272079,
+          "min_separation_ratio": 0.918961764758703
+        },
+        {
+          "cluster": "Alpha-d-mannosyl d-glycerate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9983497536945812,
+          "occupancy": 0.5358423742428721,
+          "min_separation_ratio": 0.91976076367558
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_edge": 0.058823529411764705,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.48499093530640125,
+          "occupancy": 0.2595849127494843,
+          "min_separation_ratio": 0.701872204019995
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.5609756097560976,
+          "aspect_ratio": 0.9583644794156081,
+          "occupancy": 0.5789602147282976,
+          "min_separation_ratio": 0.8703997464480906
+        },
+        {
+          "cluster": "Amp exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.980287356321839,
+          "occupancy": 0.5037379004915618,
+          "min_separation_ratio": 0.9423423209077237
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_edge": 0.06,
+          "hairball_index": 1.8181818181818181,
+          "aspect_ratio": 0.9518258083676534,
+          "occupancy": 0.5397926958103508,
+          "min_separation_ratio": 0.7945735514129902
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_edge": 0.0625,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1691035784417962,
+          "occupancy": 0.43973519155683477,
+          "min_separation_ratio": 0.9053051668391494
+        },
+        {
+          "cluster": "Asparagine exchange",
+          "crossings_per_edge": 0.05128205128205128,
+          "hairball_index": 1.862068965517241,
+          "aspect_ratio": 0.9816836181149731,
+          "occupancy": 0.30426495877742393,
+          "min_separation_ratio": 0.36666386205681883
+        },
+        {
+          "cluster": "Biosynthesis of various nucleotide sugars",
+          "crossings_per_edge": 0.0625,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9735469052715036,
+          "occupancy": 0.40638166968435946,
+          "min_separation_ratio": 0.8246399361896557
+        },
+        {
+          "cluster": "Copper exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.996940366972477,
+          "occupancy": 0.5530929625555318,
+          "min_separation_ratio": 0.9014736865132524
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_edge": 0.1,
+          "hairball_index": 1.9148936170212765,
+          "aspect_ratio": 1.070342561724309,
+          "occupancy": 0.5283635908953086,
+          "min_separation_ratio": 0.4122938118513589
+        },
+        {
+          "cluster": "D-fructose phosphate transport",
+          "crossings_per_edge": 0.0048543689320388345,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0388429054054054,
+          "occupancy": 0.5270062557208843,
+          "min_separation_ratio": 0.8664423884363875
+        },
+        {
+          "cluster": "D-galactose transport",
+          "crossings_per_edge": 0.16666666666666666,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.4015645184961525,
+          "occupancy": 0.25343906603060656,
+          "min_separation_ratio": 0.9859459434622828
+        },
+        {
+          "cluster": "Fatty acid biosynthesis",
+          "crossings_per_edge": 0.1396103896103896,
+          "hairball_index": 2.4,
+          "aspect_ratio": 1.5587641546846245,
+          "occupancy": 0.6028452970802924,
+          "min_separation_ratio": 0.5525018327445981
+        },
+        {
+          "cluster": "Fatty acid degradation",
+          "crossings_per_edge": 0.044444444444444446,
+          "hairball_index": 1.8275862068965518,
+          "aspect_ratio": 0.9304944701571456,
+          "occupancy": 0.5076400112011341,
+          "min_separation_ratio": 0.9999571819922822
+        },
+        {
+          "cluster": "Fatty acid elongation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9148936170212765,
+          "aspect_ratio": 0.881285875937229,
+          "occupancy": 0.5406768072340696,
+          "min_separation_ratio": 0.8658685734812127
+        },
+        {
+          "cluster": "Fe-enterobactin Enterochelin",
+          "crossings_per_edge": 0.29545454545454547,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.7417810565637857,
+          "occupancy": 0.431278806563328,
+          "min_separation_ratio": 0.6724920803302754
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_edge": 0.09090909090909091,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.470459694770932,
+          "occupancy": 0.4032480507669828,
+          "min_separation_ratio": 0.8847387244010374
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_edge": 0.0875,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1507464874200095,
+          "occupancy": 0.49507545767640215,
+          "min_separation_ratio": 0.7508171534711485
+        },
+        {
+          "cluster": "Galactose metabolism",
+          "crossings_per_edge": 0.06818181818181818,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9614348675836386,
+          "occupancy": 0.4710313448453705,
+          "min_separation_ratio": 0.8082006182442243
+        },
+        {
+          "cluster": "Glycerol phosphate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.010807098765432,
+          "occupancy": 0.4933046816630303,
+          "min_separation_ratio": 0.8843115516689946
+        },
+        {
+          "cluster": "Glycerolipid metabolism",
+          "crossings_per_edge": 0.018867924528301886,
+          "hairball_index": 1.909090909090909,
+          "aspect_ratio": 0.9611013830988824,
+          "occupancy": 0.5399981621066348,
+          "min_separation_ratio": 0.5289421406904302
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_edge": 0.11764705882352941,
+          "hairball_index": 1.7560975609756098,
+          "aspect_ratio": 0.8837379299722784,
+          "occupancy": 0.5708964768593464,
+          "min_separation_ratio": 0.8101826446361331
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8964992290434268,
+          "occupancy": 0.4809212614420108,
+          "min_separation_ratio": 0.7932671979907687
+        },
+        {
+          "cluster": "Glyoxylate and dicarboxylate metabolism",
+          "crossings_per_edge": 0.08928571428571429,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2257765474838154,
+          "occupancy": 0.39668438563950326,
+          "min_separation_ratio": 0.7507138203884455
+        },
+        {
+          "cluster": "Hexanoate transport",
+          "crossings_per_edge": 0.13333333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1244195907972696,
+          "occupancy": 0.24690909392787702,
+          "min_separation_ratio": 0.9877809069979746
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_edge": 0.1,
+          "hairball_index": 1.894736842105263,
+          "aspect_ratio": 1.7509194999059097,
+          "occupancy": 0.43538864455331333,
+          "min_separation_ratio": 0.9412923647224767
+        },
+        {
+          "cluster": "L-proline transport",
+          "crossings_per_edge": 0.23529411764705882,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8511229528784894,
+          "occupancy": 0.16828726105605704,
+          "min_separation_ratio": 0.34026037454988695
+        },
+        {
+          "cluster": "L-threonine transport",
+          "crossings_per_edge": 0.4473684210526316,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.006905729312684,
+          "occupancy": 0.10816959044871194,
+          "min_separation_ratio": 0.5910281906894835
+        },
+        {
+          "cluster": "Lipid transport",
+          "crossings_per_edge": 0.021739130434782608,
+          "hairball_index": 1.9259259259259258,
+          "aspect_ratio": 1.7464002420455802,
+          "occupancy": 0.4819615569738225,
+          "min_separation_ratio": 0.7910414954385518
+        },
+        {
+          "cluster": "Lipopolysaccharide biosynthesis",
+          "crossings_per_edge": 0.05357142857142857,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.6112441945928349,
+          "occupancy": 0.4782994155231383,
+          "min_separation_ratio": 0.5804540816160463
+        },
+        {
+          "cluster": "Lps core Antigen",
+          "crossings_per_edge": 0.032407407407407406,
+          "hairball_index": 2.803738317757009,
+          "aspect_ratio": 0.9607299485983994,
+          "occupancy": 0.67116300210131,
+          "min_separation_ratio": 0.36666666666666675
+        },
+        {
+          "cluster": "Lysine biosynthesis",
+          "crossings_per_edge": 0.05263157894736842,
+          "hairball_index": 1.9130434782608696,
+          "aspect_ratio": 1.4404730161717996,
+          "occupancy": 0.4553988229165972,
+          "min_separation_ratio": 0.8446050289784307
+        },
+        {
+          "cluster": "Malate Transport periplasm",
+          "crossings_per_edge": 0.22413793103448276,
+          "hairball_index": 1.9024390243902438,
+          "aspect_ratio": 1.2155975759456301,
+          "occupancy": 0.5217283512385168,
+          "min_separation_ratio": 0.6650523780244105
+        },
+        {
+          "cluster": "Maltohexaose transport Abc system periplasm",
+          "crossings_per_edge": 0.1388888888888889,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2783003806457,
+          "occupancy": 0.10017717113118035,
+          "min_separation_ratio": 0.4713058321798513
+        },
+        {
+          "cluster": "Murein",
+          "crossings_per_edge": 0.13,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.4072245322245323,
+          "occupancy": 0.5198718225353616,
+          "min_separation_ratio": 0.36666666666666653
+        },
+        {
+          "cluster": "N-c",
+          "crossings_per_edge": 0.16964285714285715,
+          "hairball_index": 2.690721649484536,
+          "aspect_ratio": 1.2311043417731828,
+          "occupancy": 0.5838072890428739,
+          "min_separation_ratio": 0.47999999999999987
+        },
+        {
+          "cluster": "N-c 2",
+          "crossings_per_edge": 0.16770186335403728,
+          "hairball_index": 2.2388059701492535,
+          "aspect_ratio": 0.9071101567134946,
+          "occupancy": 0.632906503919911,
+          "min_separation_ratio": 0.36666666666666586
+        },
+        {
+          "cluster": "N-c 3",
+          "crossings_per_edge": 0.21978021978021978,
+          "hairball_index": 1.8648648648648647,
+          "aspect_ratio": 1.3280389419322887,
+          "occupancy": 0.5222910397282373,
+          "min_separation_ratio": 0.3914499027326906
+        }
+      ]
+    },
+    "spring": {
+      "maps": 40,
+      "median_seconds": 0.016078699991339818,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.02661064425770308,
+          "mean": 0.06006963432387301
+        },
+        "hairball_index": {
+          "median": 1.9666666666666668,
+          "mean": 2.0549471833267576
+        },
+        "aspect_ratio": {
+          "median": 1.0160576926498464,
+          "mean": 1.0505374344937706
+        },
+        "occupancy": {
+          "median": 0.6075258828610991,
+          "mean": 0.5327255574946147
+        },
+        "min_separation_ratio": {
+          "median": 0.7568657973982529,
+          "mean": 0.6838487126869861
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetaldehyde transport periplasm",
+          "crossings_per_edge": 0.03125,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7288478580322895,
+          "occupancy": 0.20309404781187634,
+          "min_separation_ratio": 0.9874470004634337
+        },
+        {
+          "cluster": "Aerobactin transport",
+          "crossings_per_edge": 0.2616822429906542,
+          "hairball_index": 2.3684210526315788,
+          "aspect_ratio": 1.0683495205783773,
+          "occupancy": 0.6398122571033643,
+          "min_separation_ratio": 0.970307744965274
+        },
+        {
+          "cluster": "Alpha-d-mannosyl d-glycerate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9666666666666668,
+          "aspect_ratio": 1.0160576926498464,
+          "occupancy": 0.6007268528602075,
+          "min_separation_ratio": 0.9164532022162184
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_edge": 0.04411764705882353,
+          "hairball_index": 1.8666666666666667,
+          "aspect_ratio": 0.6560044886961195,
+          "occupancy": 0.5384841453532244,
+          "min_separation_ratio": 0.697546061738093
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.9024390243902443,
+          "aspect_ratio": 0.931733613605935,
+          "occupancy": 0.6660137464871131,
+          "min_separation_ratio": 0.6160069662865796
+        },
+        {
+          "cluster": "Amp exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9666666666666668,
+          "aspect_ratio": 1.0160576926498464,
+          "occupancy": 0.5979832840393898,
+          "min_separation_ratio": 0.9246563576946384
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_edge": 0.058823529411764705,
+          "hairball_index": 2.909090909090909,
+          "aspect_ratio": 0.7672309879466973,
+          "occupancy": 0.6149468030517737,
+          "min_separation_ratio": 0.5735436273941082
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.4024969370525938,
+          "occupancy": 0.46833872293603307,
+          "min_separation_ratio": 0.7605117381537457
+        },
+        {
+          "cluster": "Asparagine exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 3.413793103448276,
+          "aspect_ratio": 0.8763354165774442,
+          "occupancy": 0.6088461470648905,
+          "min_separation_ratio": 0.36666497014999183
+        },
+        {
+          "cluster": "Biosynthesis of various nucleotide sugars",
+          "crossings_per_edge": 0.0125,
+          "hairball_index": 3.0476190476190474,
+          "aspect_ratio": 1.0558212959932707,
+          "occupancy": 0.6366844584945518,
+          "min_separation_ratio": 0.7886209955989988
+        },
+        {
+          "cluster": "Copper exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9666666666666668,
+          "aspect_ratio": 1.0160576926498464,
+          "occupancy": 0.5972466565606857,
+          "min_separation_ratio": 0.9164532022162184
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_edge": 0.061224489795918366,
+          "hairball_index": 2.4255319148936167,
+          "aspect_ratio": 1.1641209862950928,
+          "occupancy": 0.6567245423109421,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "D-fructose phosphate transport",
+          "crossings_per_edge": 0.004901960784313725,
+          "hairball_index": 2.670731707317073,
+          "aspect_ratio": 1.0184465776687184,
+          "occupancy": 0.5777822936922247,
+          "min_separation_ratio": 0.3082032443827695
+        },
+        {
+          "cluster": "D-galactose transport",
+          "crossings_per_edge": 0.15789473684210525,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.4380911219507175,
+          "occupancy": 0.2780763003670778,
+          "min_separation_ratio": 0.9963136080459928
+        },
+        {
+          "cluster": "Fatty acid biosynthesis",
+          "crossings_per_edge": 0.1,
+          "hairball_index": 2.1,
+          "aspect_ratio": 0.9320765902006752,
+          "occupancy": 0.6567802955061082,
+          "min_separation_ratio": 0.6308270835778107
+        },
+        {
+          "cluster": "Fatty acid degradation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 3.103448275862069,
+          "aspect_ratio": 0.9093498360517079,
+          "occupancy": 0.6658113342475024,
+          "min_separation_ratio": 0.9181690880597385
+        },
+        {
+          "cluster": "Fatty acid elongation",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.6170212765957446,
+          "aspect_ratio": 1.0644181926549114,
+          "occupancy": 0.6584627867121502,
+          "min_separation_ratio": 0.7647268122339186
+        },
+        {
+          "cluster": "Fe-enterobactin Enterochelin",
+          "crossings_per_edge": 0.25,
+          "hairball_index": 1.942857142857143,
+          "aspect_ratio": 0.5562172838349361,
+          "occupancy": 0.324707479137852,
+          "min_separation_ratio": 0.6325133153718823
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_edge": 0.020833333333333332,
+          "hairball_index": 1.9166666666666667,
+          "aspect_ratio": 0.9575635054781116,
+          "occupancy": 0.5359299415457417,
+          "min_separation_ratio": 0.8498723784095626
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_edge": 0.023809523809523808,
+          "hairball_index": 1.885714285714286,
+          "aspect_ratio": 0.9985280822815775,
+          "occupancy": 0.6458627803457031,
+          "min_separation_ratio": 0.7605076043599823
+        },
+        {
+          "cluster": "Galactose metabolism",
+          "crossings_per_edge": 0.05813953488372093,
+          "hairball_index": 2.325,
+          "aspect_ratio": 1.07285948432149,
+          "occupancy": 0.6451818076654438,
+          "min_separation_ratio": 0.8154711921471696
+        },
+        {
+          "cluster": "Glycerol phosphate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9666666666666668,
+          "aspect_ratio": 1.0160576926498464,
+          "occupancy": 0.6067486730383538,
+          "min_separation_ratio": 0.9164532022162184
+        },
+        {
+          "cluster": "Glycerolipid metabolism",
+          "crossings_per_edge": 0.01818181818181818,
+          "hairball_index": 2.606060606060606,
+          "aspect_ratio": 1.0988329772374676,
+          "occupancy": 0.6475395818769448,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_edge": 0.08823529411764706,
+          "hairball_index": 2.6341463414634143,
+          "aspect_ratio": 0.9623732685386113,
+          "occupancy": 0.6435515524369345,
+          "min_separation_ratio": 0.7057196359141618
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.018518518518518517,
+          "hairball_index": 2.75,
+          "aspect_ratio": 1.1310642028711086,
+          "occupancy": 0.6526342502528275,
+          "min_separation_ratio": 0.9824578840709238
+        },
+        {
+          "cluster": "Glyoxylate and dicarboxylate metabolism",
+          "crossings_per_edge": 0.057692307692307696,
+          "hairball_index": 2.333333333333333,
+          "aspect_ratio": 1.2379641564447788,
+          "occupancy": 0.6422994409893563,
+          "min_separation_ratio": 0.7672735635941552
+        },
+        {
+          "cluster": "Hexanoate transport",
+          "crossings_per_edge": 0.14705882352941177,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.181518091074713,
+          "occupancy": 0.21260595392025436,
+          "min_separation_ratio": 0.7532239904365233
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9994072066902497,
+          "occupancy": 0.44472111109400914,
+          "min_separation_ratio": 0.5522189687682613
+        },
+        {
+          "cluster": "L-proline transport",
+          "crossings_per_edge": 0.09523809523809523,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.3640487584548255,
+          "occupancy": 0.23057821263908249,
+          "min_separation_ratio": 0.9836484370511539
+        },
+        {
+          "cluster": "L-threonine transport",
+          "crossings_per_edge": 0.029411764705882353,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0733770384126329,
+          "occupancy": 0.15400111437346242,
+          "min_separation_ratio": 0.9817228677997494
+        },
+        {
+          "cluster": "Lipid transport",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.444444444444444,
+          "aspect_ratio": 1.1505087427775336,
+          "occupancy": 0.6083030926838444,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Lipopolysaccharide biosynthesis",
+          "crossings_per_edge": 0.018518518518518517,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7646579988660072,
+          "occupancy": 0.4948179099951959,
+          "min_separation_ratio": 0.3957176570585841
+        },
+        {
+          "cluster": "Lps core Antigen",
+          "crossings_per_edge": 0.022727272727272728,
+          "hairball_index": 2.2990654205607477,
+          "aspect_ratio": 0.9973420751187183,
+          "occupancy": 0.6182892460777932,
+          "min_separation_ratio": 0.41282485431607513
+        },
+        {
+          "cluster": "Lysine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.508929192767179,
+          "occupancy": 0.474444360195096,
+          "min_separation_ratio": 0.871532371279004
+        },
+        {
+          "cluster": "Malate Transport periplasm",
+          "crossings_per_edge": 0.16071428571428573,
+          "hairball_index": 1.8536585365853657,
+          "aspect_ratio": 1.4776141582796234,
+          "occupancy": 0.5885724090138611,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Maltohexaose transport Abc system periplasm",
+          "crossings_per_edge": 0.08823529411764706,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0912635207158812,
+          "occupancy": 0.1032668370288599,
+          "min_separation_ratio": 0.9030055481751742
+        },
+        {
+          "cluster": "Murein",
+          "crossings_per_edge": 0.07,
+          "hairball_index": 1.837837837837838,
+          "aspect_ratio": 1.269054822465569,
+          "occupancy": 0.6214124307315408,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "N-c",
+          "crossings_per_edge": 0.18181818181818182,
+          "hairball_index": 3.4639175257731956,
+          "aspect_ratio": 0.8224135838587152,
+          "occupancy": 0.6373546852489335,
+          "min_separation_ratio": 0.3666666666666666
+        },
+        {
+          "cluster": "N-c 2",
+          "crossings_per_edge": 0.14102564102564102,
+          "hairball_index": 3.0597014925373136,
+          "aspect_ratio": 0.7486916305658857,
+          "occupancy": 0.6121327910062369,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "N-c 3",
+          "crossings_per_edge": 0.18023255813953487,
+          "hairball_index": 2.554054054054054,
+          "aspect_ratio": 0.47971340479127317,
+          "occupancy": 0.4982519638881453,
+          "min_separation_ratio": 0.36666666666666664
+        }
+      ]
+    },
+    "kamada_kawai": {
+      "maps": 40,
+      "median_seconds": 0.02115530001174193,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.08411949685534591,
+          "mean": 0.11611244598456974
+        },
+        "hairball_index": {
+          "median": 1.8333333333333335,
+          "mean": 1.8349927192293791
+        },
+        "aspect_ratio": {
+          "median": 1.000000006403484,
+          "mean": 1.1044051609745762
+        },
+        "occupancy": {
+          "median": 0.5136861047730581,
+          "mean": 0.4502091805663575
+        },
+        "min_separation_ratio": {
+          "median": 0.4713952549675552,
+          "mean": 0.5470795321668753
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Acetaldehyde transport periplasm",
+          "crossings_per_edge": 0.03125,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.996651859494707,
+          "occupancy": 0.19566379931611325,
+          "min_separation_ratio": 0.9832895978496624
+        },
+        {
+          "cluster": "Aerobactin transport",
+          "crossings_per_edge": 0.3728813559322034,
+          "hairball_index": 3.6842105263157894,
+          "aspect_ratio": 1.0868418465510865,
+          "occupancy": 0.6080602480184008,
+          "min_separation_ratio": 0.2472209628211277
+        },
+        {
+          "cluster": "Alpha-d-mannosyl d-glycerate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.8333333333333335,
+          "aspect_ratio": 1.000000006403484,
+          "occupancy": 0.5978549039684843,
+          "min_separation_ratio": 0.9999996183258345
+        },
+        {
+          "cluster": "Amino sugar and nucleotide sugar metabolism",
+          "crossings_per_edge": 0.0625,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.3872928820598574,
+          "occupancy": 0.16028672079858453,
+          "min_separation_ratio": 0.45488881180639446
+        },
+        {
+          "cluster": "Aminoacyl-tRNA biosynthesis",
+          "crossings_per_edge": 0.33064516129032256,
+          "hairball_index": 1.5934959349593496,
+          "aspect_ratio": 0.8502488402885555,
+          "occupancy": 0.6858847403183859,
+          "min_separation_ratio": 0.9938514450868597
+        },
+        {
+          "cluster": "Amp exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.8333333333333335,
+          "aspect_ratio": 1.000000006403484,
+          "occupancy": 0.6247369756047803,
+          "min_separation_ratio": 0.9999996183258345
+        },
+        {
+          "cluster": "Arginine and proline metabolism",
+          "crossings_per_edge": 0.08490566037735849,
+          "hairball_index": 2.727272727272727,
+          "aspect_ratio": 1.3437721967533958,
+          "occupancy": 0.5119534143880503,
+          "min_separation_ratio": 0.29546559378142406
+        },
+        {
+          "cluster": "Arginine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.753597063064933,
+          "occupancy": 0.35184361115279816,
+          "min_separation_ratio": 0.9999190295431104
+        },
+        {
+          "cluster": "Asparagine exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 2.1379310344827585,
+          "aspect_ratio": 0.9543983379153586,
+          "occupancy": 0.4286865130597175,
+          "min_separation_ratio": 0.37906518201887335
+        },
+        {
+          "cluster": "Biosynthesis of various nucleotide sugars",
+          "crossings_per_edge": 0.036585365853658534,
+          "hairball_index": 1.8571428571428572,
+          "aspect_ratio": 0.9600380183561701,
+          "occupancy": 0.4064963125911561,
+          "min_separation_ratio": 0.09005807988464441
+        },
+        {
+          "cluster": "Copper exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.8333333333333335,
+          "aspect_ratio": 1.000000006403484,
+          "occupancy": 0.6337864963529033,
+          "min_separation_ratio": 0.9999996183258345
+        },
+        {
+          "cluster": "Cysteine and methionine metabolism",
+          "crossings_per_edge": 0.09803921568627451,
+          "hairball_index": 1.702127659574468,
+          "aspect_ratio": 1.6349806709113774,
+          "occupancy": 0.5235765483493928,
+          "min_separation_ratio": 0.17843259662780367
+        },
+        {
+          "cluster": "D-fructose phosphate transport",
+          "crossings_per_edge": 0.10952380952380952,
+          "hairball_index": 2.2682926829268295,
+          "aspect_ratio": 0.8700434002802602,
+          "occupancy": 0.6548602588680768,
+          "min_separation_ratio": 0.9999085296511925
+        },
+        {
+          "cluster": "D-galactose transport",
+          "crossings_per_edge": 0.15789473684210525,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.377426379295136,
+          "occupancy": 0.23427491309471205,
+          "min_separation_ratio": 0.9391674047441476
+        },
+        {
+          "cluster": "Fatty acid biosynthesis",
+          "crossings_per_edge": 0.16556291390728478,
+          "hairball_index": 5.15625,
+          "aspect_ratio": 0.9958756461140754,
+          "occupancy": 0.6509843853802084,
+          "min_separation_ratio": 0.14260029080523023
+        },
+        {
+          "cluster": "Fatty acid degradation",
+          "crossings_per_edge": 0.125,
+          "hairball_index": 1.9310344827586206,
+          "aspect_ratio": 0.9520043029214156,
+          "occupancy": 0.5597271390425771,
+          "min_separation_ratio": 0.1457090826189244
+        },
+        {
+          "cluster": "Fatty acid elongation",
+          "crossings_per_edge": 0.14705882352941177,
+          "hairball_index": 1.957446808510638,
+          "aspect_ratio": 1.032419847244149,
+          "occupancy": 0.5191967484659123,
+          "min_separation_ratio": 0.225286431588838
+        },
+        {
+          "cluster": "Fe-enterobactin Enterochelin",
+          "crossings_per_edge": 0.32558139534883723,
+          "hairball_index": 1.942857142857143,
+          "aspect_ratio": 1.45910164127539,
+          "occupancy": 0.3407191735023586,
+          "min_separation_ratio": 0.9578970749976391
+        },
+        {
+          "cluster": "Folate biosynthesis",
+          "crossings_per_edge": 0.020833333333333332,
+          "hairball_index": 2.625,
+          "aspect_ratio": 1.1664289365144325,
+          "occupancy": 0.5201601717095944,
+          "min_separation_ratio": 0.5100862083603724
+        },
+        {
+          "cluster": "Fructose and mannose metabolism",
+          "crossings_per_edge": 0.02702702702702703,
+          "hairball_index": 1.942857142857143,
+          "aspect_ratio": 0.6988985044390406,
+          "occupancy": 0.5175579048325534,
+          "min_separation_ratio": 0.487901698128716
+        },
+        {
+          "cluster": "Galactose metabolism",
+          "crossings_per_edge": 0.10638297872340426,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2387503387225671,
+          "occupancy": 0.5366418961122216,
+          "min_separation_ratio": 0.2164412316944896
+        },
+        {
+          "cluster": "Glycerol phosphate exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.8333333333333335,
+          "aspect_ratio": 1.000000006403484,
+          "occupancy": 0.6430588385656818,
+          "min_separation_ratio": 0.9999996183258345
+        },
+        {
+          "cluster": "Glycerolipid metabolism",
+          "crossings_per_edge": 0.03333333333333333,
+          "hairball_index": 1.7575757575757576,
+          "aspect_ratio": 1.1057510675839628,
+          "occupancy": 0.583869033745826,
+          "min_separation_ratio": 0.3066237518317142
+        },
+        {
+          "cluster": "Glycine, serine and threonine metabolism",
+          "crossings_per_edge": 0.1736111111111111,
+          "hairball_index": 2.451219512195122,
+          "aspect_ratio": 1.3716864630841759,
+          "occupancy": 0.5913233942078668,
+          "min_separation_ratio": 0.014143478552005281
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.05,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9152429690611377,
+          "occupancy": 0.5154187951580659,
+          "min_separation_ratio": 0.9998896676035749
+        },
+        {
+          "cluster": "Glyoxylate and dicarboxylate metabolism",
+          "crossings_per_edge": 0.07142857142857142,
+          "hairball_index": 1.9259259259259258,
+          "aspect_ratio": 1.1416748791058156,
+          "occupancy": 0.3459851335663339,
+          "min_separation_ratio": 0.027716234467109278
+        },
+        {
+          "cluster": "Hexanoate transport",
+          "crossings_per_edge": 0.11764705882352941,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.8897824771080568,
+          "occupancy": 0.1706513054598977,
+          "min_separation_ratio": 0.9203299248356753
+        },
+        {
+          "cluster": "Histidine metabolism",
+          "crossings_per_edge": 0.020833333333333332,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9644831666907072,
+          "occupancy": 0.3009630193830054,
+          "min_separation_ratio": 0.400988410237518
+        },
+        {
+          "cluster": "L-proline transport",
+          "crossings_per_edge": 0.2,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.709102328754348,
+          "occupancy": 0.20536143289652561,
+          "min_separation_ratio": 0.9999862622471904
+        },
+        {
+          "cluster": "L-threonine transport",
+          "crossings_per_edge": 0.6842105263157895,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6280645514761014,
+          "occupancy": 0.13641016226623354,
+          "min_separation_ratio": 0.9534051373245723
+        },
+        {
+          "cluster": "Lipid transport",
+          "crossings_per_edge": 0.021739130434782608,
+          "hairball_index": 1.0,
+          "aspect_ratio": 2.177921964272815,
+          "occupancy": 0.29032457836550263,
+          "min_separation_ratio": 0.5263023823022953
+        },
+        {
+          "cluster": "Lipopolysaccharide biosynthesis",
+          "crossings_per_edge": 0.018518518518518517,
+          "hairball_index": 1.9310344827586206,
+          "aspect_ratio": 0.5547357184226501,
+          "occupancy": 0.3851138152772389,
+          "min_separation_ratio": 0.5027265745863059
+        },
+        {
+          "cluster": "Lps core Antigen",
+          "crossings_per_edge": 0.035398230088495575,
+          "hairball_index": 2.5233644859813085,
+          "aspect_ratio": 1.6590261131149937,
+          "occupancy": 0.549506312758936,
+          "min_separation_ratio": 0.0565748617615046
+        },
+        {
+          "cluster": "Lysine biosynthesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9130434782608696,
+          "aspect_ratio": 1.2981940208396259,
+          "occupancy": 0.3260971648575964,
+          "min_separation_ratio": 0.6993490008866845
+        },
+        {
+          "cluster": "Malate Transport periplasm",
+          "crossings_per_edge": 0.23636363636363636,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.641933697199755,
+          "occupancy": 0.43951693145252446,
+          "min_separation_ratio": 0.36666666666666664
+        },
+        {
+          "cluster": "Maltohexaose transport Abc system periplasm",
+          "crossings_per_edge": 0.08333333333333333,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.0531054414947107,
+          "occupancy": 0.10203370288384538,
+          "min_separation_ratio": 0.9999998658135635
+        },
+        {
+          "cluster": "Murein",
+          "crossings_per_edge": 0.10576923076923077,
+          "hairball_index": 1.783783783783784,
+          "aspect_ratio": 0.6481496849002596,
+          "occupancy": 0.4755200113168971,
+          "min_separation_ratio": 0.294871722850877
+        },
+        {
+          "cluster": "N-c",
+          "crossings_per_edge": 0.16964285714285715,
+          "hairball_index": 2.3505154639175254,
+          "aspect_ratio": 0.7776331789359598,
+          "occupancy": 0.5787590082546566,
+          "min_separation_ratio": 0.05535388417332627
+        },
+        {
+          "cluster": "N-c 2",
+          "crossings_per_edge": 0.21875,
+          "hairball_index": 2.9850746268656714,
+          "aspect_ratio": 1.029693413735758,
+          "occupancy": 0.6392881514247892,
+          "min_separation_ratio": 0.23386162672500363
+        },
+        {
+          "cluster": "N-c 3",
+          "crossings_per_edge": 0.20224719101123595,
+          "hairball_index": 1.918918918918919,
+          "aspect_ratio": 0.8512545653863779,
+          "occupancy": 0.46621355588589364,
+          "min_separation_ratio": 0.27720410849663835
+        }
+      ]
+    }
+  }
+}
