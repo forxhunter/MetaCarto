@@ -62,9 +62,13 @@ def build_meta_graph(clusters, cofactor_score, cutoff=0.5):
         for b in clusters:
             if a == b:
                 continue
-            weight = len(produced[a] & consumed[b])
-            if weight:
-                meta.add_edge(a, b, weight=weight, rxns=[])
+            shared = produced[a] & consumed[b]
+            if shared:
+                # The shared metabolites themselves, not just how many. Tile
+                # placement only needs the count, but drawing a connector needs
+                # to know which compound to hang it on.
+                meta.add_edge(a, b, weight=len(shared), rxns=[],
+                              mets=sorted(shared))
     return meta
 
 
@@ -140,6 +144,133 @@ def _shift_point(point, dx, dy):
     if not point:
         return None
     return {"x": point["x"] + dx, "y": point["y"] + dy}
+
+
+# --------------------------------------------------------------------------
+# stitching tiles back together
+# --------------------------------------------------------------------------
+
+STITCH_MIN_WEIGHT = 4      # shared primary metabolites before a link is drawn
+STITCH_PER_TILE = 1        # strongest links kept per tile, each direction
+STITCH_CAP = 400           # absolute ceiling on connectors drawn
+
+
+def select_links(meta_graph, per_tile=STITCH_PER_TILE,
+                 min_weight=STITCH_MIN_WEIGHT, cap=STITCH_CAP):
+    """The inter-tile links worth drawing.
+
+    Drawing every meta edge is not an option and never was: Recon3D's 307 tiles
+    share 4224 directed links, 13.8 per tile, and half of them rest on a single
+    shared metabolite. Rendered, that is precisely the hairball the two-scale
+    layout exists to prevent -- which is why `compose` originally drew none at
+    all and left shared compounds duplicated, as `templates/t4` does.
+
+    The middle position is to draw the *trunk*. Each tile keeps only its
+    strongest incoming and outgoing link, and only when the two tiles share
+    enough chemistry for the link to mean something. On Recon3D that is ~500
+    connectors rather than 4224, and what survives is the backbone of flow
+    between pathways -- the thing a metro map draws and a KEGG map implies.
+    """
+    keep = {}
+    for node in meta_graph.nodes:
+        for edges in (meta_graph.out_edges(node, data=True),
+                      meta_graph.in_edges(node, data=True)):
+            ranked = sorted(edges, key=lambda e: -e[2].get("weight", 1))
+            for u, v, data in ranked[:per_tile]:
+                if data.get("weight", 1) < min_weight:
+                    continue
+                keep[(u, v)] = data
+    if len(keep) <= cap:
+        return keep
+    strongest = sorted(keep.items(), key=lambda kv: -kv[1].get("weight", 1))
+    return dict(strongest[:cap])
+
+
+def _primary_indices(nodes):
+    """{tile prefix: {bigg_id: node id}} over every tile at once.
+
+    Built in a single pass. Scanning the node table once per link instead looks
+    harmless at ten tiles and is quadratic at three hundred: the Recon3D poster
+    has 67k nodes and ~500 links, which is 54M dictionary probes for an index
+    that never changes.
+    """
+    indices = {}
+    for node_id, node in nodes.items():
+        if node.get("node_type") != "metabolite":
+            continue
+        bigg = node.get("bigg_id")
+        if bigg is None:
+            continue
+        prefix, _, _ = node_id.partition("_")
+        index = indices.setdefault(prefix, {})
+        # Prefer a primary instance; a cofactor stub is a poor anchor because
+        # it sits off the backbone and the connector would point at nothing.
+        if bigg not in index or node.get("node_is_primary"):
+            index[bigg] = node_id
+    return indices
+
+
+def stitch(links, tile_prefix, nodes, reactions):
+    """Emit one connector per selected link, anchored on a shared metabolite.
+
+    The connector is a real Escher reaction with a single segment, so Escher and
+    the preview both draw it without special-casing, and it is bowed with Bezier
+    controls so a long link reads as a connector rather than as another backbone
+    edge running through the poster.
+    """
+    indices = _primary_indices(nodes)
+    drawn = 0
+    for (source, target), data in links.items():
+        from_prefix = tile_prefix.get(source)
+        to_prefix = tile_prefix.get(target)
+        if from_prefix is None or to_prefix is None:
+            continue
+        from_index = indices.get(from_prefix, {})
+        to_index = indices.get(to_prefix, {})
+
+        anchor = None
+        for metabolite in data.get("mets", ()):
+            if metabolite in from_index and metabolite in to_index:
+                anchor = metabolite
+                break
+        if anchor is None:
+            continue
+
+        a_id, b_id = from_index[anchor], to_index[anchor]
+        a, b = nodes[a_id], nodes[b_id]
+        mid_x, mid_y = (a["x"] + b["x"]) / 2.0, (a["y"] + b["y"]) / 2.0
+        # Bow perpendicular to the run, a tenth of its length, so parallel
+        # connectors between the same pair of regions stay distinguishable.
+        dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+        span = math.hypot(dx, dy) or 1.0
+        bow_x, bow_y = -dy / span * span * 0.1, dx / span * span * 0.1
+
+        key = f"link_{drawn}_{anchor}"
+        reactions[key] = {
+            "name": f"{source} -> {target} ({anchor})",
+            "bigg_id": anchor,
+            "reversibility": False,
+            "label_x": mid_x + bow_x,
+            "label_y": mid_y + bow_y,
+            "gene_reaction_rule": "",
+            "genes": [],
+            "metabolites": [
+                {"bigg_id": anchor, "coefficient": -1.0},
+                {"bigg_id": anchor, "coefficient": 1.0},
+            ],
+            "segments": {
+                f"{key}_s1": {
+                    "from_node_id": a_id,
+                    "to_node_id": b_id,
+                    "b1": {"x": a["x"] + dx * 0.25 + bow_x,
+                           "y": a["y"] + dy * 0.25 + bow_y},
+                    "b2": {"x": a["x"] + dx * 0.75 + bow_x,
+                           "y": a["y"] + dy * 0.75 + bow_y},
+                }
+            },
+        }
+        drawn += 1
+    return drawn
 
 
 def _skyline_pack(order, width, height, gap, target_width):
@@ -259,7 +390,7 @@ def _pack_regions(layering, centres, width, height, gap, names):
 
 
 def compose(tiles, meta_graph, map_name, author="AutoLayout", description="",
-            gap=TILE_GAP, show_titles=True):
+            gap=TILE_GAP, show_titles=True, stitch_links=True):
     """Merge per-cluster Escher maps into one.
 
     `tiles` is [(cluster name, escher map)]; `meta_graph` is the directed graph
@@ -297,12 +428,14 @@ def compose(tiles, meta_graph, map_name, author="AutoLayout", description="",
                                       [name for name, _ in tiles])
 
     nodes, reactions, labels = {}, {}, {}
+    tile_prefix = {}
     for index, (name, tile) in enumerate(tiles):
         left, top, right, bottom = boxes[name]
         centre_x, centre_y = centres.get(name, (0.0, 0.0))
         dx = centre_x - (left + right) / 2.0
         dy = centre_y - (top + bottom) / 2.0 + TITLE_OFFSET / 2.0
         _offset_tile(tile, dx, dy, f"t{index}", nodes, reactions)
+        tile_prefix[name] = f"t{index}"
 
         if show_titles:
             labels[f"title_{index}"] = {
@@ -311,6 +444,11 @@ def compose(tiles, meta_graph, map_name, author="AutoLayout", description="",
                 "text": name,
                 "font_size_base": 12.0,
             }
+
+    # Tiles are placed; now put the flow between them back. This runs after
+    # placement because a connector is drawn between final node positions.
+    if stitch_links:
+        stitch(select_links(placed), tile_prefix, nodes, reactions)
 
     if show_titles:
         for label, (x, y, _block_width) in captions.items():

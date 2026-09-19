@@ -105,7 +105,15 @@ Four ideas carry almost all the quality; change them only deliberately:
 3. **Brandes-Köpf** (`sugiyama.py`). This is what produces the straight vertical backbone. A
    barycenter x-assignment does not. Its balancing step takes a per-node median over four
    alignment runs, which is *not* a convex combination and can overlap nodes, so
-   `_enforce_separation` runs afterwards — that guarantee is load-bearing, don't drop it.
+   `_enforce_separation` runs afterwards.
+
+   That guarantee covers only the nodes the layered pass places. The renderer then adds one
+   cofactor stub per reaction participant, which the layout never saw, so `render._separate_nodes`
+   enforces separation again where the nodes are final. Both are load-bearing. `_separate_nodes`
+   decides what it may move by **provenance**, not by the `node_is_primary` flag: `_unify_primary`
+   promotes a duplicate stub to primary when the compound is primary elsewhere on the map, and
+   keying off the flag made those promoted stubs untouchable — which converted 558 fixable stub
+   overlaps into apparent layout bugs.
 4. **Deterministic cofactor geometry** (`render.py`). Stubs fan off the multimarkers at a fixed
    angle, both members of a pair on the same side, joined by a Bezier that leaves along the
    reaction axis. The perpendicular is derived from the *unflipped* direction; deriving it after
@@ -129,20 +137,34 @@ them — carry no `subsystem` annotation at all, so this is the normal path, not
 `layout_v2.py` prints them per map with a `!` against anything outside target. Current v2 results
 over 1795 maps from four models (e_coli_core, iAB_RBC_283, iAF692, iCHOv1):
 
-| metric | p10 | median | p90 |
-|---|---|---|---|
-| axis_aligned | 1.000 | 1.000 | 1.000 |
-| crossings_per_edge | 0.000 | 0.000 | 0.100 |
-| min_separation_ratio | 1.444 | 1.444 | 1.444 |
-| label_overlaps | 0 | 0 | 0 |
-| hairball_index | 1.000 | 1.000 | 1.875 |
+**Report every metric, over the hard models.** An earlier version of this table listed five
+metrics, all of which passed, over a corpus that excluded the two hardest models — and omitted
+`longest_run_ratio`, `label_on_node`, `label_on_edge`, `occupancy` and `aspect_ratio`, four of
+which failed substantially. A reviewer caught that, correctly, and a partial table is worse than
+none because it reads as a pass.
+
+Current state on Recon3D (10600 reactions, 305 cluster maps + 1 combined), which is the hardest
+case in the corpus:
+
+| metric | status |
+|---|---|
+| node overlaps | 2 pairs in 2 of 305 maps (was 132 maps, worst pair coincident) |
+| clusters below the 6-reaction floor | 0 (was 1589 of 2143) |
+| clusters with a biological name | 256 of 306 (was 0; all were `Cluster_N`) |
+| print size, fitted to 180 mm | **fails**: combined map is 301 mm tall at 0.14 pt |
 
 Use these as a regression gate: a change that improves one pathway by eye but degrades these
-across the corpus is not an improvement. Two caveats when reading a report:
+across the corpus is not an improvement. Caveats when reading a report:
 
 - `aspect_ratio` legitimately sits low for an unbranched pathway — a ten-step chain drawn as a
   tall column is what a reader expects, and folding it would be worse. `sugiyama._fold_columns`
   only wraps a stack past `fold_after` (26 layers), where it stops fitting on a page.
+- **The whole-model composed map is not a print figure and the metrics should not be read as if
+  it were.** 10600 reactions on one page gives each reaction its own area whether or not the
+  layout is good; the arithmetic, not the algorithm, is what puts labels at 0.14 pt. A printable
+  whole-model view needs an abstraction level — pathway nodes and inter-pathway edges, as in
+  `templates/t4` — which is a separate feature, not a tuning problem. The per-cluster maps are
+  the printable artifacts (Citric Acid Cycle sits at 6.1 pt).
 - `hairball_index` is not meaningful on a composed whole-model map. It measures density variance
   across the canvas, and a tiled poster is dense tiles separated by empty gutters by construction
   (iAF1260 scores 7.8). Read it per cluster, not on `*_Combined.json`.

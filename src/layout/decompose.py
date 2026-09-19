@@ -516,13 +516,54 @@ def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
         merged = merge_small(merged, cofactor_score, min_size=min_size,
                              max_size=max_size, boundary=boundary)
 
-    # After merging, boundary clusters no longer need one name per chunk.
+    # After merging, boundary clusters are renamed for what they carry.
+    #
+    # This step used to hand out ordinals -- "Exchange and biomass 37" -- and it
+    # runs *after* name_clusters, so it overwrote the names that step had just
+    # derived. That is the same defect as a caption reading "Cluster_8", and on
+    # Recon3D it accounted for every remaining numeric caption. The reactions say
+    # what is being exchanged, so the caption can too; the ordinal survives only
+    # as the fallback for a cluster whose names really are uninformative.
+    #
+    # It still has to run here rather than earlier, because close_cycles and
+    # merge_small change cluster membership and a name derived from the wrong
+    # membership is worse than no name.
+    frequency, total = None, 0
+    if name_structural:
+        from .naming import describe, phrase_frequency
+        model_reactions = list(model.reactions)
+        frequency = phrase_frequency(model_reactions)
+        total = len(model_reactions)
+
+    # Seed with the names that are staying, so a derived caption cannot collide
+    # with a curated one that happens to be processed later.
+    used = {name for name, reactions in merged.items()
+            if not (is_boundary_cluster(reactions, cofactor_score) and len(merged) > 1)}
+
     renamed, index = {}, 0
     for name, reactions in merged.items():
-        if is_boundary_cluster(reactions, cofactor_score) and len(merged) > 1:
+        if not (is_boundary_cluster(reactions, cofactor_score) and len(merged) > 1):
+            renamed[name] = reactions
+            continue
+
+        label = describe(reactions, frequency, total) if frequency is not None else None
+        if not label and name_structural:
+            # Exchange reactions have one side and mostly uninformative names,
+            # so ask the metabolite table what the cluster handles.
+            from .naming import cargo_species
+            cargo = cargo_species(reactions)
+            if cargo:
+                label = cargo[0].capitalize()
+        if label:
+            label = f"{label} exchange"
+        else:
             index += 1
             label = "Exchange and biomass" if index == 1 else f"Exchange and biomass {index}"
-            renamed[label] = reactions
-        else:
-            renamed[name] = reactions
+
+        candidate, suffix = label, 2
+        while candidate in used:
+            candidate = f"{label} {suffix}"
+            suffix += 1
+        renamed[candidate] = reactions
+        used.add(candidate)
     return renamed

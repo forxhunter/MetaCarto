@@ -524,7 +524,7 @@ PRIMARY_RADIUS = 30.0
 SECONDARY_RADIUS = 16.0
 
 
-def _separate_nodes(builder, passes=6):
+def _separate_nodes(builder, passes=14):
     """Guarantee drawn nodes do not overlap.
 
     `sugiyama._enforce_separation` guarantees this for the layout, but the
