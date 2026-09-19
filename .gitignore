@@ -31,3 +31,6 @@ escher_maps_BiGG/
 
 # Escher fork is its own git repository with its own remote
 escher/
+
+# Generated map output from any run
+layout_output*/
