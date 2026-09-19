@@ -1,0 +1,30 @@
+{
+  "commit": "e2d32c5",
+  "model": "iJO1366",
+  "clusters_with_cycles": 3,
+  "cycles": 3,
+  "median_cv": {
+    "full": 1.5830067990030046e-16,
+    "no_rings": 0.513367317234917
+  },
+  "per_cluster": [
+    {
+      "cluster": "N-c periplasm",
+      "rings": 1,
+      "full_cv": 1.5830067990030046e-16,
+      "ablated_cv": 0.513367317234917
+    },
+    {
+      "cluster": "Periplasm",
+      "rings": 1,
+      "full_cv": 2.119397532549477e-16,
+      "ablated_cv": 0.5780966631590435
+    },
+    {
+      "cluster": "Suf Isc",
+      "rings": 1,
+      "full_cv": 0.0,
+      "ablated_cv": 0.4648635936225522
+    }
+  ]
+}

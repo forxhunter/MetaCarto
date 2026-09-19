@@ -1,0 +1,30 @@
+{
+  "commit": "e2d32c5",
+  "model": "iMM904",
+  "clusters_with_cycles": 3,
+  "cycles": 3,
+  "median_cv": {
+    "full": 7.061430480347799e-17,
+    "no_rings": 0.5111736476126669
+  },
+  "per_cluster": [
+    {
+      "cluster": "Arginine biosynthesis",
+      "rings": 1,
+      "full_cv": 0.0,
+      "ablated_cv": 0.42269013596235006
+    },
+    {
+      "cluster": "D-xylose transport",
+      "rings": 1,
+      "full_cv": 1.4881572258170164e-16,
+      "ablated_cv": 0.5240378927899403
+    },
+    {
+      "cluster": "Starch and sucrose metabolism",
+      "rings": 1,
+      "full_cv": 7.061430480347799e-17,
+      "ablated_cv": 0.5111736476126669
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "commit": "e2d32c5",
+  "model": "e_coli_core",
+  "clusters_with_cycles": 1,
+  "cycles": 1,
+  "median_cv": {
+    "full": 2.3805556638611926e-16,
+    "no_rings": 0.6735043347550116
+  },
+  "per_cluster": [
+    {
+      "cluster": "Citrate cycle (TCA cycle)",
+      "rings": 1,
+      "full_cv": 2.3805556638611926e-16,
+      "ablated_cv": 0.6735043347550116
+    }
+  ]
+}

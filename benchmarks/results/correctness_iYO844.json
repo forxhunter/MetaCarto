@@ -1,22 +1,32 @@
 {
-  "commit": "8fdd66c",
+  "commit": "e2d32c5",
   "model": "iYO844",
   "kegg_reactions_drawn": 2895,
   "variants": {
     "full": {
       "considered": 450,
-      "agree": 423,
-      "rate": 0.94
-    },
-    "no_cofactor_tiering": {
-      "considered": 450,
       "agree": 426,
       "rate": 0.9466666666666667
+    }
+  },
+  "metdraw": {
+    "p80": {
+      "reactions": 453,
+      "recall": 0.977924944812362,
+      "precision": 0.32802547770700635,
+      "edges_per_reaction": 3.465783664459161
     },
-    "no_cofactor_handling": {
-      "considered": 450,
-      "agree": 415,
-      "rate": 0.9222222222222223
+    "p90": {
+      "reactions": 453,
+      "recall": 0.9690949227373068,
+      "precision": 0.5169133192389006,
+      "edges_per_reaction": 2.088300220750552
+    },
+    "p95": {
+      "reactions": 453,
+      "recall": 0.9690949227373068,
+      "precision": 0.6507936507936508,
+      "edges_per_reaction": 1.6688741721854305
     }
   }
 }

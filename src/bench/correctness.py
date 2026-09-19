@@ -100,6 +100,84 @@ def chosen_pairs(model, reactions, variant):
     return out
 
 
+def metdraw_pairs(model, reactions, percentile=0.90):
+    """The connections MetDraw would draw, reconstructed from its description.
+
+    MetDraw (Bioinformatics 2014) "identif[ies] major metabolites that are more
+    highly connected than other metabolites in the same subsystem", clones
+    those, and draws the rest. It does not choose a single backbone pair the
+    way primary-compound reduction does -- it draws every remaining
+    substrate/product connection -- so the honest comparison is not
+    agree/disagree but precision and recall against what KEGG drew.
+
+    The rule is connectivity and nothing else: no conserved-moiety chemistry,
+    no curated carrier list. `percentile` is the cloning threshold, taken over
+    the degree distribution of the reaction set being drawn, which is what
+    "more highly connected than other metabolites in the same subsystem"
+    means.
+    """
+    degree = {}
+    for rxn in reactions:
+        for met in rxn.metabolites:
+            degree[met.id] = degree.get(met.id, 0) + 1
+    if not degree:
+        return {}
+    ordered = sorted(degree.values())
+    cutoff = ordered[min(len(ordered) - 1, int(percentile * len(ordered)))]
+
+    out = {}
+    for rxn in reactions:
+        stoich = {m.id: c for m, c in rxn.metabolites.items()}
+        subs = [m for m, c in stoich.items() if c < 0]
+        prods = [m for m, c in stoich.items() if c > 0]
+        minor = {m for m in list(subs) + list(prods) if degree.get(m, 0) >= cutoff}
+        keep_s = [m for m in subs if m not in minor] or subs
+        keep_p = [m for m in prods if m not in minor] or prods
+        out[rxn.id] = {(a, b) for a in keep_s for b in keep_p}
+    return out
+
+
+def evaluate_metdraw(model, drawn, percentile=0.90):
+    """Precision and recall of MetDraw's drawn connections against KEGG's."""
+    compound_of = {}
+    for met in model.metabolites:
+        ids = _annotation(met, "kegg.compound")
+        if ids:
+            compound_of[met.id] = set(ids)
+
+    pairs = metdraw_pairs(model, list(model.reactions), percentile)
+    considered = covered = 0
+    drawn_edges = 0
+    correct_edges = 0
+    for rxn in model.reactions:
+        target = set()
+        for rid in _annotation(rxn, "kegg.reaction"):
+            target |= drawn.get(rid, set())
+        if not target:
+            continue
+        candidate = pairs.get(rxn.id) or set()
+        usable = [(a, b) for a, b in candidate
+                  if compound_of.get(a) and compound_of.get(b)]
+        if not usable:
+            continue
+        considered += 1
+        drawn_edges += len(usable)
+        hit = False
+        for a, b in usable:
+            if any(frozenset((x, y)) in target
+                   for x in compound_of[a] for y in compound_of[b]):
+                correct_edges += 1
+                hit = True
+        if hit:
+            covered += 1
+    return {
+        "reactions": considered,
+        "recall": covered / considered if considered else float("nan"),
+        "precision": correct_edges / drawn_edges if drawn_edges else float("nan"),
+        "edges_per_reaction": drawn_edges / considered if considered else float("nan"),
+    }
+
+
 def evaluate(model, drawn, variant):
     """Agreement between MetaCarto's backbone and KEGG's drawn connection."""
     compound_of = {}
@@ -166,6 +244,21 @@ def main(argv=None):
                             "rate": rate, "examples_missed": missed}
         print("%-24s%12d%12d%9.1f%%" % (variant, considered, agree, 100 * rate))
 
+    print()
+    print("MetDraw's rule (connectivity cloning, no chemistry, no curated list)")
+    print("%-24s%12s%12s%12s%14s" % ("threshold", "reactions", "recall",
+                                     "precision", "edges/rxn"))
+    md = {}
+    for pct in (0.80, 0.90, 0.95):
+        stats = evaluate_metdraw(model, drawn, pct)
+        md["p%d" % int(pct * 100)] = stats
+        print("%-24s%12d%11.1f%%%11.1f%%%14.2f"
+              % ("top %d%% cloned" % int((1 - pct) * 100), stats["reactions"],
+                 100 * stats["recall"], 100 * stats["precision"],
+                 stats["edges_per_reaction"]))
+    print("MetaCarto draws exactly one connection per reaction, so its recall")
+    print("and precision are both the agreement rate above.")
+
     if "full" in results and results["full"]["examples_missed"]:
         print("\nreactions where the full method disagrees with KEGG's drawing:")
         for rid, a, b in results["full"]["examples_missed"][:8]:
@@ -184,7 +277,8 @@ def main(argv=None):
                    "kegg_reactions_drawn": len(drawn),
                    "variants": {k: {kk: vv for kk, vv in v.items()
                                     if kk != "examples_missed"}
-                                for k, v in results.items()}},
+                                for k, v in results.items()},
+                   "metdraw": md},
                   handle, indent=2)
     print("\nwrote %s (commit %s)" % (target, sha))
     return 0

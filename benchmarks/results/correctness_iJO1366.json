@@ -1,5 +1,5 @@
 {
-  "commit": "8fdd66c",
+  "commit": "e2d32c5",
   "model": "iJO1366",
   "kegg_reactions_drawn": 2895,
   "variants": {
@@ -7,6 +7,26 @@
       "considered": 673,
       "agree": 640,
       "rate": 0.950965824665676
+    }
+  },
+  "metdraw": {
+    "p80": {
+      "reactions": 673,
+      "recall": 0.9598811292719168,
+      "precision": 0.38235294117647056,
+      "edges_per_reaction": 2.8291233283803865
+    },
+    "p90": {
+      "reactions": 673,
+      "recall": 0.9569093610698366,
+      "precision": 0.48695054945054944,
+      "edges_per_reaction": 2.163447251114413
+    },
+    "p95": {
+      "reactions": 673,
+      "recall": 0.9613670133729569,
+      "precision": 0.6047297297297297,
+      "edges_per_reaction": 1.7592867756315007
     }
   }
 }
