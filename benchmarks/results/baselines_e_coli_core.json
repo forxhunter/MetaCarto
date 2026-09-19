@@ -1,0 +1,463 @@
+{
+  "commit": "ef7d436",
+  "model": "e_coli_core",
+  "clusters": 6,
+  "methods": {
+    "metacarto": {
+      "maps": 6,
+      "median_seconds": 0.021012550001614727,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.0,
+          "mean": 0.04050925925925926
+        },
+        "hairball_index": {
+          "median": 1.8624999999999998,
+          "mean": 1.9849845679012343
+        },
+        "aspect_ratio": {
+          "median": 0.31398727701251855,
+          "mean": 0.4783263352364268
+        },
+        "occupancy": {
+          "median": 0.3670505137214676,
+          "mean": 0.37241023330517975
+        },
+        "min_separation_ratio": {
+          "median": 0.8808800455254886,
+          "mean": 0.784177702090486
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Ammonium exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 3.407407407407407,
+          "aspect_ratio": 0.33686668635664596,
+          "occupancy": 0.4155562388925272,
+          "min_separation_ratio": 1.0555555555555556
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_edge": 0.1875,
+          "hairball_index": 1.9375,
+          "aspect_ratio": 0.7957267195201178,
+          "occupancy": 0.40796947812369544,
+          "min_separation_ratio": 0.6344378423372131
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.8499999999999999,
+          "aspect_ratio": 0.15649207158094092,
+          "occupancy": 0.22155538766055533,
+          "min_separation_ratio": 0.8808800455254887
+        },
+        {
+          "cluster": "Pentose phosphate pathway",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.29110786766839114,
+          "occupancy": 0.2433834785527618,
+          "min_separation_ratio": 0.366666666666667
+        },
+        {
+          "cluster": "Transhydrogenase Glutamate",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.875,
+          "aspect_ratio": 0.28584309766501426,
+          "occupancy": 0.3261315493192397,
+          "min_separation_ratio": 0.8866460569325034
+        },
+        {
+          "cluster": "Transport symport",
+          "crossings_per_edge": 0.05555555555555555,
+          "hairball_index": 1.84,
+          "aspect_ratio": 1.003921568627451,
+          "occupancy": 0.619865267282299,
+          "min_separation_ratio": 0.8808800455254884
+        }
+      ]
+    },
+    "dot": {
+      "maps": 6,
+      "median_seconds": 0.013414400003966875,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.010869565217391304,
+          "mean": 0.033551503817983476
+        },
+        "hairball_index": {
+          "median": 1.7548148148148148,
+          "mean": 1.557854938271605
+        },
+        "aspect_ratio": {
+          "median": 1.487559945315426,
+          "mean": 3.6403920468762063
+        },
+        "occupancy": {
+          "median": 0.2583190284006244,
+          "mean": 0.27919054905581714
+        },
+        "min_separation_ratio": {
+          "median": 0.8654144572656872,
+          "mean": 0.7474841179796256
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Ammonium exchange",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.6296296296296295,
+          "aspect_ratio": 13.537611773199146,
+          "occupancy": 0.2088784934224747,
+          "min_separation_ratio": 1.0
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_edge": 0.11290322580645161,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.34093084911988253,
+          "occupancy": 0.2592138159826732,
+          "min_separation_ratio": 0.9965457582448797
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.9000000000000001,
+          "aspect_ratio": 0.25321766154260544,
+          "occupancy": 0.2574242408185755,
+          "min_separation_ratio": 0.845762610383957
+        },
+        {
+          "cluster": "Pentose phosphate pathway",
+          "crossings_per_edge": 0.0,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.46475276649698066,
+          "occupancy": 0.248379944819635,
+          "min_separation_ratio": 0.39086336843483277
+        },
+        {
+          "cluster": "Transhydrogenase Glutamate",
+          "crossings_per_edge": 0.021739130434782608,
+          "hairball_index": 1.9375,
+          "aspect_ratio": 2.510367124133871,
+          "occupancy": 0.3223084646613039,
+          "min_separation_ratio": 0.8850663041474175
+        },
+        {
+          "cluster": "Transport symport",
+          "crossings_per_edge": 0.06666666666666667,
+          "hairball_index": 1.8800000000000001,
+          "aspect_ratio": 4.735472106764754,
+          "occupancy": 0.3789383346302406,
+          "min_separation_ratio": 0.3666666666666662
+        }
+      ]
+    },
+    "neato": {
+      "maps": 6,
+      "median_seconds": 0.015385200007585809,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.06446731234866829,
+          "mean": 0.11524977849283917
+        },
+        "hairball_index": {
+          "median": 1.0,
+          "mean": 1.2858024691358025
+        },
+        "aspect_ratio": {
+          "median": 1.004903152075004,
+          "mean": 1.1853530081933192
+        },
+        "occupancy": {
+          "median": 0.3968156107878318,
+          "mean": 0.4104842942562536
+        },
+        "min_separation_ratio": {
+          "median": 0.6039853934901114,
+          "mean": 0.6734873272952929
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Ammonium exchange",
+          "crossings_per_edge": 0.03571428571428571,
+          "hairball_index": 1.814814814814815,
+          "aspect_ratio": 1.0548788423376505,
+          "occupancy": 0.41973189182144727,
+          "min_separation_ratio": 0.9999143529203662
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_edge": 0.13636363636363635,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7752446337084413,
+          "occupancy": 0.28559683413282577,
+          "min_separation_ratio": 0.568671826292947
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.03409090909090909,
+          "hairball_index": 1.9000000000000001,
+          "aspect_ratio": 1.874902941173264,
+          "occupancy": 0.5048496414320968,
+          "min_separation_ratio": 0.6392989606872759
+        },
+        {
+          "cluster": "Pentose phosphate pathway",
+          "crossings_per_edge": 0.021739130434782608,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.533236344090188,
+          "occupancy": 0.3738993297542163,
+          "min_separation_ratio": 0.5222801458100548
+        },
+        {
+          "cluster": "Transhydrogenase Glutamate",
+          "crossings_per_edge": 0.37037037037037035,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9549274618123577,
+          "occupancy": 0.3609149654024781,
+          "min_separation_ratio": 0.8844596423862485
+        },
+        {
+          "cluster": "Transport symport",
+          "crossings_per_edge": 0.09322033898305085,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.9189278260380143,
+          "occupancy": 0.5179131029944575,
+          "min_separation_ratio": 0.42629903567486505
+        }
+      ]
+    },
+    "fdp": {
+      "maps": 6,
+      "median_seconds": 0.015634149996913038,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.1360294117647059,
+          "mean": 0.15582901345116065
+        },
+        "hairball_index": {
+          "median": 1.8629629629629627,
+          "mean": 1.6039043209876542
+        },
+        "aspect_ratio": {
+          "median": 1.1249730962821611,
+          "mean": 1.1643048322468048
+        },
+        "occupancy": {
+          "median": 0.43228142155619426,
+          "mean": 0.4343701294596009
+        },
+        "min_separation_ratio": {
+          "median": 0.56247118982963,
+          "mean": 0.6481997360956642
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Ammonium exchange",
+          "crossings_per_edge": 0.03571428571428571,
+          "hairball_index": 1.9259259259259258,
+          "aspect_ratio": 0.9976898148148149,
+          "occupancy": 0.4934133431346238,
+          "min_separation_ratio": 1.0000000000000007
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_edge": 0.14705882352941177,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.1196565873510758,
+          "occupancy": 0.36205957442869147,
+          "min_separation_ratio": 0.7930516731313901
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.125,
+          "hairball_index": 1.7999999999999998,
+          "aspect_ratio": 1.3834237099493751,
+          "occupancy": 0.5159637121877112,
+          "min_separation_ratio": 0.5828029796195253
+        },
+        {
+          "cluster": "Pentose phosphate pathway",
+          "crossings_per_edge": 0.16666666666666666,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.398154484563082,
+          "occupancy": 0.3711494999777647,
+          "min_separation_ratio": 0.48980098571131536
+        },
+        {
+          "cluster": "Transhydrogenase Glutamate",
+          "crossings_per_edge": 0.37037037037037035,
+          "hairball_index": 1.9375,
+          "aspect_ratio": 1.1302896052132467,
+          "occupancy": 0.32353553078799596,
+          "min_separation_ratio": 0.5421394000397347
+        },
+        {
+          "cluster": "Transport symport",
+          "crossings_per_edge": 0.09016393442622951,
+          "hairball_index": 1.96,
+          "aspect_ratio": 0.9566147915892345,
+          "occupancy": 0.5400991162408181,
+          "min_separation_ratio": 0.48140337807201866
+        }
+      ]
+    },
+    "spring": {
+      "maps": 6,
+      "median_seconds": 0.011380550000467338,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.08114035087719298,
+          "mean": 0.08197804064032134
+        },
+        "hairball_index": {
+          "median": 1.6199999999999999,
+          "mean": 2.057361111111111
+        },
+        "aspect_ratio": {
+          "median": 0.7981419104951739,
+          "mean": 0.827232303932679
+        },
+        "occupancy": {
+          "median": 0.5551341535001447,
+          "mean": 0.5010664631318167
+        },
+        "min_separation_ratio": {
+          "median": 0.5479550315634507,
+          "mean": 0.6399905487507025
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Ammonium exchange",
+          "crossings_per_edge": 0.08333333333333333,
+          "hairball_index": 4.666666666666667,
+          "aspect_ratio": 0.9734837453398997,
+          "occupancy": 0.6444035315358438,
+          "min_separation_ratio": 0.8968241007361739
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_edge": 0.12121212121212122,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6642760545682957,
+          "occupancy": 0.28006900642680715,
+          "min_separation_ratio": 0.5232692608482257
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.0375,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.635967719111597,
+          "occupancy": 0.47283444655543244,
+          "min_separation_ratio": 0.48870690364873837
+        },
+        {
+          "cluster": "Pentose phosphate pathway",
+          "crossings_per_edge": 0.022727272727272728,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.7207632249123965,
+          "occupancy": 0.30587587470371813,
+          "min_separation_ratio": 0.5282687517645769
+        },
+        {
+          "cluster": "Transhydrogenase Glutamate",
+          "crossings_per_edge": 0.14814814814814814,
+          "hairball_index": 2.4375,
+          "aspect_ratio": 0.8755205960779512,
+          "occupancy": 0.637433860444857,
+          "min_separation_ratio": 0.8352329641441755
+        },
+        {
+          "cluster": "Transport symport",
+          "crossings_per_edge": 0.07894736842105263,
+          "hairball_index": 2.2399999999999998,
+          "aspect_ratio": 1.093382483585934,
+          "occupancy": 0.6657820591242415,
+          "min_separation_ratio": 0.5676413113623247
+        }
+      ]
+    },
+    "kamada_kawai": {
+      "maps": 6,
+      "median_seconds": 0.017982999997911975,
+      "metrics": {
+        "crossings_per_edge": {
+          "median": 0.06753246753246753,
+          "mean": 0.09720801692436842
+        },
+        "hairball_index": {
+          "median": 1.8937499999999998,
+          "mean": 2.9153240740740736
+        },
+        "aspect_ratio": {
+          "median": 1.0956393084718177,
+          "mean": 1.3212998454168228
+        },
+        "occupancy": {
+          "median": 0.4191216431258594,
+          "mean": 0.4625320517031534
+        },
+        "min_separation_ratio": {
+          "median": 0.5773974082075387,
+          "mean": 0.5976953582439469
+        }
+      },
+      "per_map": [
+        {
+          "cluster": "Ammonium exchange",
+          "crossings_per_edge": 0.06363636363636363,
+          "hairball_index": 8.944444444444443,
+          "aspect_ratio": 1.0328588551980344,
+          "occupancy": 0.7058418919967436,
+          "min_separation_ratio": 0.999997157483586
+        },
+        {
+          "cluster": "Citrate cycle (TCA cycle)",
+          "crossings_per_edge": 0.0625,
+          "hairball_index": 1.0,
+          "aspect_ratio": 0.6727381973513589,
+          "occupancy": 0.26652956120989724,
+          "min_separation_ratio": 0.4608445730185512
+        },
+        {
+          "cluster": "Glycolysis / Gluconeogenesis",
+          "crossings_per_edge": 0.07142857142857142,
+          "hairball_index": 1.8499999999999999,
+          "aspect_ratio": 2.8865905687430375,
+          "occupancy": 0.4399276018102148,
+          "min_separation_ratio": 0.8691211840360795
+        },
+        {
+          "cluster": "Pentose phosphate pathway",
+          "crossings_per_edge": 0.020833333333333332,
+          "hairball_index": 1.0,
+          "aspect_ratio": 1.2097294718968643,
+          "occupancy": 0.39831568444150406,
+          "min_separation_ratio": 0.4702244139788056
+        },
+        {
+          "cluster": "Transhydrogenase Glutamate",
+          "crossings_per_edge": 0.15517241379310345,
+          "hairball_index": 1.9375,
+          "aspect_ratio": 1.1584197617456007,
+          "occupancy": 0.286047622951893,
+          "min_separation_ratio": 0.10141441851038763
+        },
+        {
+          "cluster": "Transport symport",
+          "crossings_per_edge": 0.20967741935483872,
+          "hairball_index": 2.7600000000000002,
+          "aspect_ratio": 0.9674622175660403,
+          "occupancy": 0.6785299478086677,
+          "min_separation_ratio": 0.6845704024362719
+        }
+      ]
+    }
+  }
+}
