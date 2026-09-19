@@ -29,13 +29,32 @@ from .render import (CHAR_WIDTH_RATIO, ESCHER_DEFAULT_FONT_BASE,
                      METABOLITE_FONT_FACTOR, REACTION_FONT_FACTOR)
 
 
-def _straight_segments(body):
+CONNECTOR_PREFIX = "link_"
+
+
+def _straight_segments(body, include_connectors=True):
+    """Segments the crossing and orthogonality measures apply to.
+
+    Curved segments are skipped, because a cofactor stub and a ring arc are
+    curved on purpose and charging them with being non-orthogonal measures the
+    design rather than a defect.
+
+    Inter-tile connectors are curved too, and skipping them made 68 long links
+    spanning a whole poster completely unmeasured -- a blind spot, not a design
+    decision, since a connector crossing the network is exactly the kind of
+    thing these gates exist to catch. They are identified by their reaction key
+    and measured by their chord.
+    """
     nodes = body["nodes"]
     out = []
-    for reaction in body["reactions"].values():
+    for key, reaction in body["reactions"].items():
+        connector = str(key).startswith(CONNECTOR_PREFIX)
+        if connector and not include_connectors:
+            continue
         for segment in reaction["segments"].values():
-            if segment.get("b1") or segment.get("b2"):
-                continue                      # cofactor arc, curved by design
+            curved = bool(segment.get("b1") or segment.get("b2"))
+            if curved and not connector:
+                continue
             a = nodes.get(segment["from_node_id"])
             b = nodes.get(segment["to_node_id"])
             if a is None or b is None:
@@ -296,6 +315,7 @@ def score(escher_map, pitch=180.0):
     body = escher_map[1]
     nodes = body["nodes"]
     segments = _straight_segments(body)
+    connectors = len(segments) - len(_straight_segments(body, include_connectors=False))
 
     aligned = sum(
         1 for x1, y1, x2, y2 in segments
@@ -346,6 +366,7 @@ def score(escher_map, pitch=180.0):
     return {
         "nodes": len(nodes),
         "reactions": len(body["reactions"]),
+        "connectors": connectors,
         "axis_aligned": aligned / len(segments) if segments else 1.0,
         "crossings_per_edge": (_count_crossings(segments) / len(segments)) if segments else 0.0,
         "longest_run_ratio": (_longest_straight_run(segments) / total_length) if total_length else 0.0,

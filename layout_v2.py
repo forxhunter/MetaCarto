@@ -14,6 +14,7 @@ to the v1 pipeline in process_subsystems.py, which it does not replace yet.
 import argparse
 import glob
 import os
+import shutil
 import sys
 import traceback
 
@@ -103,6 +104,9 @@ def main(argv=None):
     parser.add_argument("--raw-subsystems", action="store_true",
                         help="use declared subsystems verbatim, skipping the "
                              "constraints.md size limits and community fallback")
+    parser.add_argument("--clean", action="store_true",
+                        help="remove the model's output directory before writing, so the "
+                             "result is this run only and not a union of past runs")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
 
@@ -132,7 +136,11 @@ def main(argv=None):
     for path in paths:
         model_id = os.path.splitext(os.path.basename(path))[0]
         out_dir = os.path.join(args.out, model_id)
+        if args.clean and os.path.isdir(out_dir):
+            shutil.rmtree(out_dir, ignore_errors=True)
         os.makedirs(out_dir, exist_ok=True)
+        before = {f for f in os.listdir(out_dir) if f.endswith(".json")}
+        written = set()
         print(f"Model {model_id}")
 
         try:
@@ -157,6 +165,7 @@ def main(argv=None):
             try:
                 tile = emit(model, reactions, name, out_dir, args.preview,
                             not args.no_fba, not args.quiet, LAYER_GAP)
+                written.add(safe_name(name) + ".json")
                 if tile is not None:
                     tiles.append((name, tile))
             except Exception as exc:
@@ -174,9 +183,24 @@ def main(argv=None):
                 if combined is not None:
                     save_map(combined, out_dir, f"{model_id}_Combined",
                              args.preview, LAYER_GAP, not args.quiet)
+                    written.add(safe_name(f"{model_id}_Combined") + ".json")
             except Exception as exc:
                 print(f"  combined: FAILED {exc}")
                 traceback.print_exc()
+
+        # Cluster names change between runs, so a rename leaves the old file
+        # behind and the directory becomes the union of every run that ever
+        # wrote to it. Anything that then reads the directory -- a metric sweep,
+        # the map index, a reviewer -- scores a mixture of code versions. This
+        # has silently corrupted measurements more than once, so say so loudly
+        # rather than deleting a user's files without being asked.
+        stale = before - written
+        if stale:
+            print(f"  WARNING: {len(stale)} stale map(s) from earlier runs remain in "
+                  f"{out_dir}")
+            print(f"           this run wrote {len(written)}; anything reading that "
+                  f"directory will score a mixture")
+            print("           re-run with --clean to make the directory this run only")
 
     return 0
 
