@@ -20,7 +20,7 @@ import traceback
 
 import cobra
 
-from src.layout import metrics, preview, render
+from src.layout import metrics, preview, render, svgout
 from src.layout.compose import build_meta_graph, compose
 from src.layout.compound import compute_cofactor_scores
 from src.layout.decompose import clusters
@@ -39,6 +39,61 @@ def load_model(path):
 
 def safe_name(name):
     return "".join(c if (c.isalnum() or c in "-_") else "_" for c in name)
+
+
+def merge_by_function(groups, max_size=None):
+    """Consolidate clusters that do the same kind of chemistry into one map.
+
+    Packing 300 pathway tiles onto a canvas leaves 300 separate little drawings
+    however neatly they are arranged. Merging by biological function instead
+    gives one drawing per metabolic superclass -- all of lipid metabolism as a
+    single connected map, all of amino acid metabolism as another -- which is
+    how `templates/t1` and `t2` are organised and what makes them navigable.
+
+    `taxonomy.superclass` already classifies a cluster name into the KEGG BRITE
+    top-level categories; it was only being used to place tiles near each other,
+    which is adjacency without integration.
+
+    A superclass that blows past `max_size` is split, but the pieces keep the
+    functional name and stay adjacent, so the reader still sees one region.
+    """
+    from src.layout import taxonomy
+
+    pooled = {}
+    for name, reactions in groups.items():
+        pooled.setdefault(taxonomy.superclass(name), []).append((name, reactions))
+
+    out = {}
+    for label, members in pooled.items():
+        total = sum(len(r) for _, r in members)
+        if not max_size or total <= max_size:
+            out[label] = [r for _, rs in members for r in rs]
+            continue
+
+        # Bin-pack whole pathways, never slicing one.
+        #
+        # Cutting the merged reaction list every `max_size` entries is the
+        # obvious way to do this and it is wrong: the cut lands in the middle of
+        # whichever pathway happens to straddle it, so glycolysis ends up half
+        # in sheet 2 and half in sheet 3 for no reason a reader can see. Keeping
+        # the pathway as the atom costs a little packing efficiency and keeps
+        # every pathway whole.
+        bins = []
+        for name, reactions in sorted(members, key=lambda kv: -len(kv[1])):
+            for b in bins:
+                if b["size"] + len(reactions) <= max_size:
+                    b["reactions"].extend(reactions)
+                    b["size"] += len(reactions)
+                    break
+            else:
+                bins.append({"reactions": list(reactions), "size": len(reactions)})
+
+        if len(bins) == 1:
+            out[label] = bins[0]["reactions"]
+        else:
+            for index, b in enumerate(bins, 1):
+                out[f"{label} ({index})"] = b["reactions"]
+    return out
 
 
 def subsystems_of(model):
@@ -65,13 +120,20 @@ def metabolite_groups(reactions):
 
 
 def emit(model, reactions, name, out_dir, want_preview, use_fba, verbose, pitch,
-         groups=None):
+         groups=None, write=True):
+    """Lay out one cluster; `write=False` keeps it in memory as a tile only.
+
+    A whole-model map still needs every cluster drawn, but it does not need
+    every cluster *written*: Recon3D emits 300-odd per-pathway files that nobody
+    opens, and they then go stale the moment cluster naming changes.
+    """
     result = layout_reactions(model, reactions, name, author=AUTHOR,
                               use_fba=use_fba, verbose=verbose, groups=groups)
     if result is None:
         print(f"  {name}: no drawable structure, skipped")
         return None
-    save_map(result.escher_map, out_dir, name, want_preview, pitch, verbose)
+    if write:
+        save_map(result.escher_map, out_dir, name, want_preview, pitch, verbose)
     return result.escher_map
 
 
@@ -80,6 +142,11 @@ def save_map(escher_map, out_dir, name, want_preview, pitch, verbose=True):
     render.save(escher_map, stem + ".json")
     if want_preview:
         preview.render(escher_map, stem + ".png")
+        # SVG alongside the PNG: a raster has one resolution, and these maps are
+        # read by zooming into a corner rather than at fit-to-page. The vector
+        # copy stays sharp at any magnification, prints at any DPI, and costs
+        # about as much to write as the PNG does.
+        svgout.render(escher_map, stem + ".svg")
     values = metrics.score(escher_map, pitch=pitch)
     if verbose:
         print(f"  {name}: {values['reactions']} reactions, {values['nodes']} nodes")
@@ -104,10 +171,28 @@ def main(argv=None):
     parser.add_argument("--raw-subsystems", action="store_true",
                         help="use declared subsystems verbatim, skipping the "
                              "constraints.md size limits and community fallback")
-    parser.add_argument("--clean", action="store_true",
-                        help="remove the model's output directory before writing, so the "
-                             "result is this run only and not a union of past runs")
+    parser.add_argument("--no-clean", dest="clean", action="store_false",
+                        default=True,
+                        help="keep maps from previous runs. Cleaning is the "
+                             "default: cluster names change between runs, so a "
+                             "rename leaves the old file behind and the "
+                             "directory silently becomes a union of several "
+                             "generations of contradictory maps.")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--group-function", action="store_true",
+                        help="merge clusters of the same metabolic superclass "
+                             "into one map each (lipid, amino acid, ...), "
+                             "instead of emitting one tile per pathway")
+    parser.add_argument("--combined-only", action="store_true",
+                        help="write only the whole-model map, not one file per "
+                             "cluster. Implies --combined.")
+    parser.add_argument("--max-cluster", type=int, default=None,
+                        help="largest cluster in reactions (default 60). Raising "
+                             "it trades per-tile readability for a whole-model "
+                             "map made of a few large regions instead of "
+                             "hundreds of postage stamps.")
+    parser.add_argument("--min-cluster", type=int, default=None,
+                        help="smallest cluster in reactions (default 6)")
     args = parser.parse_args(argv)
 
     if args.all:
@@ -152,7 +237,18 @@ def main(argv=None):
         if args.raw_subsystems:
             groups = subsystems_of(model)
         else:
-            groups = clusters(model, compute_cofactor_scores(model))
+            from src.layout import decompose
+            size_limits = {}
+            if args.max_cluster:
+                size_limits["max_size"] = args.max_cluster
+            if args.min_cluster:
+                size_limits["min_size"] = args.min_cluster
+            groups = clusters(model, compute_cofactor_scores(model), **size_limits)
+            if args.group_function:
+                pathway_count = len(groups)
+                groups = merge_by_function(groups, max_size=args.max_cluster)
+                print(f"  merged {pathway_count} pathway clusters into "
+                      f"{len(groups)} functional maps")
         targets = ({args.subsystem: groups[args.subsystem]}
                    if args.subsystem and args.subsystem in groups else groups)
         if args.subsystem and args.subsystem not in groups:
@@ -164,7 +260,8 @@ def main(argv=None):
         for name, reactions in sorted(targets.items()):
             try:
                 tile = emit(model, reactions, name, out_dir, args.preview,
-                            not args.no_fba, not args.quiet, LAYER_GAP)
+                            not args.no_fba, not args.quiet, LAYER_GAP,
+                            write=not args.combined_only)
                 written.add(safe_name(name) + ".json")
                 if tile is not None:
                     tiles.append((name, tile))
@@ -172,7 +269,7 @@ def main(argv=None):
                 print(f"  {name}: FAILED {exc}")
                 traceback.print_exc()
 
-        if args.combined and not args.subsystem and tiles:
+        if (args.combined or args.combined_only) and not args.subsystem and tiles:
             # Meta-tiling: reuse the per-cluster drawings and lay the tiles out
             # with the same layered pass. Drawing the whole model in one go
             # instead is what produces an unreadable 2.6-crossings-per-edge map.

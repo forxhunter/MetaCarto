@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "MetaCarto: constructive layout synthesis for genome-scale metabolic networks"
+message: "If you use this software or the maps it generates, please cite it."
+type: software
+authors:
+  - family-names: Wu
+    given-names: Tianyu
+    affiliation: University of Illinois Urbana-Champaign
+repository-code: "https://github.com/forxhunter/MetaCarto"
+url: "https://forxhunter.github.io/escher/"
+license: CC-BY-4.0
+keywords:
+  - metabolic network
+  - graph drawing
+  - Escher
+  - BiGG
+  - systems biology
+references:
+  - type: data
+    title: "Escher maps for BiGG models, generated with MetaCarto"
+    authors:
+      - family-names: Wu
+        given-names: Tianyu
+    repository-code: "https://github.com/forxhunter/escher_maps_BiGG"
+    license: CC-BY-4.0

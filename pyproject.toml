@@ -8,11 +8,12 @@ version = "0.1.0"
 description = "Constructive layout synthesis for genome-scale metabolic networks, emitting Escher-compatible maps"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = { text = "CC-BY-4.0" }
 authors = [{ name = "Tianyu Wu" }]
 keywords = ["metabolic-network", "layout", "escher", "bigg", "systems-biology"]
 classifiers = [
     "Intended Audience :: Science/Research",
+    "License :: Other/Proprietary License",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Programming Language :: Python :: 3",
 ]

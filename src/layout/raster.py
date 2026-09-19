@@ -173,7 +173,14 @@ class Canvas:
                                             top + row * scale + sy, colour)
             cursor += GLYPH_WIDTH * scale
 
-    def save(self, path):
+    def save(self, path, dpi=300):
+        """Write the PNG, declaring `dpi` so viewers report the right print size.
+
+        The pHYs chunk is metadata only -- it does not add detail. What makes a
+        zoom sharp is the pixel count, which `preview.render` decides. Without
+        pHYs, though, every consumer assumes 72 dpi and reports a figure four
+        times too large on paper, so both halves are needed.
+        """
         raw = b"".join(b"\x00" + bytes(row) for row in self.rows)
         compressed = zlib.compress(raw, 6)
 
@@ -182,9 +189,13 @@ class Canvas:
                     + struct.pack(">I", zlib.crc32(tag + payload) & 0xFFFFFFFF))
 
         header = struct.pack(">2I5B", self.width, self.height, 8, 2, 0, 0, 0)
+        # pHYs: pixels per metre, unit 1 = metre.
+        per_metre = int(round(dpi / 0.0254))
+        phys = struct.pack(">2IB", per_metre, per_metre, 1)
         with open(path, "wb") as handle:
             handle.write(b"\x89PNG\r\n\x1a\n")
             handle.write(chunk(b"IHDR", header))
+            handle.write(chunk(b"pHYs", phys))
             handle.write(chunk(b"IDAT", compressed))
             handle.write(chunk(b"IEND", b""))
         return path

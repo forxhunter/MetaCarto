@@ -111,6 +111,24 @@ and is a demo, not a driver.
 `plan.md` describes a GNN + reinforcement-learning architecture that was explored and
 abandoned. None of it is on either production path; see `experiments/README.md`.
 
+## Licence and citation
+
+**[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)**, the same licence as the map
+collection. You may use, modify and redistribute this for any purpose including commercially,
+**on the condition that you give attribution** — attribution is a term of the licence, not a
+courtesy.
+
+If you use MetaCarto, or maps it generated, in a paper, figure, talk, poster, database or
+derived software, please cite this repository. `CITATION.cff` carries the machine-readable
+form and GitHub renders it as *Cite this repository*.
+
+Please also cite the underlying model from [BiGG Models](http://bigg.ucsd.edu/) and, where the
+maps are displayed, [Escher](https://doi.org/10.1371/journal.pcbi.1004321).
+
+A note for anyone reusing the code: CC BY is a content licence rather than a software licence,
+so it carries no patent grant and is not OSI-approved. It is used here deliberately, to keep
+the citation requirement identical across the software and the maps.
+
 ## Credits
 
 **Created by Tianyu Wu (GitHub: [forxhunter](https://github.com/forxhunter))**, University of

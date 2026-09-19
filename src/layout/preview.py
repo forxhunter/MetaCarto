@@ -6,8 +6,10 @@ looks right is also evidence the exported JSON is structurally right.
 
 from .raster import Canvas, text_width
 
-MAX_PIXELS = 2200.0
-POSTER_PIXELS = 4400.0     # a whole-model map needs more canvas to be readable at all
+MAX_PIXELS = 6000.0
+POSTER_PIXELS = 12000.0    # a whole-model map needs more canvas to be readable at all
+MAX_SCALE = 2.0            # glyphs at 4x; past this the file grows for nothing
+DEFAULT_DPI = 300
 
 BACKBONE = (47, 59, 71)
 STUB = (154, 166, 178)
@@ -34,7 +36,7 @@ def _bezier(p0, b1, b2, p3, steps=14):
     return points
 
 
-def render(escher_map, path, show_labels=True, max_pixels=None):
+def render(escher_map, path, show_labels=True, max_pixels=None, dpi=DEFAULT_DPI):
     body = escher_map[1]
     nodes, reactions, canvas_box = body["nodes"], body["reactions"], body["canvas"]
 
@@ -42,7 +44,16 @@ def render(escher_map, path, show_labels=True, max_pixels=None):
     span_y = max(canvas_box["height"], 1.0)
     if max_pixels is None:
         max_pixels = POSTER_PIXELS if max(span_x, span_y) > 12000.0 else MAX_PIXELS
-    scale = min(max_pixels / span_x, max_pixels / span_y, 0.5)
+
+    # Scale so the smallest label still lands on real glyphs rather than the
+    # "too small to read" bar, then let the pixel budget veto it.
+    #
+    # The old 0.5 ceiling was the binding constraint on every large map: at 0.5
+    # a metabolite label is drawn at exactly 1x, i.e. a 6x7 pixel glyph, which
+    # survives a screenshot and disintegrates the moment anyone zooms. Raising
+    # the ceiling is what makes a zoom sharp; `max_pixels` still bounds the
+    # memory, because this rasteriser holds the whole image as Python bytearrays.
+    scale = min(max_pixels / span_x, max_pixels / span_y, MAX_SCALE)
     width = max(240, int(span_x * scale))
     height = max(240, int(span_y * scale))
     canvas = Canvas(width, height)
@@ -161,7 +172,7 @@ def render(escher_map, path, show_labels=True, max_pixels=None):
             lx, ly = to_px(label["x"], label["y"])
             draw_label(label, 3.0, label.get("text", ""), lx, ly, TITLE_TEXT)
 
-    return canvas.save(path)
+    return canvas.save(path, dpi=dpi)
 
 
 def label_pixel_width(text, scale=1):

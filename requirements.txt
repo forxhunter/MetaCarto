@@ -1,11 +1,14 @@
-cobra>=0.26.0
-networkx>=3.0
-torch>=2.0.0
-torch-geometric>=2.3.0
-numpy
-scipy
-matplotlib
-bioservices
-rdkit
-escher
-pytest
+# The runtime dependencies, and only those. Install the package instead:
+#
+#     pip install -e .            # drawing maps
+#     pip install -e '.[bench]'   # plus the benchmark (scipy, pygraphviz)
+#     pip install -e '.[test]'    # plus pytest
+#
+# This file previously listed torch, torch-geometric, rdkit, escher,
+# bioservices and matplotlib. None of them are imported by either pipeline:
+# they belonged to the abandoned learned-layout branch now archived in
+# experiments/, and matplotlib cannot render on every platform, which is why
+# src/layout/raster.py is a self-contained PNG writer.
+cobra>=0.26
+networkx>=3.1
+numpy>=1.22

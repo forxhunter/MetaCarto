@@ -39,3 +39,15 @@ layout_output*/
 # are tracked despite the blanket *.json rule above. They are small, and a
 # result that is not diffable cannot show a regression.
 !benchmarks/results/*.json
+
+# Local editable-install metadata
+*.egg-info/
+
+# Journal templates and manuscript drafts: third-party copyright (OUP
+# bioinfo.cls, natbib.bst) and not part of the software.
+bioinfomatics/
+
+# Scratch screenshots
+error1.png
+graph_error.png
+hi_test.png
