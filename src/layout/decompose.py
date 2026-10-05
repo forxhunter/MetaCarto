@@ -19,10 +19,14 @@ is merged into the neighbour it shares the most chemistry with rather than
 being swept into an "Uncategorized" bucket.
 """
 
+import html
 import json
 import os
+import re
 
 import networkx as nx
+
+from .taxonomy import is_structural
 
 MAX_CLUSTER = 60
 MIN_CLUSTER = 6          # layout_algorithm.md, Requirements
@@ -43,10 +47,26 @@ def load_kegg_mapping(path=KEGG_MAPPING_FILE):
     return _kegg_mapping
 
 
+def clean_subsystem(text):
+    """A reaction's subsystem string, fit to be a caption.
+
+    BiGG passes some through HTML-escaped ("Lipid &amp; Cell Wall Metabolism")
+    and one model family writes them as identifiers ("S_Alternate_Carbon_source").
+    A string with no letters at all -- one model has "&apos;" -- is no subsystem.
+    ": " is reserved for the qualifier `name_pieces` appends, so a subsystem's
+    own colon becomes a dash.
+    """
+    name = html.unescape(str(text or "")).strip()
+    if re.match(r"^S_\W*[A-Za-z]", name) and " " not in name:
+        name = re.sub(r"^S_\W*", "", name).replace("_", " ")
+    name = re.sub(r"\s+", " ", name.replace(": ", " - ")).strip()
+    return name if re.search(r"[A-Za-z]", name) else ""
+
+
 def declared_subsystems(reactions):
     groups = {}
     for reaction in reactions:
-        key = (getattr(reaction, "subsystem", "") or "").strip() or "Uncategorized"
+        key = clean_subsystem(getattr(reaction, "subsystem", "")) or "Uncategorized"
         groups.setdefault(key, []).append(reaction)
     return groups
 
@@ -190,12 +210,9 @@ def _cluster_metabolites(reactions, cofactor_score, cutoff=0.5):
             if cofactor_score.get(m.id, 0.0) < cutoff}
 
 
-STRUCTURAL_PREFIXES = ("Unannotated", "Other", "Uncategorized", "Cluster_")
-
-
 def is_biological(name):
     """True when the cluster name came from annotation rather than topology."""
-    return not str(name).startswith(STRUCTURAL_PREFIXES)
+    return not is_structural(name)
 
 
 BOUNDARY_PREFIXES = ("EX_", "DM_", "SK_", "BIOMASS", "ATPM")
@@ -284,8 +301,10 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
     # across: keeping biomass out of glycolysis is the point, but a lone
     # exchange reaction still has no business being its own map.
     boundary = set(boundary)
+    orphaned = set()
     while True:
-        undersized = [n for n, r in groups.items() if len(r) < min_size]
+        undersized = [n for n, r in groups.items()
+                      if len(r) < min_size and n not in orphaned]
         if not undersized:
             break
         # Smallest first: the hardest to place, and merging it may make a
@@ -304,28 +323,17 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
                 best, best_score = other, score
 
         if best is None:
-            # Nothing it shares chemistry with and fits into. Pool the
-            # remaining orphans together rather than looping forever.
-            orphans = [n for n in undersized]
-            if len(orphans) < 2:
-                break
-            pooled = []
-            for orphan in orphans:
-                pooled.extend(groups.pop(orphan))
-                del mets[orphan]
-            # Chop, do not re-cluster. Running community detection over the
-            # pooled orphans can hand back the very fragments that were just
-            # pooled, and the loop never terminates.
-            pooled.sort(key=lambda r: r.id)
-            chunks = [pooled[i:i + max_size] for i in range(0, len(pooled), max_size)]
-            for piece in chunks:
-                key = _unique(groups, "Other")
-                groups[key] = piece
-                mets[key] = _cluster_metabolites(piece, cofactor_score)
-                for metabolite in mets[key]:
-                    owners.setdefault(metabolite, set()).add(key)
-            for metabolite, holders in owners.items():
-                holders &= set(groups)
+            # Nothing it shares chemistry with has room for it, and merging
+            # only ever fills clusters, so nothing ever will. Set this one
+            # aside and let the rest try.
+            #
+            # This used to pool *every* undersized cluster the moment the
+            # smallest one failed -- including the ones that would have merged
+            # -- and chop the pool alphabetically by reaction id. On the
+            # annotated corpus that drew a third of all reactions as
+            # 120-reaction runs from 10FTHF5GLUtm to CRVNCtr, spanning twenty
+            # subsystems, which no caption could describe.
+            orphaned.add(name)
             continue
 
         # The surviving name should be the one that means something. A
@@ -338,8 +346,95 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
             keep, drop = ((best, name) if len(groups[best]) >= len(groups[name])
                           else (name, best))
         absorb(keep, drop)
+        # A merged cluster is a new cluster; if it is still undersized it gets
+        # its own chance to find a partner.
+        orphaned.discard(keep)
+        orphaned.discard(drop)
 
+    orphans = [n for n in orphaned if n in groups and len(groups[n]) < min_size]
+    if len(orphans) >= 2:
+        _pool_orphans(groups, orphans, min_size, max_size)
     return groups
+
+
+def _family(name, names=()):
+    """The subsystem a piece came from: "Transport, extracellular (37)" ->
+    "Transport, extracellular".
+
+    A bare trailing number is only a piece number when the unnumbered name is
+    also present -- that is how `_unique` numbers -- so "Photosystem 2" stays
+    itself unless there is a "Photosystem" for it to be a piece of.
+    """
+    name = str(name).strip()
+    stripped = re.sub(r" \(\d+\)$", "", name)
+    if stripped != name:
+        return stripped
+    bare = re.sub(r" \d+$", "", name)
+    return bare if bare != name and bare in names else name
+
+
+def _pool_orphans(groups, orphans, min_size, max_size):
+    """Gather clusters that could not merge into drawable pieces.
+
+    An orphan shares no chemistry with anything that has room, so chemistry
+    cannot group them. Biology still can. Orphans are pooled with the other
+    pieces of the subsystem they came from first -- the hundreds of single
+    transport steps a transport subsystem splits into belong on one another's
+    maps, not on a map with whatever sorts next to them alphabetically --
+    then whatever is still too small is pooled by superclass. Within a pool,
+    reactions are ordered by what they are about (`taxonomy.theme`: for a
+    transport step, the class of its cargo) so each chunk is a coherent run.
+
+    Chop, do not re-cluster. Running community detection over the pooled
+    orphans can hand back the very fragments that were just pooled, and the
+    caller's loop never terminates.
+    """
+    from . import taxonomy
+
+    everything = [r for reactions in groups.values() for r in reactions]
+    mapping = load_kegg_mapping()
+    classes, degree = taxonomy.compound_classes(everything, mapping)
+
+    def key(reaction):
+        label = taxonomy.theme(reaction, classes, degree, mapping)
+        return (taxonomy.order_index(label) if label else 99, label, reaction.id)
+
+    def emit(name, pooled):
+        pooled.sort(key=key)
+        for start in range(0, len(pooled), max_size):
+            groups[_piece_name(groups, name)] = pooled[start:start + max_size]
+
+    families = {}
+    for name in sorted(orphans):
+        families.setdefault(_family(name, groups), []).extend(groups.pop(name))
+
+    leftovers = {}
+    for family, pooled in families.items():
+        if len(pooled) >= min_size or len(families) == 1:
+            emit(family, pooled)
+        else:
+            label = taxonomy.classify(family, pooled, mapping)
+            leftovers.setdefault(label, []).extend(pooled)
+
+    for label, pooled in leftovers.items():
+        # "Other carbohydrate metabolism" reads like KEGG's own "Other glycan
+        # degradation" and, unlike the placeholder "Other", still says which
+        # region the steps belong to.
+        if label in (taxonomy.OTHER, taxonomy.UNASSIGNED):
+            emit("Other", pooled)
+        else:
+            emit("Other " + label[0].lower() + label[1:], pooled)
+
+
+def _piece_name(groups, family):
+    """`family` if it is free, else the next "family (k)", matching the
+    numbering split_cluster's pieces already use."""
+    if family not in groups and not any(_family(n, groups) == family for n in groups):
+        return family
+    index = 1
+    while f"{family} ({index})" in groups:
+        index += 1
+    return f"{family} ({index})"
 
 
 def _unique(groups, base):
@@ -516,54 +611,59 @@ def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
         merged = merge_small(merged, cofactor_score, min_size=min_size,
                              max_size=max_size, boundary=boundary)
 
-    # After merging, boundary clusters are renamed for what they carry.
-    #
-    # This step used to hand out ordinals -- "Exchange and biomass 37" -- and it
-    # runs *after* name_clusters, so it overwrote the names that step had just
-    # derived. That is the same defect as a caption reading "Cluster_8", and on
-    # Recon3D it accounted for every remaining numeric caption. The reactions say
-    # what is being exchanged, so the caption can too; the ordinal survives only
-    # as the fallback for a cluster whose names really are uninformative.
-    #
-    # It still has to run here rather than earlier, because close_cycles and
-    # merge_small change cluster membership and a name derived from the wrong
-    # membership is worse than no name.
-    frequency, total = None, 0
-    if name_structural:
-        from .naming import describe, phrase_frequency
-        model_reactions = list(model.reactions)
-        frequency = phrase_frequency(model_reactions)
-        total = len(model_reactions)
+    if not name_structural:
+        return merged
 
-    # Seed with the names that are staying, so a derived caption cannot collide
-    # with a curated one that happens to be processed later.
-    used = {name for name, reactions in merged.items()
-            if not (is_boundary_cluster(reactions, cofactor_score) and len(merged) > 1)}
+    # A boundary cluster that structure produced and the free text could not
+    # name is still an exchange cluster, and saying so is the honest caption.
+    if len(merged) > 1:
+        for name in list(merged):
+            if is_structural(name) and is_boundary_cluster(merged[name], cofactor_score):
+                merged[_piece_name(merged, "Biomass and exchange")] = merged.pop(name)
 
-    renamed, index = {}, 0
-    for name, reactions in merged.items():
-        if not (is_boundary_cluster(reactions, cofactor_score) and len(merged) > 1):
-            renamed[name] = reactions
-            continue
+    # Last, because close_cycles and merge_small change cluster membership and
+    # a name derived from the wrong membership is worse than no name.
+    return name_pieces(merged, list(model.reactions))
 
-        label = describe(reactions, frequency, total) if frequency is not None else None
-        if not label and name_structural:
-            # Exchange reactions have one side and mostly uninformative names,
-            # so ask the metabolite table what the cluster handles.
-            from .naming import cargo_species
-            cargo = cargo_species(reactions)
-            if cargo:
-                label = cargo[0].capitalize()
-        if label:
-            label = f"{label} exchange"
-        else:
+
+def name_pieces(groups, reactions):
+    """Caption the pieces of a split subsystem by what each contains.
+
+    Splitting a subsystem that does not fit a page is unavoidable; captioning
+    the pieces "(1)" to "(149)" is not, and neither is the previous fix for
+    exchange clusters, which renamed a 120-reaction piece of "Extracellular
+    exchange" after one of its forty compounds. Each piece keeps its family's
+    curated name and gains a qualifier that tells it from its siblings --
+    "Transport, Inner Membrane: amino acids and peptides" -- and a family that
+    ended up in one piece loses its number.
+    """
+    from . import taxonomy
+    from .naming import qualify
+
+    mapping = load_kegg_mapping()
+    classes, degree = taxonomy.compound_classes(reactions, mapping)
+    present = set(groups)
+    families = {}
+    for name in groups:
+        families.setdefault(_family(name, present), []).append(name)
+
+    out = {}
+
+    def put(name, members):
+        candidate, index = name, 2
+        while candidate in out:
+            candidate = f"{name} {index}"
             index += 1
-            label = "Exchange and biomass" if index == 1 else f"Exchange and biomass {index}"
+        out[candidate] = members
 
-        candidate, suffix = label, 2
-        while candidate in used:
-            candidate = f"{label} {suffix}"
-            suffix += 1
-        renamed[candidate] = reactions
-        used.add(candidate)
-    return renamed
+    for family, members in families.items():
+        if len(members) == 1:
+            put(family, groups[members[0]])
+            continue
+        members.sort(key=lambda n: (-len(groups[n]), n))
+        labels = qualify([groups[n] for n in members], family, classes, degree,
+                         mapping)
+        for name, label in zip(members, labels):
+            put(f"{family} ({label})" if label.isdigit() else f"{family}: {label}",
+                groups[name])
+    return out

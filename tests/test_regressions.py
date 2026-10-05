@@ -6,6 +6,7 @@ would not have caught any of them.
 """
 
 import json
+import re
 import os
 
 import pytest
@@ -291,3 +292,161 @@ def test_prepare_repo_does_not_generate_a_readme():
                   encoding="utf-8").read()
     assert "README" not in source.split('"""')[2] or "left untouched" in source
     assert 'write("# Escher Maps' not in source
+
+
+# --------------------------------------------------------------------------
+# Naming the published maps. A third of the collection shipped as "Other
+# metabolism (N)" and nearly every split map as "<superclass> (N)".
+# --------------------------------------------------------------------------
+
+class _Met:
+    def __init__(self, mid, name="", formula="C6H12O6"):
+        self.id, self.name, self.formula = mid, name or mid, formula
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+
+class _Rxn:
+    def __init__(self, rid, consumed, produced, subsystem="", name=""):
+        self.id, self.subsystem, self.name = rid, subsystem, name or rid
+        self.annotation = {}
+        self.metabolites = {_Met(m): -1.0 for m in consumed}
+        self.metabolites.update({_Met(m): 1.0 for m in produced})
+
+
+def test_bigg_models_are_fetched_with_their_subsystems():
+    """BiGG's SBML export drops `subsystem`; its JSON export keeps it. Built
+    from SBML, every model but e_coli_core looked unannotated."""
+    source = open(os.path.join("scripts", "fetch_bigg.py"), encoding="utf-8").read()
+    assert 'default="json"' in source
+
+
+def test_subsystem_strings_are_cleaned_into_captions():
+    from src.layout.decompose import clean_subsystem
+    assert clean_subsystem("Lipid &amp; Cell Wall Metabolism") == "Lipid & Cell Wall Metabolism"
+    assert clean_subsystem("S_Alternate_Carbon_source") == "Alternate Carbon source"
+    assert clean_subsystem("&apos;") == ""
+    assert clean_subsystem("Fatty acid synthesis: omega-3") == "Fatty acid synthesis - omega-3"
+
+
+def test_a_kegg_pathway_starting_with_other_is_still_a_pathway():
+    """The structural-name test was an unanchored prefix, so KEGG's "Other
+    glycan degradation" was treated as a placeholder and renamed."""
+    from src.layout.taxonomy import is_structural, superclass
+    assert not is_structural("Other glycan degradation")
+    assert superclass("Other glycan degradation") == "Glycan metabolism"
+    assert superclass("Other carbon fixation pathways") == "Energy metabolism"
+    for placeholder in ("Other", "Other 3", "Unannotated 12 (2)", "UNASSIGNED",
+                        "Miscellaneous", "Cluster_8"):
+        assert is_structural(placeholder), placeholder
+
+
+def test_superclass_recognises_its_own_page_titles():
+    """"Carbohydrate metabolism (2)" matched no keyword, so on the combined map
+    every carbohydrate page was regrouped under Other."""
+    from src.layout.taxonomy import LABELS, superclass
+    for label in LABELS:
+        assert superclass(label) == label
+        assert superclass(f"{label} (2)") == label
+        assert superclass(f"{label}: Glycolysis; Pentose phosphate") == label
+
+
+def test_kegg_names_follow_brite_not_the_first_keyword_they_contain():
+    from src.layout.taxonomy import superclass
+    assert superclass("Mannose type O-glycan biosynthesis") == "Glycan metabolism"
+    assert superclass("Keratan sulfate degradation") == "Glycan metabolism"
+    assert superclass("Heme degradation") == "Cofactor and vitamin metabolism"
+    assert superclass("Phosphatidylinositol phosphate metabolism") == "Lipid metabolism"
+    assert superclass("Brassinosteroid biosynthesis") == "Terpenoid and polyketide metabolism"
+    assert superclass("Tetrahydrobiopterin metabolism") == "Cofactor and vitamin metabolism"
+
+
+def test_a_piece_qualifier_does_not_reclassify_the_piece():
+    """"Extracellular exchange: amino acids and peptides" matched "amino acid"
+    before "exchange" and was filed as amino-acid metabolism."""
+    from src.layout.taxonomy import superclass
+    assert superclass("Extracellular exchange: amino acids and peptides") == \
+        "Transport and exchange"
+
+
+def test_an_uninformative_name_is_classified_by_its_reactions():
+    from src.layout.taxonomy import OTHER, UNASSIGNED, classify
+    reactions = [_Rxn(f"R{i}", [f"a{i}"], [f"b{i}"], subsystem="Purine metabolism")
+                 for i in range(8)]
+    assert classify("Miscellaneous", reactions) == "Nucleotide metabolism"
+    assert classify("Hydratase", reactions) == "Nucleotide metabolism"
+    # No evidence at all: say so rather than guess.
+    blank = [_Rxn(f"R{i}", [f"a{i}"], [f"b{i}"]) for i in range(8)]
+    assert classify("Hydratase", blank) == OTHER
+    assert classify("Miscellaneous", blank) == UNASSIGNED
+
+
+def test_one_unplaceable_cluster_does_not_drag_the_others_into_a_pool():
+    """merge_small pooled *every* undersized cluster the moment the smallest
+    had no partner, then chopped the pool alphabetically by reaction id: a
+    third of the annotated corpus was drawn as runs like 10FTHF5GLUtm ..
+    CRVNCtr, spanning twenty subsystems."""
+    from src.layout.decompose import merge_small
+    pathway = [_Rxn(f"P{i}", [f"m{i}"], [f"m{i + 1}"], "Purine metabolism")
+               for i in range(10)]
+    fragment = [_Rxn("F1", ["m3"], ["x1"], "Purine metabolism"),
+                _Rxn("F2", ["x1"], ["x2"], "Purine metabolism")]
+    lone_a = [_Rxn("A1", ["q1"], ["q2"], "Thiamine metabolism")]
+    lone_b = [_Rxn("B1", ["r1"], ["r2"], "Riboflavin metabolism")]
+    groups = {"Purine metabolism": pathway, "Purine metabolism (2)": fragment,
+              "Thiamine metabolism": lone_a, "Riboflavin metabolism": lone_b}
+    merged = merge_small(groups, {}, min_size=6, max_size=60)
+    home = next(name for name, rs in merged.items() if any(r.id == "F1" for r in rs))
+    ids = {r.id for r in merged[home]}
+    assert "P0" in ids, (
+        "the purine fragment shares chemistry with purine metabolism and must "
+        "merge into it")
+    # The old pool took the fragment *and* the thiamine and riboflavin steps,
+    # and the pool -- sharing the fragment's chemistry -- then merged into
+    # purine metabolism, putting vitamins on the purine map.
+    assert not ids & {"A1", "B1"}, (
+        "steps that share no chemistry with purine metabolism ended up on its map")
+
+
+def test_page_titles_name_their_pathways_and_are_distinct():
+    from src.layout.naming import title_pages
+    titles = title_pages("Lipid metabolism", [
+        [("Glycerophospholipid Metabolism: cardiolipin", 60),
+         ("Membrane Lipid Metabolism", 40)],
+        [("Glycerophospholipid Metabolism: phosphatidylserine", 100)],
+        [("Inorganic Ion Transport and Metabolism", 30)],
+    ])
+    assert len(set(titles)) == len(titles)
+    assert not any(re.search(r"\(\d+\)$", t) for t in titles), titles
+    assert "cardiolipin" in titles[0] and "Membrane Lipid" in titles[0]
+    assert "phosphatidylserine" in titles[1]
+    # "Metabolism" is dropped as redundant, but not where it is half the name.
+    assert titles[2].endswith("Inorganic Ion Transport and Metabolism")
+
+
+def test_split_superclasses_get_titles_not_numbers(core_model, core_clusters):
+    import layout_v2
+    pages = layout_v2.merge_by_function(core_clusters, max_size=15)
+    assert len(pages) > len({n.split(":")[0] for n in pages}), \
+        "max_size=15 should split at least one superclass into pages"
+    for name in pages:
+        assert not re.search(r" \(\d+\)$", name), name
+        assert not name.startswith("Other metabolism"), name
+
+
+def test_map_file_names_stay_short_when_titles_are_long():
+    """Page titles became sentences and were used whole as file names, which
+    pushed paths past Windows' 260-character limit: maps failed to save with
+    "[Errno 2] No such file or directory"."""
+    import layout_v2
+    long_a = ("Amino acid metabolism: Arginine and Proline; Tyrosine, Tryptophan, "
+              "and Phenylalanine; tRNA Charging; +1 more")
+    long_b = long_a.replace("+1 more", "+2 more")
+    a, b = layout_v2.file_stem(long_a), layout_v2.file_stem(long_b)
+    assert len(a) <= layout_v2.MAX_STEM and len(b) <= layout_v2.MAX_STEM
+    assert a != b, "truncation must not make two titles share a file"
+    assert layout_v2.file_stem("Glycolysis/Gluconeogenesis") == "Glycolysis_Gluconeogenesis"

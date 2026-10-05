@@ -13,7 +13,9 @@ to the v1 pipeline in process_subsystems.py, which it does not replace yet.
 
 import argparse
 import glob
+import hashlib
 import os
+import re
 import shutil
 import sys
 import traceback
@@ -41,6 +43,22 @@ def safe_name(name):
     return "".join(c if (c.isalnum() or c in "-_") else "_" for c in name)
 
 
+# Longest file stem. A map's title is now a sentence -- "Transport and
+# exchange: Transport, Inner Membrane (amino acids and peptides)" -- and used
+# whole as a file name it pushed paths past Windows' 260-character limit. The
+# title lives in the map; the file name only has to be unique and readable.
+MAX_STEM = 60
+
+
+def file_stem(name):
+    """A short, unique, filesystem-safe stem for a map titled `name`."""
+    stem = re.sub(r"_+", "_", safe_name(name)).strip("_")
+    if len(stem) <= MAX_STEM:
+        return stem
+    digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:6]
+    return stem[:MAX_STEM - 7].rstrip("_") + "_" + digest
+
+
 def merge_by_function(groups, max_size=None):
     """Consolidate clusters that do the same kind of chemistry into one map.
 
@@ -50,18 +68,22 @@ def merge_by_function(groups, max_size=None):
     single connected map, all of amino acid metabolism as another -- which is
     how `templates/t1` and `t2` are organised and what makes them navigable.
 
-    `taxonomy.superclass` already classifies a cluster name into the KEGG BRITE
-    top-level categories; it was only being used to place tiles near each other,
-    which is adjacency without integration.
+    `taxonomy.classify` files each cluster under a KEGG BRITE top-level
+    category, by its name when that says and by what its reactions are when it
+    does not.
 
-    A superclass that blows past `max_size` is split, but the pieces keep the
-    functional name and stay adjacent, so the reader still sees one region.
+    A superclass that blows past `max_size` is split into pages, each titled
+    for the pathways on it, so the reader still sees one region and can tell
+    its pages apart.
     """
-    from src.layout import taxonomy
+    from src.layout import naming, taxonomy
+    from src.layout.decompose import load_kegg_mapping
 
+    mapping = load_kegg_mapping()
     pooled = {}
     for name, reactions in groups.items():
-        pooled.setdefault(taxonomy.superclass(name), []).append((name, reactions))
+        label = taxonomy.classify(name, reactions, mapping)
+        pooled.setdefault(label, []).append((name, reactions))
 
     out = {}
     for label, members in pooled.items():
@@ -78,30 +100,42 @@ def merge_by_function(groups, max_size=None):
         # in sheet 2 and half in sheet 3 for no reason a reader can see. Keeping
         # the pathway as the atom costs a little packing efficiency and keeps
         # every pathway whole.
+        #
+        # Pathways are placed largest first, and a piece of a split pathway goes
+        # on a page that already holds its siblings when one has room. A page is
+        # then one large pathway plus the small ones that fill its gaps, which
+        # is something a title can say.
+        family = {name: naming.split_piece(name)[0] for name, _ in members}
+        family_size = {}
+        for name, reactions in members:
+            family_size[family[name]] = family_size.get(family[name], 0) + len(reactions)
+        order = sorted(members, key=lambda kv: (-family_size[family[kv[0]]],
+                                                family[kv[0]], -len(kv[1]), kv[0]))
         bins = []
-        for name, reactions in sorted(members, key=lambda kv: -len(kv[1])):
-            for b in bins:
-                if b["size"] + len(reactions) <= max_size:
-                    b["reactions"].extend(reactions)
-                    b["size"] += len(reactions)
-                    break
-            else:
-                bins.append({"reactions": list(reactions), "size": len(reactions)})
+        for name, reactions in order:
+            fits = [b for b in bins if b["size"] + len(reactions) <= max_size]
+            same = [b for b in fits if family[name] in b["families"]]
+            target = (same or fits or [None])[0]
+            if target is None:
+                target = {"members": [], "size": 0, "families": set()}
+                bins.append(target)
+            target["members"].append((name, reactions))
+            target["size"] += len(reactions)
+            target["families"].add(family[name])
 
         if len(bins) == 1:
-            out[label] = bins[0]["reactions"]
-        else:
-            for index, b in enumerate(bins, 1):
-                out[f"{label} ({index})"] = b["reactions"]
+            out[label] = [r for _, rs in bins[0]["members"] for r in rs]
+            continue
+        titles = naming.title_pages(
+            label, [[(name, len(rs)) for name, rs in b["members"]] for b in bins])
+        for title, b in zip(titles, bins):
+            out[title] = [r for _, rs in b["members"] for r in rs]
     return out
 
 
 def subsystems_of(model):
-    groups = {}
-    for reaction in model.reactions:
-        key = (getattr(reaction, "subsystem", "") or "Uncategorized").strip() or "Uncategorized"
-        groups.setdefault(key, []).append(reaction)
-    return groups
+    from src.layout.decompose import declared_subsystems
+    return declared_subsystems(model.reactions)
 
 
 def metabolite_groups(reactions):
@@ -110,9 +144,11 @@ def metabolite_groups(reactions):
     Passed to the layered pass so a whole-model map keeps each pathway in one
     place rather than interleaving them during crossing minimisation.
     """
+    from src.layout.decompose import clean_subsystem
+
     tally = {}
     for reaction in reactions:
-        key = (getattr(reaction, "subsystem", "") or "Uncategorized").strip() or "Uncategorized"
+        key = clean_subsystem(getattr(reaction, "subsystem", "")) or "Uncategorized"
         for metabolite in reaction.metabolites:
             counts = tally.setdefault(metabolite.id, {})
             counts[key] = counts.get(key, 0) + 1
@@ -138,7 +174,7 @@ def emit(model, reactions, name, out_dir, want_preview, use_fba, verbose, pitch,
 
 
 def save_map(escher_map, out_dir, name, want_preview, pitch, verbose=True):
-    stem = os.path.join(out_dir, safe_name(name))
+    stem = os.path.join(out_dir, file_stem(name))
     render.save(escher_map, stem + ".json")
     if want_preview:
         preview.render(escher_map, stem + ".png")
@@ -266,7 +302,7 @@ def main(argv=None):
                 tile = emit(model, reactions, name, out_dir, args.preview,
                             not args.no_fba, not args.quiet, LAYER_GAP,
                             write=not args.combined_only)
-                written.add(safe_name(name) + ".json")
+                written.add(file_stem(name) + ".json")
                 if tile is not None:
                     tiles.append((name, tile))
             except Exception as exc:
@@ -284,7 +320,7 @@ def main(argv=None):
                 if combined is not None:
                     save_map(combined, out_dir, f"{model_id}_Combined",
                              args.preview, LAYER_GAP, not args.quiet)
-                    written.add(safe_name(f"{model_id}_Combined") + ".json")
+                    written.add(file_stem(f"{model_id}_Combined") + ".json")
             except Exception as exc:
                 print(f"  combined: FAILED {exc}")
                 traceback.print_exc()
