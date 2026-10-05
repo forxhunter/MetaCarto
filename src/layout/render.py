@@ -450,7 +450,10 @@ def _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied, route=
             if forward:
                 segment(anchor_id, node_id, b1, b2)
             else:
-                segment(node_id, anchor_id, b1, b2)
+                # Escher's b1 is the control beside from_node. A substrate stub
+                # is the from_node here, so the pair swaps; passed through
+                # unswapped, the curve kinked back past the anchor.
+                segment(node_id, anchor_id, b2, b1)
 
     for met, coefficient in rec.stoichiometry.items():
         metabolite_entries.append({"bigg_id": met, "coefficient": float(coefficient)})

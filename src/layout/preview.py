@@ -75,9 +75,12 @@ def render(escher_map, path, show_labels=True, max_pixels=None, dpi=DEFAULT_DPI)
     # carries: Escher draws its own from the signed stoichiometry, but these
     # PNGs are what anyone actually looks at, and without heads a reader cannot
     # tell which way the pathway runs.
+    # A reversible reaction also gets a head at its substrate end, as Escher
+    # draws it; otherwise a reversible step reads as irreversible.
     arrows = []
 
     for reaction in reactions.values():
+        reversible = reaction.get("reversibility", False)
         for segment in reaction["segments"].values():
             a = nodes.get(segment["from_node_id"])
             b = nodes.get(segment["to_node_id"])
@@ -102,12 +105,14 @@ def render(escher_map, path, show_labels=True, max_pixels=None, dpi=DEFAULT_DPI)
                 curve = _bezier(p0, (segment["b1"]["x"], segment["b1"]["y"]),
                                 (segment["b2"]["x"], segment["b2"]["y"]), p3)
                 canvas.polyline([to_px(*p) for p in curve], colour, weight)
-                if b["node_type"] == "metabolite":
-                    arrows.append((curve[-2], p3, node_radius(b), colour))
+                tail_b, tail_a = curve[-2], curve[1]
             else:
                 canvas.line(*to_px(*p0), *to_px(*p3), colour, weight)
-                if b["node_type"] == "metabolite":
-                    arrows.append((p0, p3, node_radius(b), colour))
+                tail_b, tail_a = p0, p3
+            if b["node_type"] == "metabolite":
+                arrows.append((tail_b, p3, node_radius(b), colour))
+            if reversible and a["node_type"] == "metabolite":
+                arrows.append((tail_a, p0, node_radius(a), colour))
 
     for node in nodes.values():
         x, y = to_px(node["x"], node["y"])

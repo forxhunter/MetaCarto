@@ -26,7 +26,7 @@ from .svgout import (ARROW_HALF, ARROW_LEN, BACKBONE, BACKBONE_W, MID_R,
                      MIDMARKER, MULTI_R, MULTIMARKER, METABOLITE_TEXT,
                      PRIMARY_EDGE, PRIMARY_FILL, PRIMARY_R, REACTION_TEXT,
                      SECONDARY_EDGE, SECONDARY_FILL, SECONDARY_R, STUB,
-                     STUB_W, TITLE_TEXT, _is_secondary)
+                     STUB_W, TITLE_TEXT, _is_secondary, _radius)
 
 PT_PER_MM = 72.0 / 25.4
 
@@ -182,6 +182,7 @@ def _draw(escher_map, canvas, show_labels):
     canvas.parts.append("1 J")          # round caps, as the SVG has
     arrows = []
     for reaction in reactions.values():
+        reversible = reaction.get("reversibility", False)
         for segment in reaction["segments"].values():
             a = nodes.get(segment["from_node_id"])
             b = nodes.get(segment["to_node_id"])
@@ -195,14 +196,15 @@ def _draw(escher_map, canvas, show_labels):
                 b1, b2 = segment["b1"], segment["b2"]
                 canvas.bezier(p0, (b1["x"], b1["y"]), (b2["x"], b2["y"]),
                               p3, colour, weight)
-                tail = (b2["x"], b2["y"])
+                tail_b, tail_a = (b2["x"], b2["y"]), (b1["x"], b1["y"])
             else:
                 canvas.line(p0, p3, colour, weight)
-                tail = p0
+                tail_b, tail_a = p0, p3
+            # Product end always; substrate end too when reversible (svgout).
             if b["node_type"] == "metabolite":
-                radius = (PRIMARY_R if b.get("node_is_primary", True)
-                          else SECONDARY_R)
-                arrows.append((tail, p3, radius, colour))
+                arrows.append((tail_b, p3, _radius(b), colour))
+            if reversible and a["node_type"] == "metabolite":
+                arrows.append((tail_a, p0, _radius(a), colour))
 
     for tail, head, radius, colour in arrows:
         _arrow(canvas, tail, head, radius, colour)

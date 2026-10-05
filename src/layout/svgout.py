@@ -49,6 +49,10 @@ def _is_secondary(node):
             and not node.get("node_is_primary", True))
 
 
+def _radius(node):
+    return PRIMARY_R if node.get("node_is_primary", True) else SECONDARY_R
+
+
 def _arrow(parts, tail, head, radius, colour):
     dx, dy = head[0] - tail[0], head[1] - tail[1]
     length = (dx * dx + dy * dy) ** 0.5
@@ -81,6 +85,7 @@ def render(escher_map, path, show_labels=True):
 
     arrows = []
     for reaction in reactions.values():
+        reversible = reaction.get("reversibility", False)
         for segment in reaction["segments"].values():
             a = nodes.get(segment["from_node_id"])
             b = nodes.get(segment["to_node_id"])
@@ -98,17 +103,21 @@ def render(escher_map, path, show_labels=True):
                     'stroke="%s" stroke-width="%.1f"/>'
                     % (p0[0], p0[1], b1["x"], b1["y"], b2["x"], b2["y"],
                        p3[0], p3[1], colour, weight))
-                tail = (b2["x"], b2["y"])
+                tail_b, tail_a = (b2["x"], b2["y"]), (b1["x"], b1["y"])
             else:
                 parts.append(
                     '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" '
                     'stroke="%s" stroke-width="%.1f"/>'
                     % (p0[0], p0[1], p3[0], p3[1], colour, weight))
-                tail = p0
+                tail_b, tail_a = p0, p3
 
+            # The chain runs substrate -> product, so a head goes on the
+            # product end. A reversible reaction runs either way and gets one
+            # on the substrate end too, as Escher itself draws it.
             if b["node_type"] == "metabolite":
-                radius = PRIMARY_R if b.get("node_is_primary", True) else SECONDARY_R
-                arrows.append((tail, p3, radius, colour))
+                arrows.append((tail_b, p3, _radius(b), colour))
+            if reversible and a["node_type"] == "metabolite":
+                arrows.append((tail_a, p0, _radius(a), colour))
 
     parts.append('</g><g>')
     for tail, head, radius, colour in arrows:
