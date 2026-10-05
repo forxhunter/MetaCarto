@@ -408,6 +408,107 @@ def score(escher_map, pitch=180.0):
     }
 
 
+def _bezier_points(p0, b1, b2, p3, steps):
+    for i in range(steps + 1):
+        t = i / steps
+        m = 1.0 - t
+        yield (m ** 3 * p0[0] + 3 * m * m * t * b1[0] + 3 * m * t * t * b2[0] + t ** 3 * p3[0],
+               m ** 3 * p0[1] + 3 * m * m * t * b1[1] + 3 * m * t * t * b2[1] + t ** 3 * p3[1])
+
+
+def blank_space(escher_map, cell=120.0, reach=240.0):
+    """How much of the drawing is empty, and how big the largest hole is.
+
+    `occupancy` above is the content's bounding box over the canvas, so a
+    poster of tiles with wide empty gutters between them scores as full. This
+    rasterises what is actually drawn -- nodes, edges, labels, captions -- and
+    calls a cell blank when nothing is drawn within `reach` of it. `reach` is
+    about one node spacing (a layer is 180 apart, a node 160 wide), so the air
+    inside a pathway is not counted; a gutter or an empty corner is.
+
+    Returns the blank share of the content area and the largest blank square,
+    as a share of the content area and as its side in map units. The second is
+    the one a reader notices: a hundred small gaps read as spacing, one hole a
+    fifth of the poster wide reads as a hole.
+    """
+    import numpy as np
+
+    body = escher_map[1]
+    nodes = body["nodes"]
+    if not nodes:
+        return {"blank_share": 0.0, "largest_blank_share": 0.0, "largest_blank": 0.0}
+
+    points, rects = [], []
+    for node in nodes.values():
+        points.append((node["x"], node["y"]))
+    for reaction in body["reactions"].values():
+        for segment in reaction["segments"].values():
+            a = nodes.get(segment["from_node_id"])
+            b = nodes.get(segment["to_node_id"])
+            if a is None or b is None:
+                continue
+            p0, p3 = (a["x"], a["y"]), (b["x"], b["y"])
+            steps = max(1, int(math.hypot(p3[0] - p0[0], p3[1] - p0[1]) / (cell / 2.0)))
+            if segment.get("b1") and segment.get("b2"):
+                b1 = (segment["b1"]["x"], segment["b1"]["y"])
+                b2 = (segment["b2"]["x"], segment["b2"]["y"])
+                points.extend(_bezier_points(p0, b1, b2, p3, steps))
+            else:
+                points.extend((p0[0] + (p3[0] - p0[0]) * i / steps,
+                               p0[1] + (p3[1] - p0[1]) * i / steps)
+                              for i in range(steps + 1))
+    for left, top, right, bottom, _ in _label_boxes(body):
+        rects.append((left, top, right, bottom))
+
+    xs = [p[0] for p in points] + [r[0] for r in rects] + [r[2] for r in rects]
+    ys = [p[1] for p in points] + [r[1] for r in rects] + [r[3] for r in rects]
+    x0, y0 = min(xs), min(ys)
+    cols = int((max(xs) - x0) // cell) + 1
+    rows = int((max(ys) - y0) // cell) + 1
+    ink = np.zeros((rows, cols), dtype=bool)
+    pts = np.array(points)
+    ink[((pts[:, 1] - y0) // cell).astype(int), ((pts[:, 0] - x0) // cell).astype(int)] = True
+    for left, top, right, bottom in rects:
+        ink[int((top - y0) // cell):int((bottom - y0) // cell) + 1,
+            int((left - x0) // cell):int((right - x0) // cell) + 1] = True
+
+    # Near ink: any ink within `reach`, by a box filter over prefix sums.
+    k = max(0, int(round(reach / cell)))
+    padded = np.pad(ink.astype(np.int32), k)
+    summed = padded.cumsum(0).cumsum(1)
+    summed = np.pad(summed, ((1, 0), (1, 0)))
+    size = 2 * k + 1
+    window = (summed[size:, size:] - summed[:-size, size:]
+              - summed[size:, :-size] + summed[:-size, :-size])
+    blank = window == 0
+
+    total = rows * cols
+    share = float(blank.sum()) / total
+
+    # Largest all-blank square, by bisection on its side: a square of side s
+    # exists iff some s-by-s window of the blank grid sums to s*s.
+    b = np.pad(blank.astype(np.int32).cumsum(0).cumsum(1), ((1, 0), (1, 0)))
+
+    def exists(s):
+        if s > rows or s > cols:
+            return False
+        win = b[s:, s:] - b[:-s, s:] - b[s:, :-s] + b[:-s, :-s]
+        return bool((win == s * s).any())
+
+    low, high = 0, min(rows, cols)
+    while low < high:
+        mid = (low + high + 1) // 2
+        if exists(mid):
+            low = mid
+        else:
+            high = mid - 1
+    return {
+        "blank_share": share,
+        "largest_blank_share": (low * low) / total,
+        "largest_blank": low * cell,
+    }
+
+
 def format_report(values):
     lines = []
     for key, value in values.items():

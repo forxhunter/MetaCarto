@@ -133,6 +133,21 @@ def merge_by_function(groups, max_size=None):
     return out
 
 
+def species_canvas(model, model_id, targets, tiles):
+    """The whole model on one canvas, regions by KEGG superclass."""
+    from src.layout import organisms, taxonomy
+    from src.layout.canvas import compose_canvas
+    from src.layout.decompose import load_kegg_mapping
+
+    mapping = load_kegg_mapping()
+    labels = {name: taxonomy.classify(name, targets[name], mapping) for name, _ in tiles}
+    meta = build_meta_graph({n: r for n, r in targets.items()},
+                            compute_cofactor_scores(model))
+    _, species, common = organisms.describe(model_id)
+    title = model_id + (f" - {species}" if species else "") + (f" ({common})" if common else "")
+    return compose_canvas(tiles, labels, meta, title, author=AUTHOR)
+
+
 def subsystems_of(model):
     from src.layout.decompose import declared_subsystems
     return declared_subsystems(model.reactions)
@@ -219,6 +234,12 @@ def main(argv=None):
                              "directory silently becomes a union of several "
                              "generations of contradictory maps.")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--canvas", action="store_true",
+                        help="also draw the whole model on one densely packed "
+                             "canvas (<model>_Canvas), planned on the pathways' "
+                             "real shapes rather than their bounding boxes")
+    parser.add_argument("--canvas-only", action="store_true",
+                        help="write only the one-canvas map. Implies --canvas.")
     parser.add_argument("--group-function", action="store_true",
                         help="merge clusters of the same metabolic superclass "
                              "into one map each (lipid, amino acid, ...), "
@@ -301,7 +322,7 @@ def main(argv=None):
             try:
                 tile = emit(model, reactions, name, out_dir, args.preview,
                             not args.no_fba, not args.quiet, LAYER_GAP,
-                            write=not args.combined_only)
+                            write=not (args.combined_only or args.canvas_only))
                 written.add(file_stem(name) + ".json")
                 if tile is not None:
                     tiles.append((name, tile))
@@ -323,6 +344,21 @@ def main(argv=None):
                     written.add(file_stem(f"{model_id}_Combined") + ".json")
             except Exception as exc:
                 print(f"  combined: FAILED {exc}")
+                traceback.print_exc()
+
+        if (args.canvas or args.canvas_only) and not args.subsystem and tiles:
+            try:
+                sheet = species_canvas(model, model_id, targets, tiles)
+                if sheet is not None:
+                    save_map(sheet, out_dir, f"{model_id}_Canvas",
+                             args.preview, LAYER_GAP, not args.quiet)
+                    written.add(file_stem(f"{model_id}_Canvas") + ".json")
+                    if not args.quiet:
+                        blank = metrics.blank_space(sheet)
+                        print(f"    blank share {blank['blank_share']:.3f}, largest "
+                              f"blank {blank['largest_blank_share']:.3f} of the canvas")
+            except Exception as exc:
+                print(f"  canvas: FAILED {exc}")
                 traceback.print_exc()
 
         # Cluster names change between runs, so a rename leaves the old file

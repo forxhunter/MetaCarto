@@ -450,3 +450,91 @@ def test_map_file_names_stay_short_when_titles_are_long():
     assert len(a) <= layout_v2.MAX_STEM and len(b) <= layout_v2.MAX_STEM
     assert a != b, "truncation must not make two titles share a file"
     assert layout_v2.file_stem("Glycolysis/Gluconeogenesis") == "Glycolysis_Gluconeogenesis"
+
+
+# --------------------------------------------------------------------------
+# The species canvas. Its claims are that pathways never overlap -- by
+# construction, not by luck -- and that it is denser than tiling rectangles.
+# --------------------------------------------------------------------------
+
+def test_packer_positions_match_a_brute_force_check():
+    """Feasibility and contact come from FFT correlation over a window; one
+    off-by-one in the padding that lines the kernels up would put shapes on
+    top of each other while every metric still looked fine."""
+    import numpy as np
+    from src.layout.canvas import Packer, _dilate
+    rng = np.random.default_rng(1)
+    for _ in range(40):
+        packer = Packer(gap=int(rng.integers(1, 3)), outer_gap=int(rng.integers(3, 5)))
+        packer.done = rng.random((40, 44)) < 0.06
+        packer.group = rng.random((40, 44)) < 0.06
+        packer.fixed = np.zeros_like(packer.done)
+        packer.box = (8, 8, 32, 36)
+        mask = rng.random((int(rng.integers(2, 6)), int(rng.integers(2, 6)))) < 0.7
+        mask[0, 0] = True
+        feasible, _, rows, cols, _ = packer.candidates(mask, window=(10, 25, 10, 30))
+
+        def clear(grid, d, r, c):
+            kernel = _dilate(mask, d)
+            r0, c0 = r - d, c - d
+            for i, j in zip(*np.nonzero(kernel)):
+                y, x = r0 + i, c0 + j
+                if 0 <= y < grid.shape[0] and 0 <= x < grid.shape[1] and grid[y, x]:
+                    return False
+            return True
+
+        g_out = max(packer.outer_gap, packer.gap)
+        for i in range(feasible.shape[0]):
+            for j in range(feasible.shape[1]):
+                r, c = int(rows[i, 0]), int(cols[0, j])
+                expected = clear(packer.group, packer.gap, r, c) and clear(packer.done, g_out, r, c)
+                assert bool(feasible[i, j]) == expected, (r, c)
+
+
+def test_enclosed_holes_are_never_offered_to_a_neighbour():
+    """A TCA ring encloses empty space; nothing else may be packed inside it."""
+    import numpy as np
+    from src.layout.canvas import _fill_holes
+    ring = np.zeros((7, 7), dtype=bool)
+    ring[1, 1:6] = ring[5, 1:6] = ring[1:6, 1] = ring[1:6, 5] = True
+    filled = _fill_holes(ring)
+    assert filled[2:5, 2:5].all()
+    assert not filled[0].any() and not filled[:, 0].any()
+
+
+def _core_canvas(core_model, core_clusters):
+    from src.layout import taxonomy
+    from src.layout.canvas import compose_canvas
+    from src.layout.compose import build_meta_graph
+    from src.layout.compound import compute_cofactor_scores
+    from src.layout.engine import layout_reactions
+    tiles = []
+    for name, reactions in sorted(core_clusters.items()):
+        result = layout_reactions(core_model, reactions, name)
+        if result is not None:
+            tiles.append((name, result.escher_map))
+    labels = {n: taxonomy.classify(n, core_clusters[n]) for n, _ in tiles}
+    meta = build_meta_graph(core_clusters, compute_cofactor_scores(core_model))
+    return tiles, compose_canvas(tiles, labels, meta, "e_coli_core")
+
+
+def test_species_canvas_draws_everything_and_overlaps_nothing(core_model, core_clusters):
+    from src.layout.canvas import cross_overlaps
+    tiles, canvas = _core_canvas(core_model, core_clusters)
+    body = canvas[1]
+    assert len(body["nodes"]) == sum(len(t[1]["nodes"]) for _, t in tiles)
+    assert len(body["reactions"]) == sum(len(t[1]["reactions"]) for _, t in tiles)
+    assert cross_overlaps(canvas) == 0
+
+
+def test_species_canvas_is_denser_than_tiling_rectangles(core_model, core_clusters):
+    """The point of planning on real shapes: the rectangle-packed poster was
+    more than half empty."""
+    from src.layout import metrics
+    from src.layout.compose import build_meta_graph, compose
+    from src.layout.compound import compute_cofactor_scores
+    tiles, canvas = _core_canvas(core_model, core_clusters)
+    meta = build_meta_graph(core_clusters, compute_cofactor_scores(core_model))
+    tiled = compose(tiles, meta, "e_coli_core")
+    assert (metrics.blank_space(canvas)["blank_share"]
+            < 0.75 * metrics.blank_space(tiled)["blank_share"])
