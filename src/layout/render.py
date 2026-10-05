@@ -11,6 +11,7 @@ stoichiometry, which v1 discarded.
 import json
 import math
 
+from . import identity
 from .compound import NEVER_PRIMARY, SUPPRESSED, strip_compartment
 
 # All distances are Escher canvas pixels.
@@ -19,6 +20,8 @@ MARKER_OFFSET = 36.0       # multimarker distance from the midmarker
 STUB_SPREAD = math.radians(24.0)
 STUB_ANGLE = math.radians(72.0)     # mostly perpendicular: stubs must not crowd the axis
 PARALLEL_GAP = 150.0       # lateral offset between opposed reactions
+LANE_GAP = 110.0           # between the lanes of reactions joining one metabolite pair
+LANE_FAN = 60.0            # how much further along its axis each inner lane steps out
 LABEL_DX = 24.0
 LABEL_DY = -12.0
 
@@ -123,6 +126,76 @@ def _arc_points(start, end, centre, along=0.0):
 
     mid_t = 0.5 + shift
     return at(mid_t - delta), at(mid_t), at(mid_t + delta), tangent(mid_t)
+
+
+def _bow_centre(start, end, sagitta):
+    """Centre of the circle through `start` and `end` whose arc bulges
+    `sagitta` units to the left of start -> end (negative: to the right)."""
+    ux, uy, length = _unit(end[0] - start[0], end[1] - start[1])
+    if length < 1e-6 or abs(sagitta) < 1e-6:
+        return None
+    nx, ny = -uy, ux
+    radius = (length * length / 4.0 + sagitta * sagitta) / (2.0 * abs(sagitta))
+    mx, my = (start[0] + end[0]) / 2.0, (start[1] + end[1]) / 2.0
+    back = sagitta - math.copysign(radius, sagitta)
+    return (mx + nx * back, my + ny * back)
+
+
+def _signed_sagitta(start, end, centre):
+    """How far the arc about `centre` from start to end bulges left of the chord."""
+    ux, uy, length = _unit(end[0] - start[0], end[1] - start[1])
+    nx, ny = -uy, ux
+    mx, my = (start[0] + end[0]) / 2.0, (start[1] + end[1]) / 2.0
+    radius = (math.hypot(start[0] - centre[0], start[1] - centre[1])
+              + math.hypot(end[0] - centre[0], end[1] - centre[1])) / 2.0
+    towards = (mx - centre[0]) * nx + (my - centre[1]) * ny
+    # The short arc lies on the side of the chord away from the centre.
+    return math.copysign(radius - abs(towards), towards) if towards else radius
+
+
+def _offset_polyline(path, shift, rank=0):
+    """The orthogonal polyline `path` moved `shift` units to its left.
+
+    Its two ends stay on the metabolites they join, so every lane needs a
+    step sideways into its track, and no two steps may share a line. The
+    outermost lane on each side (`rank` 0) -- every lane when two or three
+    reactions join the pair, by far the common case -- steps out at a right
+    angle at the metabolite. Inner lanes fan out diagonally, each `LANE_FAN`
+    further along than the lane outside it, so their angles all differ.
+
+    Fanning every lane out diagonally kept lanes apart but cost a fifth of the
+    maps their orthogonality; following the axis before stepping out kept it
+    orthogonal but put both inner lanes on the same stretch of axis.
+    """
+    normals, units, lengths = [], [], []
+    for i in range(len(path) - 1):
+        ux, uy, length = _unit(path[i + 1][0] - path[i][0], path[i + 1][1] - path[i][1])
+        normals.append((-uy, ux))
+        units.append((ux, uy))
+        lengths.append(length)
+
+    def stepped(point, unit, normal, inset, sign):
+        # The outermost lane steps out at a right angle at the metabolite.
+        # An inner lane cannot do the same without running along its outer
+        # neighbour's step, and cannot follow the axis first either: the
+        # inner lane on the other side would follow the same stretch of axis.
+        # So inner lanes, which only exist with four or more reactions between
+        # one pair, fan out at their own angle instead.
+        lane = (point[0] + sign * unit[0] * inset + shift * normal[0],
+                point[1] + sign * unit[1] * inset + shift * normal[1])
+        return [lane]
+
+    head_inset = min(rank * LANE_FAN, lengths[0] / 3.0)
+    tail_inset = min(rank * LANE_FAN, lengths[-1] / 3.0)
+    out = [path[0]] + stepped(path[0], units[0], normals[0], head_inset, 1.0)
+    for i in range(1, len(path) - 1):
+        n1, n2 = normals[i - 1], normals[i]
+        if abs(n1[0] - n2[0]) < 1e-6 and abs(n1[1] - n2[1]) < 1e-6:
+            continue
+        out.append((path[i][0] + shift * (n1[0] + n2[0]), path[i][1] + shift * (n1[1] + n2[1])))
+    out += list(reversed(stepped(path[-1], units[-1], normals[-1], tail_inset, -1.0)))
+    out.append(path[-1])
+    return out
 
 
 def _route_polyline(points):
@@ -302,6 +375,8 @@ def build_escher_map(cgraph, pos, map_name, author="AutoLayout", description="",
         _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied,
                        routes.get(rid))
 
+    _nudge_overlaps(builder)
+    _slide_markers(builder)
     _unify_primary(builder)
     _enforce_secondary(builder)
     _separate_nodes(builder)
@@ -314,6 +389,359 @@ def build_escher_map(cgraph, pos, map_name, author="AutoLayout", description="",
     for node in builder.nodes.values():
         node.pop("_anchored", None)
     return builder.to_escher(map_name, description or f"Generated by {author}", canvas)
+
+
+NUDGE = 30.0               # spacing between edges pulled off a shared line
+NUDGE_PASSES = 8
+NODE_CLEARANCE = 14.0      # gap kept between an edge and an unrelated node
+
+
+def _runs(builder):
+    """Every reaction's straight edges merged into maximal collinear runs.
+
+    A run is the unit an edge moves by: shifting one segment of a straight
+    stretch alone would leave its neighbour diagonal, while shifting the whole
+    stretch only lengthens or shortens the perpendicular legs at its ends.
+    Returns [(rid, orientation, coordinate, lo, hi, node ids)].
+    """
+    nodes = builder.nodes
+    out = []
+    for rid, reaction in builder.reactions.items():
+        adjacency = {}
+        for segment in reaction["segments"].values():
+            if segment.get("b1") or segment.get("b2"):
+                continue
+            a, b = segment["from_node_id"], segment["to_node_id"]
+            na, nb = nodes[a], nodes[b]
+            if abs(na["y"] - nb["y"]) < 1.0 and abs(na["x"] - nb["x"]) >= 1.0:
+                orient = "h"
+            elif abs(na["x"] - nb["x"]) < 1.0 and abs(na["y"] - nb["y"]) >= 1.0:
+                orient = "v"
+            else:
+                continue
+            adjacency.setdefault((a, orient), []).append(b)
+            adjacency.setdefault((b, orient), []).append(a)
+        seen = set()
+        for (start, orient), _ in adjacency.items():
+            if (start, orient) in seen:
+                continue
+            # Walk the connected same-orientation chain through `start`.
+            chain, stack = set(), [start]
+            while stack:
+                node = stack.pop()
+                if node in chain:
+                    continue
+                chain.add(node)
+                seen.add((node, orient))
+                stack.extend(adjacency.get((node, orient), ()))
+            coord = nodes[start]["y"] if orient == "h" else nodes[start]["x"]
+            along = [nodes[n]["x"] if orient == "h" else nodes[n]["y"] for n in chain]
+            out.append((rid, orient, coord, min(along), max(along), chain))
+    return out
+
+
+def _movable(builder, chain):
+    return all(builder.nodes[n]["node_type"] != "metabolite" for n in chain)
+
+
+def _shift_run(builder, rid, orient, chain, shift, moved):
+    """Move a run `shift` across its own line; return False if it cannot.
+
+    A run that ends on a metabolite gets a new bend a short way out from it,
+    so the metabolite stays put and the rest of the run takes the new track.
+    """
+    nodes = builder.nodes
+    fixed = [n for n in chain if nodes[n]["node_type"] == "metabolite"]
+    if len(fixed) > 1:
+        return False
+    if fixed:
+        # The metabolite stays put; the run leaves it through a right-angle
+        # step at the metabolite itself, then takes its new track.
+        m = fixed[0]
+        reaction = builder.reactions[rid]
+        for sid, segment in list(reaction["segments"].items()):
+            if segment.get("b1") or segment.get("b2"):
+                continue
+            a, b = segment["from_node_id"], segment["to_node_id"]
+            if m not in (a, b):
+                continue
+            other = b if a == m else a
+            if other not in chain:
+                continue
+            mx, my = nodes[m]["x"], nodes[m]["y"]
+            jog = builder.add_marker("multimarker", mx, my)
+            del reaction["segments"][sid]
+            pairs = ((a, jog), (jog, b))
+            for k, (p, q) in enumerate(pairs):
+                reaction["segments"][f"{sid}_n{k}"] = {
+                    "from_node_id": p, "to_node_id": q, "b1": None, "b2": None}
+            chain = (chain - {m}) | {jog}
+            break
+    for node_id in chain:
+        dx, dy = (0.0, shift) if orient == "h" else (shift, 0.0)
+        nodes[node_id]["x"] += dx
+        nodes[node_id]["y"] += dy
+        moved[node_id] = (moved.get(node_id, (0.0, 0.0))[0] + dx,
+                          moved.get(node_id, (0.0, 0.0))[1] + dy)
+    return True
+
+
+def _nudge_overlaps(builder):
+    """Pull apart edges of unrelated reactions drawn on top of each other.
+
+    Orthogonal routing sends long edges down shared channels, so two
+    reactions with nothing in common can end up on one line, or one edge can
+    run straight through another reaction's markers or metabolite and appear
+    to join it. The remedy from orthogonal connector routing is nudging: move
+    each offending straight run a little to the side.
+
+      collinear  unrelated runs sharing a stretch of one line each get a
+                 track of their own, NUDGE apart;
+      through    a run passing over an unrelated node, or over any other
+                 reaction's midmarker, moves clear of it.
+
+    Reactions that share a metabolite are left on one track. Edges converging
+    on the compound they share are how the sharing is drawn, and they still
+    read as two edges because they part where the sharing ends; splitting
+    them cost a tenth of the drawing's orthogonality for nothing.
+    """
+    nodes = builder.nodes
+    touches, owners = {}, {}
+    for rid, reaction in builder.reactions.items():
+        for segment in reaction["segments"].values():
+            for end in (segment["from_node_id"], segment["to_node_id"]):
+                owners.setdefault(end, set()).add(rid)
+                if nodes[end]["node_type"] == "metabolite":
+                    touches.setdefault(rid, set()).add(end)
+
+    def related(r1, r2):
+        return r1 == r2 or bool(touches.get(r1, set()) & touches.get(r2, set()))
+
+    def radius(node):
+        if node["node_type"] == "metabolite":
+            return PRIMARY_RADIUS if node.get("node_is_primary", True) else SECONDARY_RADIUS
+        return 11.0 if node["node_type"] == "midmarker" else 6.0
+
+    for _ in range(NUDGE_PASSES):
+        moved = {}
+        runs = _runs(builder)
+
+        # Collinear: group runs on one line whose spans overlap.
+        lines = {}
+        for run in runs:
+            rid, orient, coord, lo, hi, chain = run
+            lines.setdefault((orient, round(coord / 4.0)), []).append(run)
+        for spans in lines.values():
+            spans.sort(key=lambda r: r[3])
+            groups, current, reach = [], [], None
+            for run in spans:
+                if current and run[3] < reach - 12.0:
+                    current.append(run)
+                    reach = max(reach, run[4])
+                else:
+                    if current:
+                        groups.append(current)
+                    current, reach = [run], run[4]
+            if current:
+                groups.append(current)
+            for group in groups:
+                # One track per set of mutually related reactions.
+                tracks = []
+                for run in sorted(group, key=lambda r: r[0]):
+                    for track in tracks:
+                        if any(related(run[0], other[0]) for other in track):
+                            track.append(run)
+                            break
+                    else:
+                        tracks.append([run])
+                if len(tracks) < 2:
+                    continue
+                for k, track in enumerate(tracks):
+                    shift = (k - (len(tracks) - 1) / 2.0) * NUDGE
+                    if not shift:
+                        continue
+                    for rid, orient, _, _, _, chain in track:
+                        if not any(n in moved for n in chain):
+                            _shift_run(builder, rid, orient, chain, shift, moved)
+
+        # Through: a run passing over a node of an unrelated reaction.
+        cell = 120.0
+        grid = {}
+        for node_id, node in nodes.items():
+            grid.setdefault((int(node["x"] // cell), int(node["y"] // cell)), []).append(node_id)
+        for rid, orient, coord, lo, hi, chain in _runs(builder):
+            if any(n in moved for n in chain):
+                continue
+            worst = None
+            steps = int((hi - lo) // cell) + 2
+            for s in range(steps + 1):
+                t = lo + (hi - lo) * min(1.0, s / steps)
+                px, py = (t, coord) if orient == "h" else (coord, t)
+                for dx in (-1, 0, 1):
+                    for dy in (-1, 0, 1):
+                        for other in grid.get((int(px // cell) + dx, int(py // cell) + dy), ()):
+                            if other in chain:
+                                continue
+                            node = nodes[other]
+                            # A midmarker is where a reaction is read -- its
+                            # arrow, its label. Another reaction's line over it,
+                            # or its bend on it, reads as one reaction even when
+                            # the two do share a metabolite.
+                            mid = node["node_type"] == "midmarker"
+                            if mid:
+                                if rid in owners.get(other, ()):
+                                    continue
+                            elif any(related(rid, r) for r in owners.get(other, ())):
+                                continue
+                            along = node["x"] if orient == "h" else node["y"]
+                            across = node["y"] if orient == "h" else node["x"]
+                            need = radius(node) + NODE_CLEARANCE
+                            # Past the ends too: a node on a run's corner sits
+                            # on the bend marker there, which is as much an
+                            # overlap as one halfway along.
+                            # Past the ends too, for a node a corner may not
+                            # touch: a metabolite or midmarker on a run's bend
+                            # is as much an overlap as one halfway along. Two
+                            # bends touching is not; they are dots on lines.
+                            margin = need if mid or node["node_type"] == "metabolite" else 0.0
+                            if not lo - margin < along < hi + margin:
+                                continue
+                            if abs(across - coord) < need:
+                                side = 1.0 if coord >= across else -1.0
+                                shift = across + side * need - coord
+                                if worst is None or abs(shift) > abs(worst):
+                                    worst = shift
+            if worst:
+                _shift_run(builder, rid, orient, chain, worst, moved)
+
+        if not moved:
+            return
+        # Curves anchored on a moved marker keep their shape.
+        for reaction in builder.reactions.values():
+            for segment in reaction["segments"].values():
+                for end, control in (("from_node_id", "b1"), ("to_node_id", "b2")):
+                    point = segment.get(control)
+                    move = moved.get(segment[end])
+                    if point and move:
+                        point["x"] += move[0]
+                        point["y"] += move[1]
+
+
+SLIDE_STEP = 12.0
+SLIDE_GAP = 4.0            # clearance between a moved marker and anything else
+
+
+def _node_reach(node):
+    if node["node_type"] == "metabolite":
+        return PRIMARY_RADIUS if node.get("node_is_primary", True) else SECONDARY_RADIUS
+    return 11.0 if node["node_type"] == "midmarker" else 6.0
+
+
+def _slide_markers(builder):
+    """Move a reaction's arrow off any node that is not its own.
+
+    Nudging moves straight runs sideways, which cannot help a reaction drawn
+    as one diagonal or curved stroke -- an inner sibling lane, a transport
+    step between two columns -- whose midmarker happens to land on another
+    reaction's metabolite. The reaction then reads as passing through that
+    compound. Sliding the arrow (midmarker, its two multimarkers, and the
+    cofactor fan hanging off them) along its own straight axis changes
+    nothing else about the drawing and clears it.
+    """
+    nodes = builder.nodes
+    owners, members = {}, {}
+    for rid, reaction in builder.reactions.items():
+        for segment in reaction["segments"].values():
+            for end in (segment["from_node_id"], segment["to_node_id"]):
+                owners.setdefault(end, set()).add(rid)
+                members.setdefault(rid, set()).add(end)
+    cell = 120.0
+    grid = {}
+    for node_id, node in nodes.items():
+        grid.setdefault((int(node["x"] // cell), int(node["y"] // cell)), []).append(node_id)
+
+    def clashes(rid, points, own):
+        for (x, y), reach in points:
+            cx, cy = int(x // cell), int(y // cell)
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    for other in grid.get((cx + dx, cy + dy), ()):
+                        if other in own:
+                            continue
+                        node = nodes[other]
+                        if math.hypot(node["x"] - x, node["y"] - y) < reach + _node_reach(node) + SLIDE_GAP:
+                            return True
+        return False
+
+    for rid, reaction in builder.reactions.items():
+        segments = list(reaction["segments"].values())
+        mid = next((n for s in segments for n in (s["from_node_id"], s["to_node_id"])
+                    if nodes[n]["node_type"] == "midmarker"), None)
+        if mid is None:
+            continue
+        straight = {}
+        for segment in segments:
+            a, b = segment["from_node_id"], segment["to_node_id"]
+            if not (segment.get("b1") or segment.get("b2")):
+                straight.setdefault(a, []).append(b)
+                straight.setdefault(b, []).append(a)
+        flank = [n for n in straight.get(mid, ()) if nodes[n]["node_type"] == "multimarker"]
+        if len(flank) != 2:
+            continue
+        outer = []
+        for marker in flank:
+            beyond = [n for n in straight.get(marker, ()) if n != mid]
+            if len(beyond) != 1:
+                break
+            outer.append(beyond[0])
+        if len(outer) != 2:
+            continue
+        p, q = nodes[outer[0]], nodes[outer[1]]
+        ux, uy, length = _unit(q["x"] - p["x"], q["y"] - p["y"])
+        if length < 1.0:
+            continue
+        body = [mid] + flank
+        # The axis has to be straight through all five points to slide along it.
+        if any(abs((nodes[n]["x"] - p["x"]) * uy - (nodes[n]["y"] - p["y"]) * ux) > 1.0 for n in body):
+            continue
+        # Cofactor stubs hang off the two multimarkers and move with them.
+        stubs = sorted({s["from_node_id"] if s["to_node_id"] in flank else s["to_node_id"]
+                        for s in segments
+                        if (s["from_node_id"] in flank) != (s["to_node_id"] in flank)})
+        stubs = [n for n in stubs if owners.get(n) == {rid}
+                 and nodes[n]["node_type"] == "metabolite"
+                 and not nodes[n].get("node_is_primary", True)]
+        moving = body + stubs
+        mine = members[rid]
+
+        def placed(t):
+            return [((nodes[n]["x"] + ux * t, nodes[n]["y"] + uy * t), _node_reach(nodes[n]))
+                    for n in moving]
+
+        if not clashes(rid, placed(0.0), mine):
+            continue
+        along = [(nodes[n]["x"] - p["x"]) * ux + (nodes[n]["y"] - p["y"]) * uy for n in body]
+        keep = 24.0
+        low, high = keep - min(along), (length - keep) - max(along)
+        steps = sorted((k * SLIDE_STEP for k in range(int(low // SLIDE_STEP), int(high // SLIDE_STEP) + 1)),
+                       key=abs)
+        for t in steps:
+            if t and not clashes(rid, placed(t), mine):
+                for n in moving:
+                    old = (nodes[n]["x"], nodes[n]["y"])
+                    grid[(int(old[0] // cell), int(old[1] // cell))].remove(n)
+                    nodes[n]["x"] += ux * t
+                    nodes[n]["y"] += uy * t
+                    grid.setdefault((int(nodes[n]["x"] // cell), int(nodes[n]["y"] // cell)), []).append(n)
+                for segment in segments:
+                    for end, control in (("from_node_id", "b1"), ("to_node_id", "b2")):
+                        point = segment.get(control)
+                        if point and segment[end] in moving:
+                            point["x"] += ux * t
+                            point["y"] += uy * t
+                reaction["label_x"] += ux * t
+                reaction["label_y"] += uy * t
+                break
 
 
 def _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied, route=None):
@@ -338,21 +766,46 @@ def _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied, route=
         start_node = metabolite_nodes[anchored]
         end_node = None
 
-    # Opposed reactions (kinase/phosphatase, dehydrogenase/reductase) share an
-    # axis. Routing them down two parallel channels draws a closed rectangle
-    # with no nodes at its corners -- and a closed quadrilateral is the
-    # universal notation for a cycle, so a reversible pair ends up claiming to
-    # be one. Worst case, SUCDi/FRD7 drew a false ring right where the real TCA
-    # ring belongs. They share one axis instead, each with its own midmarker
-    # offset along it, and the arrowheads (which follow each reaction's own
-    # direction) make the pair read as the standard double arrow.
+    # Reactions joining the same two metabolites -- an opposed pair such as
+    # PFK/FBP, or two enzymes for one conversion such as NADH16 and CYTBD --
+    # each get a lane of their own, bowed apart.
+    #
+    # They used to share one axis, each midmarker offset along it, because
+    # two parallel *straight* channels draw a closed rectangle with no nodes at
+    # its corners, which reads as a cycle (SUCDi/FRD7 drew a false ring beside
+    # the real TCA ring). Sharing the axis was worse in a different way: the
+    # two reactions are drawn on top of each other, and Q8 -> NADH16 -> CYTBD
+    # -> Q8H2 reads as a two-step chain through an intermediate that does not
+    # exist. Bowed lanes are a lens, which no one reads as a cycle, and every
+    # reaction has a line of its own.
+    #
+    # Lanes are shared out over the *unordered* pair. Reactions drawn in
+    # opposite directions sit on the two opposite edges, and laning each edge
+    # on its own put them on the same tracks -- a left lane drawn backwards is
+    # the other edge's right lane -- so four iron transporters still drew as
+    # two lines.
     siblings = []
-    if sub in pos and prod in pos and cgraph.D.has_edge(sub, prod):
-        siblings = cgraph.D.edges[sub, prod]["rxns"]
+    canonical = (sub, prod) if str(sub) <= str(prod) else (prod, sub)
+    if sub in pos and prod in pos:
+        for u, v in (canonical, canonical[::-1]):
+            if cgraph.D.has_edge(u, v):
+                siblings.extend(r for r in cgraph.D.edges[u, v]["rxns"] if r not in siblings)
     along = 0.0
-    if len(siblings) > 1 and rec.rid in siblings:
+    lane = 0.0
+    if len(siblings) > 1 and rec.rid in siblings and end_node is not None:
         index = siblings.index(rec.rid)
-        along = (index - (len(siblings) - 1) / 2.0) * MARKER_OFFSET * 2.4
+        lane = (index - (len(siblings) - 1) / 2.0) * LANE_GAP
+        if (sub, prod) != canonical:
+            lane = -lane
+    if lane:
+        if len(path) == 2:
+            chord = _signed_sagitta(path[0], path[1], arc_centre) if arc_centre else 0.0
+            arc_centre = _bow_centre(path[0], path[1], chord + lane)
+        else:
+            lanes = [(k - (len(siblings) - 1) / 2.0) * LANE_GAP for k in range(len(siblings))]
+            rank = sum(1 for other in lanes
+                       if other * lane > 0 and abs(other) > abs(lane) + 1e-6)
+            path = _offset_polyline(path, lane, rank)
 
     total = _path_length(path)
     centre = min(max(total / 2.0 + along, total * 0.25), total * 0.75)
@@ -430,6 +883,9 @@ def _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied, route=
 
     # Cofactor fans, both sides of the axis chosen once per reaction.
     side = _cofactor_side(midpoint, direction, occupied)
+    if lane:
+        # Outward from the pair, so one lane's cofactors never cross the other.
+        side = 1 if lane > 0 else -1
     metabolite_entries = []
 
     for met_id, forward, anchor_id, anchor_pt in (
@@ -489,22 +945,42 @@ _ABBREVIATIONS = {
     "r5p": "R5P", "s7p": "S7P", "e4p": "E4P", "etoh": "EtOH", "acald": "AcAld",
     "actp": "AcP", "ac": "Ac", "for": "Form", "q8": "Q8", "q8h2": "Q8H2",
 }
-_COMPARTMENT_NAMES = {"c": "c", "e": "e", "p": "p", "m": "m", "x": "x",
-                      "r": "r", "l": "l", "n": "n", "g": "g", "v": "v"}
+
+_LABEL_LIMIT = 28
 
 
-def display_label(bigg_id, ambiguous=()):
+def _label_base(identifier):
+    """The species part of an id, as a reader should see it, and its key."""
+    base = identity.species(identifier)
+    if base.startswith("name:") or identity.opaque(base):
+        return None, base
+    readable = base.replace("__", "-").replace("_", "-")
+    return readable, readable.lower()
+
+
+def display_label(bigg_id, ambiguous=(), name=None):
     """Short, human-facing label for a metabolite id.
 
     `mal__L_c` -> `Mal`, or `Mal[c]` when malate also appears in another
     compartment on the same map. BiGG's double-underscore escaping never
-    reaches the figure.
+    reaches the figure. An id that means nothing to a reader -- Human-GEM's
+    `MAM01371c`, Yeast-GEM's `s_0434` -- is labelled by the currency key
+    (`atp`) or the metabolite's name instead.
     """
-    base = strip_compartment(bigg_id)
-    compartment = bigg_id[len(base) + 1:] if len(bigg_id) > len(base) else ""
-    key = base.replace("__", "-").replace("_", "-").lower()
-    text = _ABBREVIATIONS.get(key, base.replace("__", "-").replace("_", "-"))
-    if key in ambiguous and compartment in _COMPARTMENT_NAMES:
+    readable, key = _label_base(bigg_id)
+    compartment = identity.compartment(bigg_id)
+    if readable is None:
+        text = identity.currency(bigg_id)
+        if not text:
+            text = str(name or bigg_id).strip()
+            if compartment and text.endswith("_" + compartment):
+                text = text[:-len(compartment) - 1]
+            text = text.split(" [")[0].strip() or bigg_id
+        if len(text) > _LABEL_LIMIT:
+            text = text[:_LABEL_LIMIT - 1].rstrip() + "…"
+    else:
+        text = _ABBREVIATIONS.get(key, readable)
+    if key in ambiguous and compartment and len(compartment) <= 3:
         text = f"{text}[{compartment}]"
     return text
 
@@ -516,9 +992,7 @@ def ambiguous_bases(builder):
         if node["node_type"] != "metabolite":
             continue
         identifier = node["bigg_id"]
-        base = strip_compartment(identifier)
-        key = base.replace("__", "-").replace("_", "-").lower()
-        seen.setdefault(key, set()).add(identifier[len(base) + 1:])
+        seen.setdefault(_label_base(identifier)[1], set()).add(identity.compartment(identifier))
     return {key for key, comps in seen.items() if len(comps) > 1}
 
 
@@ -526,7 +1000,7 @@ def apply_display_labels(builder):
     ambiguous = ambiguous_bases(builder)
     for node in builder.nodes.values():
         if node["node_type"] == "metabolite":
-            node["label_text"] = display_label(node["bigg_id"], ambiguous)
+            node["label_text"] = display_label(node["bigg_id"], ambiguous, node.get("name"))
     for reaction in builder.reactions.values():
         reaction["label_text"] = reaction["bigg_id"]
 
@@ -807,6 +1281,47 @@ def _segment_hits_box(x1, y1, x2, y2, left, top, right, bottom):
     return t0 <= t1
 
 
+def _segment_points(a, b, segment, steps=10):
+    """A segment as a polyline: its two ends, or its Bezier sampled."""
+    p0, p3 = (a["x"], a["y"]), (b["x"], b["y"])
+    if not (segment.get("b1") and segment.get("b2")):
+        return [p0, p3]
+    b1 = (segment["b1"]["x"], segment["b1"]["y"])
+    b2 = (segment["b2"]["x"], segment["b2"]["y"])
+    out = []
+    for i in range(steps + 1):
+        t = i / steps
+        m = 1.0 - t
+        out.append((m ** 3 * p0[0] + 3 * m * m * t * b1[0] + 3 * m * t * t * b2[0] + t ** 3 * p3[0],
+                    m ** 3 * p0[1] + 3 * m * m * t * b1[1] + 3 * m * t * t * b2[1] + t ** 3 * p3[1]))
+    return out
+
+
+FAR_STEP = 60.0            # ring spacing when a label has to look further out
+FAR_LIMIT = 20000.0
+
+
+def _place_far(obstacles, text, factor, anchor_x, anchor_y):
+    """The nearest free place for a label at the smallest size, at any distance."""
+    width, height = label_box(text, MIN_FONT_BASE, factor)
+    half_w, half_v = width / 2.0, height / 2.0
+    radius = FAR_STEP * 2
+    while radius < FAR_LIMIT:
+        arms = max(16, int(2.0 * math.pi * radius / FAR_STEP))
+        ring = []
+        for index in range(arms):
+            angle = 2.0 * math.pi * index / arms
+            ring.append((abs(math.sin(angle)), radius * math.cos(angle),
+                         radius * math.sin(angle)))
+        ring.sort(key=lambda a: a[0])           # beside before above or below
+        for _, dx, dy in ring:
+            cx, cy = anchor_x + dx, anchor_y + dy
+            if not obstacles.hits(cx - half_w, cy - half_v, cx + half_w, cy + half_v):
+                return (cx, cy, half_w, half_v, MIN_FONT_BASE)
+        radius += FAR_STEP
+    return (anchor_x + FAR_LIMIT, anchor_y, half_w, half_v, MIN_FONT_BASE)
+
+
 def _place_labels(builder):
     """Place every label near the thing it names, shrinking it if it must.
 
@@ -814,9 +1329,10 @@ def _place_labels(builder):
     to move. `layout_algorithm.md` asks that a label never overlap a node, an edge,
     or another label, and the previous version satisfied that by widening the
     search until something was free -- which left labels hundreds of pixels
-    from their node, annotating nothing. Distance is capped instead, and the
-    font ladder absorbs the pressure. Only if a label cannot fit anywhere even
-    at the minimum size is an overlap accepted, and `metrics.score` counts it.
+    from their node, annotating nothing. So the near search comes first and
+    the font ladder absorbs the pressure there; only a label that fits nowhere
+    near, even at the minimum size, goes further out (`_place_far`). It never
+    overlaps: text on a node or an edge makes both unreadable.
 
     Longest labels go first: they are both hardest to fit and most damaging
     when they land on something.
@@ -835,8 +1351,15 @@ def _place_labels(builder):
             b = builder.nodes.get(segment["to_node_id"])
             if a is None or b is None:
                 continue
-            clearance = _STUB_CLEARANCE if segment.get("b1") else _SEGMENT_CLEARANCE
-            obstacles.add_segment(a["x"], a["y"], b["x"], b["y"], clearance)
+            stub = any(n["node_type"] == "metabolite" and not n.get("node_is_primary", True)
+                       for n in (a, b))
+            clearance = _STUB_CLEARANCE if stub else _SEGMENT_CLEARANCE
+            # A curve is an obstacle along the curve. Its chord, which is what
+            # this used to add, runs through the empty middle of a bowed lane
+            # or a ring and kept labels off exactly the wrong place.
+            points = _segment_points(a, b, segment)
+            for (x1, y1), (x2, y2) in zip(points, points[1:]):
+                obstacles.add_segment(x1, y1, x2, y2, clearance)
 
     targets = []
     for node in builder.nodes.values():
@@ -858,10 +1381,9 @@ def _place_labels(builder):
     secondaries = [t for t in targets if not t[0].get("node_is_primary", True)]
     targets = primaries + reaction_targets + secondaries
 
-    crowded = dropped = 0
+    crowded = 0
     for holder, text, anchor_x, anchor_y, factor in targets:
         placed = None
-        fallback = None
 
         # Nearest placement wins over largest font: a caption that has drifted
         # away from its node is a worse failure than a slightly smaller one.
@@ -871,8 +1393,6 @@ def _place_labels(builder):
             gap = max(6.0, 0.35 * height)
             for dx, dy in _candidates(half_w, half_v, gap):
                 cx, cy = anchor_x + dx, anchor_y + dy
-                if fallback is None:
-                    fallback = (cx, cy, half_w, half_v, font_base)
                 if not obstacles.hits(cx - half_w, cy - half_v,
                                       cx + half_w, cy + half_v):
                     placed = (cx, cy, half_w, half_v, font_base)
@@ -881,19 +1401,16 @@ def _place_labels(builder):
                 break
 
         if placed is None:
-            # A cofactor label that will not fit is dropped, not forced. Curated
-            # maps label cofactors sparsely, and a label sitting on top of the
-            # network is worse than an absent one -- the stub's position and
-            # size already say "currency here", and Escher shows the identity on
-            # hover. Backbone and reaction labels are never dropped; those name
-            # the pathway.
-            droppable = (holder.get("node_type") == "metabolite"
-                         and not holder.get("node_is_primary", True))
-            if droppable:
-                holder["label_hidden"] = True
-                dropped += 1
-                continue
-            placed = fallback
+            # Nothing free close by, even at the smallest size. Text over a
+            # node or an edge is never acceptable -- it makes both unreadable --
+            # so look further out, ring by ring, until there is room. There
+            # always is, eventually, past the edge of the drawing.
+            #
+            # This used to accept the overlap for backbone and reaction labels
+            # and hide cofactor labels instead. Hiding only works in our own
+            # renderers: Escher does not know `label_hidden` and drew those
+            # labels where they were, on top of whatever was there.
+            placed = _place_far(obstacles, text, factor, anchor_x, anchor_y)
             crowded += 1
 
         cx, cy, half_w, half_v, font_base = placed
@@ -907,7 +1424,7 @@ def _place_labels(builder):
                           cx + half_w - LABEL_OVERLAP_TOLERANCE,
                           cy + half_v - LABEL_OVERLAP_TOLERANCE)
 
-    return crowded, dropped
+    return crowded
 
 
 TEXT_LABEL_FONT_FACTOR = 3.0      # Draw.js scales a free text label by 3
@@ -926,7 +1443,8 @@ def _canvas(builder, padding=None):
         if "label_x" in node:
             size = node.get("font_size_base", ESCHER_DEFAULT_FONT_BASE) * METABOLITE_FONT_FACTOR
             xs.extend((node["label_x"],
-                       node["label_x"] + len(node["bigg_id"]) * size * CHAR_WIDTH_RATIO))
+                       node["label_x"] + len(node.get("label_text", node["bigg_id"]))
+                       * size * CHAR_WIDTH_RATIO))
             ys.extend((node["label_y"] - size * LINE_HEIGHT_RATIO / 2.0,
                        node["label_y"] + size * LINE_HEIGHT_RATIO / 2.0))
     for reaction in builder.reactions.values():
@@ -957,6 +1475,9 @@ def _canvas(builder, padding=None):
 
 
 TITLE_FONT_BASE = 26.0             # map title
+TITLE_MIN_FONT_BASE = 12.0         # still a title, beside 18-point metabolites x 1.1
+TITLE_MIN_WIDTH = 900.0            # a single node's map may still carry a title
+TITLE_CLEARANCE = 50.0             # title's lower edge to the top row's centres
 ATTRIBUTION_FONT_BASE = 8.0        # a credit line, not a title
 
 
@@ -984,12 +1505,23 @@ def _title(builder, canvas, text):
     # offset from the canvas edge put it on top of the network whenever the
     # proportional padding was smaller than the title itself -- free text was
     # 20 of 207 flagged label collisions.
-    height = TITLE_FONT_BASE * TEXT_LABEL_FONT_FACTOR * LINE_HEIGHT_RATIO
+    #
+    # No wider than the drawing. A title set at full size across a narrow
+    # pathway widens the canvas to fit it, and everything right of the drawing
+    # is then empty: a two-pathway column under a 55-character title was half
+    # blank. The title shrinks instead, down to a size that still reads as one.
+    xs = [n["x"] for n in builder.nodes.values()]
+    room = max(max(xs) - min(xs) if xs else 0.0, TITLE_MIN_WIDTH)
+    per_point = len(text) * TEXT_LABEL_FONT_FACTOR * CHAR_WIDTH_RATIO
+    font = max(TITLE_MIN_FONT_BASE, min(TITLE_FONT_BASE, room / max(per_point, 1e-9)))
+    height = font * TEXT_LABEL_FONT_FACTOR * LINE_HEIGHT_RATIO
+    # The gap is measured from the title's lower edge, not its size: offset by
+    # its own height, a shrunken title came down onto the top row of nodes.
     builder.text_labels["map_title"] = {
         "x": canvas["x"] + 60.0,
-        "y": _content_top(builder) - height,
+        "y": _content_top(builder) - height / 2.0 - TITLE_CLEARANCE,
         "text": text,
-        "font_size_base": TITLE_FONT_BASE,
+        "font_size_base": round(font, 1),
     }
 
 
@@ -1003,6 +1535,26 @@ def _attribution(builder, canvas, author):
         "text": f"Created by {author}",
         "font_size_base": ATTRIBUTION_FONT_BASE,
     }
+
+
+def annotate_pathways(escher_map, parts, region=None):
+    """Record which pathway each reaction of a map belongs to.
+
+    `parts` is [(pathway name, reactions or reaction ids)]. Written once, in
+    the map header, as `pathways`: [{name, region, reactions}] with reaction
+    keys as they appear in this map. A viewer uses it to select or move a
+    whole pathway at once; nothing in the drawing depends on it.
+    """
+    present = escher_map[1]["reactions"]
+    entries = []
+    for name, reactions in parts:
+        ids = [getattr(r, "id", r) for r in reactions]
+        keys = [i for i in ids if i in present]
+        if keys:
+            entries.append({"name": name, "region": region, "reactions": keys})
+    if entries:
+        escher_map[0]["pathways"] = entries
+    return escher_map
 
 
 def save(escher_map, path):

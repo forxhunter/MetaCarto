@@ -3,6 +3,14 @@
 Reads `data/bigg/{model_id}/*.json` -- where `layout_v2.py --all --out data/bigg`
 writes -- and mirrors each model directory into the repo.
 
+v2 maps are published beside v1, never over it:
+
+    python scripts/prepare_repo.py --source data/v2_maps --repo escher_maps_BiGG/v2
+
+Only the model directories present in `--source` are touched, so a v2 sync
+leaves every v1 map at the root exactly as it was, and a v1 sync never reaches
+into `v2/`.
+
 Two things this deliberately does NOT do:
 
 * It does not write README.md. An earlier version did, clobbering the
@@ -22,7 +30,7 @@ import shutil
 
 SOURCE_ROOT = os.path.join("data", "bigg")
 REPO_NAME = "escher_maps_BiGG"
-SKIP = {"models", "test_model"}
+SKIP = {"models", "test_model", "v1", "v2", "v3"}
 
 # What gets published alongside the JSON. SVG is here because the JSON is only
 # readable through a viewer, while an SVG opens in any browser and stays sharp
@@ -33,13 +41,13 @@ SKIP = {"models", "test_model"}
 PUBLISHED = (".json", ".svg")
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", default=SOURCE_ROOT)
     parser.add_argument("--repo", default=REPO_NAME)
     parser.add_argument("--dry-run", action="store_true",
                         help="report what would change without touching files")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     repo_root = os.path.abspath(args.repo)
     if not os.path.isdir(repo_root):

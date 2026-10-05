@@ -107,8 +107,11 @@ def _bbox(escher_map):
 
 
 def _offset_tile(escher_map, dx, dy, prefix, out_nodes, out_reactions):
-    """Copy one tile's nodes and reactions into the combined map, shifted."""
-    remap = {}
+    """Copy one tile's nodes and reactions into the combined map, shifted.
+
+    Returns {reaction id in the tile: its key in the combined map}.
+    """
+    remap, keys = {}, {}
     for node_id, node in escher_map[1]["nodes"].items():
         new_id = f"{prefix}_{node_id}"
         remap[node_id] = new_id
@@ -138,6 +141,8 @@ def _offset_tile(escher_map, dx, dy, prefix, out_nodes, out_reactions):
         # two clusters would silently overwrite one of them.
         key = reaction_id if reaction_id not in out_reactions else f"{reaction_id}__{prefix}"
         out_reactions[key] = moved
+        keys[reaction_id] = key
+    return keys
 
 
 def _shift_point(point, dx, dy):

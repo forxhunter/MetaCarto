@@ -22,7 +22,7 @@ import traceback
 
 import cobra
 
-from src.layout import metrics, pdfout, preview, render, svgout
+from src.layout import identity, metrics, pdfout, preview, render, svgout
 from src.layout.compose import build_meta_graph, compose
 from src.layout.compound import compute_cofactor_scores
 from src.layout.decompose import clusters
@@ -33,10 +33,30 @@ DEFAULT_OUT = "layout_output"
 AUTHOR = "Tianyu Wu (GitHub: forxhunter)"
 
 
+MODEL_EXTENSIONS = (".json", ".xml", ".sbml", ".xml.gz", ".yml", ".yaml", ".mat")
+
+
 def load_model(path):
-    if path.endswith(".json"):
-        return cobra.io.load_json_model(path)
-    return cobra.io.read_sbml_model(path)
+    """Any format COBRApy reads: JSON, SBML (optionally gzipped), YAML, MATLAB."""
+    lower = path.lower()
+    if lower.endswith(".json"):
+        model = cobra.io.load_json_model(path)
+    elif lower.endswith((".yml", ".yaml")):
+        model = cobra.io.load_yaml_model(path)
+    elif lower.endswith(".mat"):
+        model = cobra.io.load_matlab_model(path)
+    else:
+        model = cobra.io.read_sbml_model(path)
+    identity.register(model)
+    return model
+
+
+def model_stem(path):
+    name = os.path.basename(path)
+    for ext in sorted(MODEL_EXTENSIONS, key=len, reverse=True):
+        if name.lower().endswith(ext):
+            return name[:-len(ext)]
+    return os.path.splitext(name)[0]
 
 
 def safe_name(name):
@@ -59,7 +79,7 @@ def file_stem(name):
     return stem[:MAX_STEM - 7].rstrip("_") + "_" + digest
 
 
-def merge_by_function(groups, max_size=None):
+def merge_by_function(groups, max_size=None, membership=None):
     """Consolidate clusters that do the same kind of chemistry into one map.
 
     Packing 300 pathway tiles onto a canvas leaves 300 separate little drawings
@@ -75,6 +95,9 @@ def merge_by_function(groups, max_size=None):
     A superclass that blows past `max_size` is split into pages, each titled
     for the pathways on it, so the reader still sees one region and can tell
     its pages apart.
+
+    `membership`, if given, is filled with {page title: (superclass, [(pathway,
+    reactions)])} -- what each page was merged from.
     """
     from src.layout import naming, taxonomy
     from src.layout.decompose import load_kegg_mapping
@@ -85,11 +108,12 @@ def merge_by_function(groups, max_size=None):
         label = taxonomy.classify(name, reactions, mapping)
         pooled.setdefault(label, []).append((name, reactions))
 
-    out = {}
+    out, record = {}, {}
     for label, members in pooled.items():
         total = sum(len(r) for _, r in members)
         if not max_size or total <= max_size:
             out[label] = [r for _, rs in members for r in rs]
+            record[label] = (label, list(members))
             continue
 
         # Bin-pack whole pathways, never slicing one.
@@ -125,11 +149,15 @@ def merge_by_function(groups, max_size=None):
 
         if len(bins) == 1:
             out[label] = [r for _, rs in bins[0]["members"] for r in rs]
+            record[label] = (label, list(bins[0]["members"]))
             continue
         titles = naming.title_pages(
             label, [[(name, len(rs)) for name, rs in b["members"]] for b in bins])
         for title, b in zip(titles, bins):
             out[title] = [r for _, rs in b["members"] for r in rs]
+            record[title] = (label, list(b["members"]))
+    if membership is not None:
+        membership.update(record)
     return out
 
 
@@ -171,7 +199,7 @@ def metabolite_groups(reactions):
 
 
 def emit(model, reactions, name, out_dir, want_preview, use_fba, verbose, pitch,
-         groups=None, write=True):
+         groups=None, write=True, parts=None):
     """Lay out one cluster; `write=False` keeps it in memory as a tile only.
 
     A whole-model map still needs every cluster drawn, but it does not need
@@ -183,6 +211,8 @@ def emit(model, reactions, name, out_dir, want_preview, use_fba, verbose, pitch,
     if result is None:
         print(f"  {name}: no drawable structure, skipped")
         return None
+    region, pathways = parts or (None, [(name, reactions)])
+    render.annotate_pathways(result.escher_map, pathways, region)
     if write:
         save_map(result.escher_map, out_dir, name, want_preview, pitch, verbose)
     return result.escher_map
@@ -257,11 +287,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     if args.all:
-        paths = sorted(glob.glob(os.path.join(MODEL_DIR, "*.json"))
-                       + glob.glob(os.path.join(MODEL_DIR, "*.xml")))
+        paths = sorted(p for ext in MODEL_EXTENSIONS
+                       for p in glob.glob(os.path.join(MODEL_DIR, "*" + ext)))
         seen, unique = set(), []
         for path in paths:
-            stem = os.path.splitext(os.path.basename(path))[0]
+            stem = model_stem(path)
             if stem not in seen:
                 seen.add(stem)
                 unique.append(path)
@@ -270,7 +300,7 @@ def main(argv=None):
         if os.path.exists(args.model):
             paths = [args.model]
         else:
-            candidates = [os.path.join(MODEL_DIR, args.model + ext) for ext in (".json", ".xml")]
+            candidates = [os.path.join(MODEL_DIR, args.model + ext) for ext in MODEL_EXTENSIONS]
             paths = [p for p in candidates if os.path.exists(p)][:1]
             if not paths:
                 parser.error(f"model not found: {args.model}")
@@ -280,7 +310,7 @@ def main(argv=None):
     from src.layout.engine import LAYER_GAP
 
     for path in paths:
-        model_id = os.path.splitext(os.path.basename(path))[0]
+        model_id = model_stem(path)
         out_dir = os.path.join(args.out, model_id)
         if args.clean and os.path.isdir(out_dir):
             shutil.rmtree(out_dir, ignore_errors=True)
@@ -295,6 +325,7 @@ def main(argv=None):
             print(f"  failed to load: {exc}")
             continue
 
+        page_members = {}
         if args.raw_subsystems:
             groups = subsystems_of(model)
         else:
@@ -307,7 +338,8 @@ def main(argv=None):
             groups = clusters(model, compute_cofactor_scores(model), **size_limits)
             if args.group_function:
                 pathway_count = len(groups)
-                groups = merge_by_function(groups, max_size=args.max_cluster)
+                groups = merge_by_function(groups, max_size=args.max_cluster,
+                                           membership=page_members)
                 print(f"  merged {pathway_count} pathway clusters into "
                       f"{len(groups)} functional maps")
         targets = ({args.subsystem: groups[args.subsystem]}
@@ -322,7 +354,8 @@ def main(argv=None):
             try:
                 tile = emit(model, reactions, name, out_dir, args.preview,
                             not args.no_fba, not args.quiet, LAYER_GAP,
-                            write=not (args.combined_only or args.canvas_only))
+                            write=not (args.combined_only or args.canvas_only),
+                            parts=page_members.get(name))
                 written.add(file_stem(name) + ".json")
                 if tile is not None:
                     tiles.append((name, tile))

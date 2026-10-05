@@ -90,6 +90,26 @@ def _straight_segments(body, include_connectors=True):
     return out
 
 
+def _ink_segments(body, steps=10):
+    """Every segment as straight pieces: lines as they are, Beziers sampled."""
+    nodes = body["nodes"]
+    out = []
+    for reaction in body["reactions"].values():
+        for segment in reaction["segments"].values():
+            a = nodes.get(segment["from_node_id"])
+            b = nodes.get(segment["to_node_id"])
+            if a is None or b is None:
+                continue
+            p0, p3 = (a["x"], a["y"]), (b["x"], b["y"])
+            if segment.get("b1") and segment.get("b2"):
+                points = list(_bezier_points(p0, (segment["b1"]["x"], segment["b1"]["y"]),
+                                             (segment["b2"]["x"], segment["b2"]["y"]), p3, steps))
+            else:
+                points = [p0, p3]
+            out.extend((x1, y1, x2, y2) for (x1, y1), (x2, y2) in zip(points, points[1:]))
+    return out
+
+
 def _segments_cross(s1, s2):
     (x1, y1, x2, y2), (x3, y3, x4, y4) = s1, s2
     if (abs(x1 - x3) < 1e-6 and abs(y1 - y3) < 1e-6) or (abs(x1 - x4) < 1e-6 and abs(y1 - y4) < 1e-6):
@@ -226,7 +246,10 @@ def _label_collisions(body, boxes):
         x, y = node["x"], node["y"]
         node_grid.setdefault((int(x // cell), int(y // cell)), []).append((x, y, radius))
 
-    segments = _straight_segments(body)
+    # Every edge a label can sit on, curves included. Testing only straight
+    # segments left ring arcs, bowed lanes and cofactor arcs unmeasured, and a
+    # label on a curve is as unreadable as one on a line.
+    segments = _ink_segments(body)
     segment_grid = {}
     for index, (x1, y1, x2, y2) in enumerate(segments):
         steps = max(1, int(math.hypot(x2 - x1, y2 - y1) / cell) + 1)
@@ -406,6 +429,130 @@ def score(escher_map, pitch=180.0):
         "occupancy": (content_w * content_h) / max(canvas["width"] * canvas["height"], 1.0),
         "aspect_ratio": content_w / content_h,
     }
+
+
+_NODE_RADIUS = {"multimarker": 6.0, "midmarker": 11.0}
+
+
+def _node_radius(node):
+    if node["node_type"] == "metabolite":
+        return 30.0 if node.get("node_is_primary", True) else 16.0
+    return _NODE_RADIUS.get(node["node_type"], 6.0)
+
+
+def reaction_overlaps(escher_map, collinear_tolerance=4.0, min_shared=12.0):
+    """Places where one reaction is drawn on top of another.
+
+    The label measures in `score` cover text against text, nodes and edges;
+    nothing measured drawing against drawing. Three ways it happens:
+
+      node_on_node   two nodes that no segment joins, with overlapping discs
+      edge_on_node   a segment passing through a node of another reaction
+      edge_on_edge   two straight segments of different reactions on the same
+                     horizontal or vertical line, sharing more than
+                     `min_shared` units of it -- one drawn over the other
+
+    Crossings are not counted here: two edges crossing at a point are legible
+    and `crossings_per_edge` already measures them.
+
+    Each count also comes as `*_unrelated`: only the cases where the two
+    reactions share no metabolite. Reactions converging on a compound they
+    share may run together for a stretch and part where the sharing ends --
+    that still reads as two edges. Unrelated reactions drawn together never do.
+    """
+    body = escher_map[1]
+    nodes = body["nodes"]
+    joined, owners, touches = set(), {}, {}
+    straight = []
+    for key, reaction in body["reactions"].items():
+        for segment in reaction["segments"].values():
+            a_id, b_id = segment["from_node_id"], segment["to_node_id"]
+            a, b = nodes.get(a_id), nodes.get(b_id)
+            if a is None or b is None:
+                continue
+            joined.add((a_id, b_id))
+            joined.add((b_id, a_id))
+            owners.setdefault(a_id, set()).add(key)
+            owners.setdefault(b_id, set()).add(key)
+            for end_id, end in ((a_id, a), (b_id, b)):
+                if end["node_type"] == "metabolite":
+                    touches.setdefault(key, set()).add(end_id)
+            if not (segment.get("b1") or segment.get("b2")):
+                straight.append((key, a_id, b_id, a["x"], a["y"], b["x"], b["y"]))
+
+    def unrelated(keys_a, keys_b):
+        return not any(a == b or touches.get(a, set()) & touches.get(b, set())
+                       for a in keys_a for b in keys_b)
+
+    cell = 120.0
+    grid = {}
+    for node_id, node in nodes.items():
+        grid.setdefault((int(node["x"] // cell), int(node["y"] // cell)), []).append(node_id)
+
+    node_on_node = node_on_node_unrelated = 0
+    for node_id, node in nodes.items():
+        cx, cy = int(node["x"] // cell), int(node["y"] // cell)
+        r = _node_radius(node)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for other in grid.get((cx + dx, cy + dy), ()):
+                    if other <= node_id or (node_id, other) in joined:
+                        continue
+                    o = nodes[other]
+                    if math.hypot(o["x"] - node["x"], o["y"] - node["y"]) < r + _node_radius(o):
+                        node_on_node += 1
+                        node_on_node_unrelated += unrelated(owners.get(node_id, ()),
+                                                            owners.get(other, ()))
+
+    edge_on_node = edge_on_node_unrelated = 0
+    for key, a_id, b_id, x1, y1, x2, y2 in straight:
+        length = math.hypot(x2 - x1, y2 - y1)
+        if length < 1e-6:
+            continue
+        seen = set()
+        steps = int(length // cell) + 1
+        for k in range(steps + 1):
+            px = x1 + (x2 - x1) * k / steps
+            py = y1 + (y2 - y1) * k / steps
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    for other in grid.get((int(px // cell) + dx, int(py // cell) + dy), ()):
+                        if other in seen or other in (a_id, b_id) or key in owners.get(other, ()):
+                            continue
+                        seen.add(other)
+                        o = nodes[other]
+                        t = ((o["x"] - x1) * (x2 - x1) + (o["y"] - y1) * (y2 - y1)) / (length * length)
+                        if not 0.0 < t < 1.0:
+                            continue
+                        d = abs((x2 - x1) * (y1 - o["y"]) - (x1 - o["x"]) * (y2 - y1)) / length
+                        if d < _node_radius(o):
+                            edge_on_node += 1
+                            edge_on_node_unrelated += unrelated((key,), owners.get(other, ()))
+
+    edge_on_edge = edge_on_edge_unrelated = 0
+    lines = {}
+    for key, _, _, x1, y1, x2, y2 in straight:
+        if abs(y1 - y2) < 1.0:
+            lines.setdefault(("h", round(y1 / collinear_tolerance)), []).append(
+                (key, min(x1, x2), max(x1, x2)))
+        elif abs(x1 - x2) < 1.0:
+            lines.setdefault(("v", round(x1 / collinear_tolerance)), []).append(
+                (key, min(y1, y2), max(y1, y2)))
+    for spans in lines.values():
+        spans.sort(key=lambda s: s[1])
+        for i, (key, lo, hi) in enumerate(spans):
+            for other_key, olo, ohi in spans[i + 1:]:
+                if olo >= hi:
+                    break
+                if other_key != key and min(hi, ohi) - max(lo, olo) > min_shared:
+                    edge_on_edge += 1
+                    edge_on_edge_unrelated += unrelated((key,), (other_key,))
+
+    return {"node_on_node": node_on_node, "edge_on_node": edge_on_node,
+            "edge_on_edge": edge_on_edge,
+            "node_on_node_unrelated": node_on_node_unrelated,
+            "edge_on_node_unrelated": edge_on_node_unrelated,
+            "edge_on_edge_unrelated": edge_on_edge_unrelated}
 
 
 def _bezier_points(p0, b1, b2, p3, steps):

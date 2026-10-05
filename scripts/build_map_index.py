@@ -13,6 +13,11 @@ gets its own `<model>/model_index.json`, fetched when that model is selected.
 
     python scripts/build_map_index.py                       # default paths
     python scripts/build_map_index.py --root escher_maps_BiGG
+    python scripts/build_map_index.py --root escher_maps_BiGG/v2
+
+v1 and v2 live in one repository: v1 at the root, as it always was, and v2
+under `v2/` with an index of its own. Each index covers its own directory
+only, so publishing one never touches the other.
 """
 
 import argparse
@@ -32,6 +37,8 @@ DEFAULT_ROOT = "escher_maps_BiGG"
 DEFAULT_BASE_URL = ""
 INDEX_NAME = "map_index.json"
 MODEL_INDEX_NAME = "model_index.json"
+# Another generation's directory inside this one: not a model.
+VERSION_DIRS = {"v1", "v2", "v3"}
 
 
 def describe(path):
@@ -55,7 +62,7 @@ def build(root, base_url):
     models = []
     for model_id in sorted(os.listdir(root)):
         model_dir = os.path.join(root, model_id)
-        if not os.path.isdir(model_dir) or model_id.startswith("."):
+        if not os.path.isdir(model_dir) or model_id.startswith(".") or model_id in VERSION_DIRS:
             continue
 
         maps = []
@@ -73,13 +80,14 @@ def build(root, base_url):
                 "reactions": reactions,
                 "nodes": nodes,
                 # The whole-model map is what a user most often wants first.
-                "combined": name.endswith("_Combined.json"),
+                "combined": name.endswith(("_Combined.json", "_Canvas.json")),
+                "canvas": name.endswith("_Canvas.json"),
             })
 
         if not maps:
             continue
 
-        maps.sort(key=lambda m: (not m["combined"], -m["reactions"], m["name"]))
+        maps.sort(key=lambda m: (not m["canvas"], not m["combined"], -m["reactions"], m["name"]))
         with open(os.path.join(model_dir, MODEL_INDEX_NAME), "w", encoding="utf-8") as handle:
             json.dump({"schema": 1, "id": model_id, "maps": maps}, handle, indent=1)
 

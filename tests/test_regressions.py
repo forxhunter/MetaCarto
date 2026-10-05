@@ -538,3 +538,284 @@ def test_species_canvas_is_denser_than_tiling_rectangles(core_model, core_cluste
     tiled = compose(tiles, meta, "e_coli_core")
     assert (metrics.blank_space(canvas)["blank_share"]
             < 0.75 * metrics.blank_space(tiled)["blank_share"])
+
+
+# --------------------------------------------------------------------------
+# Reactions drawn on top of each other, and text drawn on top of either.
+# --------------------------------------------------------------------------
+
+def _core_maps(core_model, core_clusters):
+    from src.layout.engine import layout_reactions
+    maps = []
+    for name, reactions in sorted(core_clusters.items()):
+        result = layout_reactions(core_model, reactions, name)
+        if result is not None:
+            maps.append(result.escher_map)
+    return maps
+
+
+def _collinear_pairs(escher_map, min_shared=12.0):
+    """(reaction, reaction) pairs whose straight segments share a stretch of line."""
+    body = escher_map[1]
+    nodes = body["nodes"]
+    lines = {}
+    for key, reaction in body["reactions"].items():
+        for segment in reaction["segments"].values():
+            if segment.get("b1") or segment.get("b2"):
+                continue
+            a, b = nodes[segment["from_node_id"]], nodes[segment["to_node_id"]]
+            if abs(a["y"] - b["y"]) < 1 and abs(a["x"] - b["x"]) >= 1:
+                lines.setdefault(("h", round(a["y"] / 4)), []).append(
+                    (min(a["x"], b["x"]), max(a["x"], b["x"]), key))
+            elif abs(a["x"] - b["x"]) < 1 and abs(a["y"] - b["y"]) >= 1:
+                lines.setdefault(("v", round(a["x"] / 4)), []).append(
+                    (min(a["y"], b["y"]), max(a["y"], b["y"]), key))
+    pairs = set()
+    for spans in lines.values():
+        spans.sort()
+        for i, (lo, hi, key) in enumerate(spans):
+            for lo2, hi2, key2 in spans[i + 1:]:
+                if lo2 >= hi:
+                    break
+                if key != key2 and min(hi, hi2) - max(lo, lo2) > min_shared:
+                    pairs.add(tuple(sorted((key, key2))))
+    return pairs
+
+
+def _metabolites_of(escher_map):
+    body = escher_map[1]
+    out = {}
+    for key, reaction in body["reactions"].items():
+        for segment in reaction["segments"].values():
+            for end in (segment["from_node_id"], segment["to_node_id"]):
+                node = body["nodes"][end]
+                if node["node_type"] == "metabolite":
+                    out.setdefault(key, set()).add(end)
+    return out
+
+
+def test_reactions_joining_one_pair_are_not_drawn_as_one_line(core_model, core_clusters):
+    """NADH16 and CYTBD both reduce ubiquinone. Drawn on one shared axis they
+    read Q8 -> NADH16 -> CYTBD -> Q8H2, a two-step chain through an
+    intermediate that does not exist."""
+    for escher_map in _core_maps(core_model, core_clusters):
+        nodes = escher_map[1]["nodes"]
+        primaries = {k: frozenset(m for m in ms if nodes[m].get("node_is_primary", True))
+                     for k, ms in _metabolites_of(escher_map).items()}
+        for a, b in _collinear_pairs(escher_map):
+            assert not (primaries.get(a) and primaries.get(a) == primaries.get(b)), (a, b)
+
+
+def test_unrelated_reactions_are_not_drawn_on_one_line(core_model, core_clusters):
+    for escher_map in _core_maps(core_model, core_clusters):
+        touches = _metabolites_of(escher_map)
+        for a, b in _collinear_pairs(escher_map):
+            assert touches.get(a, set()) & touches.get(b, set()), (
+                f"{a} and {b} share no metabolite but are drawn on one line")
+
+
+def test_no_text_on_a_node_an_edge_or_other_text(core_model, core_clusters):
+    """Label-on-edge used to be measured against straight segments only, so
+    809 labels on iML1515 sitting on ring arcs and cofactor curves were never
+    counted; and labels that could not fit were hidden, which Escher ignores."""
+    from src.layout import metrics
+    for escher_map in _core_maps(core_model, core_clusters):
+        values = metrics.score(escher_map)
+        assert values["label_overlaps"] == 0
+        assert values["label_on_node"] == 0
+        assert values["label_on_edge"] == 0
+        assert not any(n.get("label_hidden") for n in escher_map[1]["nodes"].values())
+
+
+def test_nudging_gives_unrelated_reactions_their_own_track():
+    """Two reactions with no metabolite in common, routed down one channel,
+    must end up on two lines -- and the legs at each end must stay straight."""
+    from src.layout import render
+    builder = render.EscherBuilder()
+    a = builder.add_metabolite("a_c", "a", 0.0, -200.0)
+    b = builder.add_metabolite("b_c", "b", 400.0, 200.0)
+    c = builder.add_metabolite("c_c", "c", 100.0, -300.0)
+    d = builder.add_metabolite("d_c", "d", 500.0, 300.0)
+    m1, m2 = builder.add_marker("multimarker", 0.0, 0.0), builder.add_marker("multimarker", 400.0, 0.0)
+    n1, n2 = builder.add_marker("multimarker", 100.0, 0.0), builder.add_marker("multimarker", 500.0, 0.0)
+
+    def chain(*ids):
+        return {f"s{i}": {"from_node_id": p, "to_node_id": q, "b1": None, "b2": None}
+                for i, (p, q) in enumerate(zip(ids, ids[1:]))}
+
+    builder.reactions["R1"] = {"segments": chain(a, m1, m2, b)}
+    builder.reactions["R2"] = {"segments": chain(c, n1, n2, d)}
+    render._nudge_overlaps(builder)
+    nodes = builder.nodes
+    assert abs(nodes[m1]["y"] - nodes[n1]["y"]) >= render.NUDGE * 0.9
+    assert nodes[m1]["y"] == nodes[m2]["y"] and nodes[n1]["y"] == nodes[n2]["y"]
+    for reaction in builder.reactions.values():
+        for segment in reaction["segments"].values():
+            p, q = nodes[segment["from_node_id"]], nodes[segment["to_node_id"]]
+            if nodes[segment["from_node_id"]]["node_type"] == "metabolite" or \
+               nodes[segment["to_node_id"]]["node_type"] == "metabolite":
+                continue          # the short stub into a fixed metabolite may slant
+            assert abs(p["x"] - q["x"]) < 1e-6 or abs(p["y"] - q["y"]) < 1e-6
+
+
+# --------------------------------------------------------------------------
+# Generality. The pipeline was written against BiGG and read compounds and
+# currency off the id: strip `_c` and look the rest up in a list. Human-GEM
+# spells ATP `MAM01371c` and Yeast-GEM numbers it `s_0434` per compartment,
+# so neither model had a single cofactor recognised -- ATP and NADH competed
+# for the backbone and every Yeast-GEM reaction looked like a transport step.
+# --------------------------------------------------------------------------
+
+_COMPARTMENT_WORDS = {"c": "cytoplasm", "e": "extracellular", "p": "periplasm"}
+
+
+def _respelled(core_model, style):
+    """e_coli_core with every id rewritten the way another model family writes it.
+
+    'human': MAM00001c / MAR00001, annotations kept (Human-GEM).
+    'yeast': s_0001 / r_0001, compartment only in the name, no annotations
+             at all, so currency has to be recognised from names (Yeast-GEM).
+    """
+    model = core_model.copy()
+    back = {}
+    for n, met in enumerate(sorted(model.metabolites, key=lambda m: m.id)):
+        old = met.id
+        if style == "human":
+            met.id = f"MAM{n:05d}{met.compartment}"
+        else:
+            met.id = f"s_{n:04d}"
+            met.annotation = {}
+            met.name = f"{met.name} [{_COMPARTMENT_WORDS.get(met.compartment, met.compartment)}]"
+        back[met.id] = old
+    reactions = {}
+    for n, rxn in enumerate(sorted(model.reactions, key=lambda r: r.id)):
+        old = rxn.id
+        rxn.id = f"MAR{n:05d}" if style == "human" else f"r_{n:04d}"
+        if style == "yeast":
+            rxn.annotation = {}
+        reactions[rxn.id] = old
+    model.repair()
+    return model, back, reactions
+
+
+@pytest.mark.parametrize("style", ["human", "yeast"])
+def test_main_pairs_do_not_depend_on_how_ids_are_spelled(core_model, style):
+    expected = _main_pairs(core_model, list(core_model.reactions))
+    model, back, reactions = _respelled(core_model, style)
+    got = _main_pairs(model, list(model.reactions))
+    translated = {reactions[rid]: (back.get(u, u), back.get(v, v)) for rid, (u, v) in got.items()}
+    differ = sorted(rid for rid in expected if translated.get(rid) != expected[rid])
+    assert not differ, (
+        f"{len(differ)} reactions change their main pair when ids are spelled "
+        f"the {style} way, e.g. {[(r, expected[r], translated.get(r)) for r in differ[:3]]}"
+    )
+
+
+def test_currency_is_recognised_without_bigg_ids(core_model):
+    from src.layout import identity
+    for style in ("human", "yeast"):
+        model, back, _ = _respelled(core_model, style)
+        identity.register(model)
+        for met in model.metabolites:
+            base = back[met.id].rsplit("_", 1)[0]
+            if base in ("atp", "adp", "nad", "nadh", "nadph", "h2o", "h", "co2", "pi", "coa"):
+                assert identity.currency(met) == base, (style, back[met.id], met.name)
+    identity.register(core_model)
+
+
+def test_opaque_ids_are_labelled_by_name(core_model, core_clusters):
+    from src.layout.engine import layout_reactions
+    model, back, reactions = _respelled(core_model, "human")
+    forward = {old: new for new, old in reactions.items()}
+    name = "Citric Acid Cycle" if "Citric Acid Cycle" in core_clusters else next(iter(core_clusters))
+    subset = [model.reactions.get_by_id(forward[r.id]) for r in core_clusters[name]]
+    escher_map = layout_reactions(model, subset, name).escher_map
+    labels = [n["label_text"] for n in escher_map[1]["nodes"].values()
+              if n["node_type"] == "metabolite"]
+    assert labels and not [t for t in labels if re.match(r"MAM\d", t)], labels[:10]
+
+
+# --------------------------------------------------------------------------
+# DIY maps. A reader's own cut of a model is held to the published maps'
+# rules; a two-pathway map once came out half blank because its title, set at
+# full size, was twice as wide as the drawing under it.
+# --------------------------------------------------------------------------
+
+def test_diy_map_meets_the_published_criteria(core_model, tmp_path):
+    import diy_map
+    code = diy_map.main(["--model", "e_coli_core", "--pathway", "Glycolysis",
+                         "--pathway", "Pentose*", "--out", str(tmp_path),
+                         "--strict", "--quiet", "--name", "Glycolysis and PPP"])
+    assert code == 0
+    folder = tmp_path / "e_coli_core"
+    escher_map = json.loads((folder / "Glycolysis_and_PPP.json").read_text(encoding="utf-8"))
+    assert (folder / "Glycolysis_and_PPP.svg").exists()
+    chosen = json.loads((folder / "Glycolysis_and_PPP.selection.json").read_text(encoding="utf-8"))
+    drawn = {r["bigg_id"] for r in escher_map[1]["reactions"].values()}
+    assert set(chosen["reactions"]) == drawn
+    assert {"PGI", "PFK", "G6PDH2r", "TKT1"} <= drawn
+
+    from src.layout import metrics
+    assert metrics.blank_space(escher_map)["blank_share"] < 0.25, "title widened the canvas"
+
+
+def test_connect_joins_two_islands(core_model):
+    import argparse
+    import diy_map
+    catalogue = diy_map.Catalogue(core_model)
+    args = argparse.Namespace(pathway=None, superclass=None, reaction=["PGI,CS"],
+                              from_file=None, metabolite=None, radius=1, search=None,
+                              exclude=None, no_boundary=False, connect=4)
+    chosen, _ = diy_map.select(catalogue, args)
+    ids = {r.id for r in chosen}
+    graph = diy_map._reaction_graph(catalogue, chosen)
+    import networkx as nx
+    assert {"PGI", "CS"} <= ids and nx.is_connected(graph), sorted(ids)
+
+
+def test_canvas_records_which_pathway_each_reaction_belongs_to(core_model, core_clusters):
+    """The viewer selects a whole pathway or region from the map header.
+
+    Without it, the only record of membership was the node-id prefix, which
+    says nothing about reactions and nothing about regions.
+    """
+    _, canvas = _core_canvas(core_model, core_clusters)
+    header, body = canvas
+    listed = [key for entry in header["pathways"] for key in entry["reactions"]]
+    assert sorted(listed) == sorted(body["reactions"]), "every reaction in exactly one pathway"
+    for entry in header["pathways"]:
+        assert entry["caption"] in body["text_labels"]
+        assert entry["region"]
+    for label_id in header["regions"].values():
+        assert label_id in body["text_labels"]
+
+
+def test_publishing_v2_leaves_v1_in_place(tmp_path):
+    """v1 stays published at the root while v2 is published under v2/."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("prepare_repo", os.path.join("scripts", "prepare_repo.py"))
+    prepare_repo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(prepare_repo)
+    spec = importlib.util.spec_from_file_location("build_map_index", os.path.join("scripts", "build_map_index.py"))
+    build_map_index = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build_map_index)
+
+    repo = tmp_path / "repo"
+    (repo / "e_coli_core").mkdir(parents=True)
+    v1_map = repo / "e_coli_core" / "Old_page.json"
+    v1_map.write_text(json.dumps([{"map_name": "Old page"}, {"reactions": {"A": {}}, "nodes": {}}]))
+    source = tmp_path / "v2_maps" / "e_coli_core"
+    source.mkdir(parents=True)
+    (source / "New_page.json").write_text(json.dumps([{"map_name": "New page"}, {"reactions": {"B": {}}, "nodes": {}}]))
+    (source / "e_coli_core_Canvas.json").write_text(json.dumps([{"map_name": "Canvas"}, {"reactions": {"B": {}, "C": {}}, "nodes": {}}]))
+
+    prepare_repo.main(["--source", str(tmp_path / "v2_maps"), "--repo", str(repo / "v2")])
+    build_map_index.main(["--root", str(repo)])
+    build_map_index.main(["--root", str(repo / "v2")])
+
+    assert v1_map.exists(), "a v2 sync removed a v1 map"
+    v1_index = json.loads((repo / "map_index.json").read_text())
+    assert [m["id"] for m in v1_index["models"]] == ["e_coli_core"], "v2/ listed as a model"
+    v2_maps = json.loads((repo / "v2" / "e_coli_core" / "model_index.json").read_text())["maps"]
+    assert v2_maps[0]["canvas"] and v2_maps[0]["file"] == "e_coli_core_Canvas.json"
+    assert json.loads((repo / "e_coli_core" / "model_index.json").read_text())["maps"][0]["file"] == "Old_page.json"
