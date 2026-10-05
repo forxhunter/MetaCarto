@@ -17,6 +17,7 @@ import math
 import re
 from collections import Counter
 
+from . import identity
 from .taxonomy import is_structural
 
 # Words that describe enzymology or chemistry in general rather than this
@@ -199,14 +200,14 @@ def transported_species(reactions, limit=2):
     for reaction in reactions:
         by_base = {}
         for metabolite, coefficient in reaction.metabolites.items():
-            base = metabolite.id.rsplit("_", 1)[0]
+            base = identity.species(metabolite)
             by_base.setdefault(base, []).append(coefficient)
         for base, coefficients in by_base.items():
             # Moved, not consumed: present as both substrate and product.
             if not (any(c < 0 for c in coefficients) and any(c > 0 for c in coefficients)):
                 continue
             for metabolite in reaction.metabolites:
-                if metabolite.id.rsplit("_", 1)[0] != base:
+                if identity.species(metabolite) != base:
                     continue
                 name = (getattr(metabolite, "name", "") or "").strip()
                 if not name:
@@ -372,7 +373,7 @@ def _compound_qualifier(piece, family, degree, avoid=()):
     for reactions, counts in ((piece, in_piece), (family, in_family)):
         for reaction in reactions:
             for metabolite in reaction.metabolites:
-                base = metabolite.id.rsplit("_", 1)[0]
+                base = identity.species(metabolite)
                 counts[base] = counts.get(base, 0) + 1
                 short = _short_compound(getattr(metabolite, "name", ""))
                 if short:
@@ -404,7 +405,7 @@ def _landmark(piece, dominant, classes, degree, kegg_mapping):
             continue
         carried = cargo(reaction, classes, degree)
         for metabolite in reaction.metabolites:
-            base = metabolite.id.rsplit("_", 1)[0]
+            base = identity.species(metabolite)
             short = _short_compound(getattr(metabolite, "name", ""))
             if short:
                 names.setdefault(base, short)

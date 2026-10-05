@@ -216,6 +216,8 @@ def is_biological(name):
 
 
 BOUNDARY_PREFIXES = ("EX_", "DM_", "SK_", "BIOMASS", "ATPM")
+# exchange, demand, biomass, ATP maintenance, sink
+BOUNDARY_SBO = {"SBO:0000627", "SBO:0000628", "SBO:0000629", "SBO:0000630", "SBO:0000632"}
 
 
 def is_boundary_reaction(reaction, cofactor_score, cutoff=0.5):
@@ -229,6 +231,13 @@ def is_boundary_reaction(reaction, cofactor_score, cutoff=0.5):
     """
     identifier = reaction.id.upper()
     if identifier.startswith(BOUNDARY_PREFIXES):
+        return True
+    # The id prefixes are BiGG's convention. Any model says the same thing in
+    # its SBO term or its objective, whatever it calls the reaction.
+    sbo = str((getattr(reaction, "annotation", None) or {}).get("sbo", ""))
+    if sbo in BOUNDARY_SBO:
+        return True
+    if getattr(reaction, "objective_coefficient", 0):
         return True
 
     substrates = [m for m, c in reaction.metabolites.items() if c < 0]

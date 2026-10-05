@@ -22,6 +22,8 @@ for a transport or boundary step -- its shape.
 
 import re
 
+from . import identity
+
 # Ordered: this is also the order regions are laid out in, and it follows how
 # metabolism is normally taught and drawn -- central carbon first, then what
 # feeds off it, with degradation and transport at the edges. Order also breaks
@@ -227,7 +229,7 @@ def _is_transport(reaction):
     """Moves a compound between compartments: same base id on both sides."""
     sides = {}
     for metabolite, coefficient in reaction.metabolites.items():
-        base = metabolite.id.rsplit("_", 1)[0]
+        base = identity.species(metabolite)
         sides.setdefault(base, set()).add(coefficient > 0)
     return any(len(s) == 2 for s in sides.values())
 
@@ -325,7 +327,7 @@ COMPOUND_MAJORITY = 0.5
 
 
 def _base(metabolite_id):
-    return metabolite_id.rsplit("_", 1)[0]
+    return identity.species(metabolite_id)
 
 
 def compound_classes(reactions, kegg_mapping=None):

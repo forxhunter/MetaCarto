@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 
 import networkx as nx
 
+from . import identity
 from .formula import parse_formula, moiety_score
 
 # Prior, not the rule. Metabolites outside this list are still detected as
@@ -75,11 +76,13 @@ class CompoundGraph:
 
 
 def strip_compartment(met_id):
-    """'atp_c' -> 'atp'. BiGG compartment suffixes are 1-2 characters."""
-    for n in (2, 3):
-        if len(met_id) > n and met_id[-n] == "_":
-            return met_id[:-n]
-    return met_id
+    """The compound behind a metabolite id, in the vocabulary of the lists above.
+
+    'atp_c' -> 'atp'. For a model that does not spell ids the BiGG way,
+    currency is recognised from its annotation, formula or name instead, so
+    Human-GEM's `MAM01371c` is 'atp' here too; see `identity`.
+    """
+    return identity.canonical(met_id)
 
 
 def compute_cofactor_scores(model):
@@ -89,6 +92,7 @@ def compute_cofactor_scores(model):
     drawn -- a metabolite in 200 reactions is currency wherever it appears,
     even if the current subsystem happens to use it twice.
     """
+    identity.register(model)
     degrees = {m.id: len(m.reactions) for m in model.metabolites}
     if not degrees:
         return {}
@@ -182,6 +186,13 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
             tier = never
 
             value = moiety_score(formulas.get(s, {}), formulas.get(p, {}))
+            if not value and not (formulas.get(s) and formulas.get(p)):
+                # No formula to compare. Plenty of draft reconstructions leave
+                # formulas blank, and a zero here used to drop the reaction
+                # from the map without a word. The same compound on both sides
+                # is a transport step; otherwise every pair gets the same
+                # small score, and the tier, damping and topology below choose.
+                value = 1.0 if identity.species(s) == identity.species(p) else 0.05
             # Soft damping still orders candidates *within* a tier.
             value *= (1.0 - _COFACTOR_DAMPING * cof_s) * (1.0 - _COFACTOR_DAMPING * cof_p)
             # Tie-breakers: prefer the less connected pair, and a pair that
@@ -194,7 +205,7 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
             # the reaction silently vanishes from the map.
             connectivity = min(degrees.get(s, 0) + degrees.get(p, 0), 2000)
             value *= (1.0 - 0.1 * connectivity / 2000.0)
-            if s[-2:] == p[-2:]:
+            if identity.compartment(s) == identity.compartment(p):
                 value *= 1.02
             if value > 0.0:
                 candidates.append((tier, -value, s, p))
