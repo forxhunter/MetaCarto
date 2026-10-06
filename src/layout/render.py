@@ -1148,6 +1148,7 @@ _SECONDARY_CLEARANCE = 20.0
 _MARKER_CLEARANCE = 13.0
 _SEGMENT_CLEARANCE = 13.0
 _STUB_CLEARANCE = 7.0
+BOUNDARY_MARGIN = 0.5          # see _Obstacles.hits
 # Labels may sit closer to each other than to the drawing: two adjacent labels
 # read fine with a hairline between them, and the alternative is pushing one of
 # them away from the thing it names. Text does not fill its own box -- ascender
@@ -1240,11 +1241,18 @@ class _Obstacles:
                     checked.add(id(item))
                     if item[0] == "point":
                         _, x, y, clearance = item
+                        # A hair of margin: a label placed exactly on the
+                        # clearance boundary passes or fails on float rounding,
+                        # and `metrics` recomputes the box from the stored
+                        # left edge and width, so it came out the other way --
+                        # one Yeast-GEM label read as sitting on a node.
+                        clearance += BOUNDARY_MARGIN
                         if (left - clearance < x < right + clearance
                                 and top - clearance < y < bottom + clearance):
                             return True
                     elif item[0] == "segment":
                         _, (x1, y1, x2, y2), clearance = item
+                        clearance += BOUNDARY_MARGIN
                         if _segment_hits_box(x1, y1, x2, y2,
                                              left - clearance, top - clearance,
                                              right + clearance, bottom + clearance):

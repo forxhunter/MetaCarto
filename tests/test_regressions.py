@@ -836,9 +836,39 @@ def test_a_small_model_canvas_is_not_mostly_white(core_model, core_clusters):
     from src.layout.compound import compute_cofactor_scores
     tiles, canvas = _core_canvas(core_model, core_clusters)
     blank = metrics.blank_space(canvas)
-    assert blank["blank_share"] < 0.25, blank
-    assert blank["largest_blank_rect_share"] < 0.07, blank
+    assert blank["blank_share"] < 0.22, blank
+    assert blank["largest_blank_rect_share"] < 0.06, blank
     labels = {n: taxonomy.classify(n, core_clusters[n]) for n, _ in tiles}
     meta = build_meta_graph(core_clusters, compute_cofactor_scores(core_model))
     order = organisation(canvas, labels, meta, [n for n, _ in tiles])
-    assert order["region_cohesion"] > 0.8, order
+    # Three regions -- carbohydrate, energy, transport -- and the energy
+    # region is one six-reaction pathway, whose every neighbour is another
+    # region's: cohesion cannot approach 1 here however well it is drawn.
+    assert order["region_cohesion"] > 0.65, order
+
+
+def test_energy_metabolism_is_not_filed_as_an_exchange():
+    """NADH dehydrogenase, cytochrome oxidase and ATP synthase are pure
+    currency on both sides, and the boundary test -- no primary compound on
+    *either* side -- filed all of oxidative phosphorylation under "Biomass and
+    exchange". A boundary step has currency on exactly one side."""
+    import cobra
+    from src.layout.decompose import is_boundary_reaction
+    model = cobra.io.load_json_model(os.path.join("data", "bigg", "models", "e_coli_core.json"))
+    for rid in ("NADH16", "CYTBD", "ATPS4r", "THD2", "PDH", "O2t"):
+        assert not is_boundary_reaction(model.reactions.get_by_id(rid), {}), rid
+    for rid in ("BIOMASS_Ecoli_core_w_GAM", "ATPM", "EX_glc__D_e"):
+        assert is_boundary_reaction(model.reactions.get_by_id(rid), {}), rid
+
+
+def test_a_small_pathway_merges_into_metabolism_not_transport(core_model):
+    """e_coli_core's glutamate metabolism shares glutamate with its
+    transporters more than with anything else, merged into them, and was
+    drawn and captioned as "Transport, Extracellular"."""
+    from src.layout.compound import compute_cofactor_scores
+    from src.layout.decompose import clusters
+    groups = clusters(core_model, compute_cofactor_scores(core_model))
+    home = {r.id: name for name, rs in groups.items() for r in rs}
+    for rid in ("GLUDy", "GLNS", "ME1", "PPC"):
+        assert "Transport" not in home[rid] and "exchange" not in home[rid], (rid, home[rid])
+    assert "Oxidative Phosphorylation" in groups

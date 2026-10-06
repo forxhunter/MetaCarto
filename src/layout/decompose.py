@@ -26,6 +26,7 @@ import re
 
 import networkx as nx
 
+from . import identity
 from .taxonomy import is_structural
 
 MAX_CLUSTER = 60
@@ -245,10 +246,21 @@ def is_boundary_reaction(reaction, cofactor_score, cutoff=0.5):
     if not substrates or not products:
         return True
 
-    def has_primary(metabolites):
-        return any(cofactor_score.get(m.id, 0.0) < cutoff for m in metabolites)
+    # Currency by the curated list, not the connectivity score: on a genome-
+    # scale model the score saturates for pyruvate and acetyl-CoA, and PDH
+    # looked like a reaction with nothing but currency on either side.
+    from .compound import NEVER_PRIMARY, SUPPRESSED
+    currency = NEVER_PRIMARY | SUPPRESSED
 
-    return not has_primary(substrates) or not has_primary(products)
+    def has_primary(metabolites):
+        return any(identity.canonical(m) not in currency for m in metabolites)
+
+    # Exactly one side without a primary compound. Biomass turns amino acids
+    # into nothing but ADP, Pi and NADH. A reaction with currency on *both*
+    # sides is not a boundary step at all, it is energy metabolism: testing
+    # either side alone filed NADH dehydrogenase, cytochrome oxidase and ATP
+    # synthase under "Biomass and exchange".
+    return has_primary(substrates) != has_primary(products)
 
 
 def is_boundary_cluster(reactions, cofactor_score):
@@ -309,7 +321,23 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
     # Boundary and pathway clusters merge within their own kind but never
     # across: keeping biomass out of glycolysis is the point, but a lone
     # exchange reaction still has no business being its own map.
+    #
+    # Transport is a kind of its own as well, though a softer one. A
+    # four-reaction glutamate pathway shares glutamate with the glutamate
+    # transporters more than with anything else, and merged there it was
+    # drawn and captioned as "Transport, Extracellular". It goes to the
+    # metabolism it belongs with whenever any shares its chemistry; only
+    # failing that may metabolism and transport mix.
+    from .taxonomy import classify
+    TRANSPORT = "Transport and exchange"
     boundary = set(boundary)
+
+    def kind(name):
+        if name in boundary:
+            return "boundary"
+        return "transport" if classify(name, groups[name]) == TRANSPORT else "metabolism"
+
+    kinds = {name: kind(name) for name in groups}
     orphaned = set()
     while True:
         undersized = [n for n, r in groups.items()
@@ -327,7 +355,7 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
             if len(groups[other]) + len(groups[name]) > max_size:
                 continue
             shared = len(mets[name] & mets[other])
-            score = (shared, -len(groups[other]))
+            score = (kinds[other] == kinds[name], shared, -len(groups[other]))
             if shared > 0 and (best_score is None or score > best_score):
                 best, best_score = other, score
 
@@ -351,10 +379,15 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
         # larger partner always win would throw that away.
         if is_biological(name) != is_biological(best):
             keep, drop = (name, best) if is_biological(name) else (best, name)
+        elif kinds[name] != kinds[best] and "metabolism" in (kinds[name], kinds[best]):
+            # Metabolism merged with transport is still that metabolism.
+            keep, drop = (name, best) if kinds[name] == "metabolism" else (best, name)
         else:
             keep, drop = ((best, name) if len(groups[best]) >= len(groups[name])
                           else (name, best))
         absorb(keep, drop)
+        kinds[keep] = kinds[keep] if kinds[keep] == kinds[drop] else "metabolism"
+        kinds.pop(drop, None)
         # A merged cluster is a new cluster; if it is still undersized it gets
         # its own chance to find a partner.
         orphaned.discard(keep)
