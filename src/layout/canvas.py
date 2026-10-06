@@ -498,12 +498,13 @@ WIDE_PATHWAY_ASPECTS = (0.4, 0.7, 1.0, 1.4, 2.5)
 # Packing variants by model size, as (largest reaction count, variants). The
 # variant that wins must keep region cohesion within COHESION_SLACK and the
 # distance between linked pathways within LINK_SLACK of the default packing.
-VARIANT_BUDGET = ((400, 16), (1500, 10), (3000, 4))
+VARIANT_BUDGET = ((400, 48), (1500, 16), (3000, 8), (6000, 3), (10 ** 9, 2))
 FRAME_FILLS = (0.55, 0.45)  # ink share of the page a framed variant aims for
 FRAME_OUTSIDE = 0.25        # cost per cell a shape reaches past the frame
-ORDER_JITTER = 0.3
+ORDER_JITTER = 0.7
 RECT_WEIGHT = 1.0          # one empty rectangle reads as worse than scattered air
 COHESION_SLACK = 0.05
+COHESION_FLOOR = 0.65
 LINK_SLACK = 0.10
 
 # How strongly a pathway is drawn towards the rest of its region, against the
@@ -1046,8 +1047,14 @@ def compose_canvas(tiles, labels, meta_graph, map_name, author="AutoLayout",
     # The default arrangement sets the bar for the biology: a variant may not
     # keep regions less together, or linked pathways further apart, to save
     # space. Among those that hold it, the least white space wins.
+    #
+    # Or clears an absolute floor: on a small model a region of one pathway
+    # has every neighbour in another region, so cohesion swings with the
+    # default packing's luck. e_coli_core's best packing -- energy in a
+    # column of its own, carbohydrate across the top, transport in one band
+    # below -- scores 0.66 against a 0.74 default that is half white.
     _, cohesion0, link0, _, _ = scored[0]
-    fair = [v for v in scored if v[1] >= cohesion0 - COHESION_SLACK
+    fair = [v for v in scored if v[1] >= min(cohesion0 - COHESION_SLACK, COHESION_FLOOR)
             and v[2] <= max(link0, 1.0) + LINK_SLACK]
     return min(fair, key=lambda v: (v[0], v[3]))[4]
 
