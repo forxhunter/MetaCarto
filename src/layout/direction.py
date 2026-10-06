@@ -59,6 +59,13 @@ def orient_compound_graph(cgraph, model=None, use_fba=True, verbose=False):
     D = cgraph.D
     directions = flux_directions(model, verbose=verbose) if (use_fba and model is not None) else {}
 
+    # Canonical cycles are found, and their arcs claimed, on the graph as
+    # stored: claiming can change a reaction's main pair (citrate synthase
+    # becomes oxaloacetate -> citrate), and every flip below is relative to it.
+    from .motifs import canonical_cycles, orient_cycle
+
+    cycles = canonical_cycles(cgraph)
+
     # --- pass 1: flux sign ---
     flipped_reactions = set()
     decided = set()
@@ -108,7 +115,19 @@ def orient_compound_graph(cgraph, model=None, use_fba=True, verbose=False):
             else:
                 D.add_edge(v, u, **data)
 
-    flipped_reactions |= _collapse_antiparallel(D, directions)
+    # --- canonical cycles ---
+    # The TCA and urea cycles are drawn round, whatever the flux. Recon3D's
+    # pFBA runs aconitase and isocitrate dehydrogenase backwards, which broke
+    # the directed cycle and drew the TCA cycle as a column. Reversible steps
+    # on such a cycle are turned to run around it; flux is still what the data
+    # overlay shows, and a reversible reaction is drawn with a head at each end.
+    pinned = set()
+    for _, cycle in cycles:
+        orient_cycle(cgraph, cycle, flipped_reactions)
+        pinned.update(zip(cycle, cycle[1:] + cycle[:1]))
+    cgraph.canonical_rings = [cycle for _, cycle in cycles]
+
+    flipped_reactions |= _collapse_antiparallel(D, directions, pinned)
 
     for rid in flipped_reactions:
         rec = cgraph.reactions.get(rid)
@@ -120,7 +139,7 @@ def orient_compound_graph(cgraph, model=None, use_fba=True, verbose=False):
     return flipped_reactions
 
 
-def _collapse_antiparallel(D, directions):
+def _collapse_antiparallel(D, directions, pinned=frozenset()):
     """Merge futile-cycle pairs (PFK/FBP, PYK/PPS) onto a single axis.
 
     A kinase and its phosphatase are stored as two opposed edges between the
@@ -141,7 +160,9 @@ def _collapse_antiparallel(D, directions):
         def rank(rxns):
             return (sum(1 for r in rxns if r in directions), len(rxns))
 
-        if rank(backward) > rank(forward):
+        # A canonical cycle's arc keeps its direction; the step written
+        # against the cycle is the one laid alongside.
+        if (v, u) in pinned or ((u, v) not in pinned and rank(backward) > rank(forward)):
             keep, drop, keep_key, drop_key = backward, forward, (v, u), (u, v)
         else:
             keep, drop, keep_key, drop_key = forward, backward, (u, v), (v, u)

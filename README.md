@@ -18,8 +18,8 @@ intervention. The same model always produces the same map.
 
 ## The generated collection
 
-All 108 models in the [BiGG database](http://bigg.ucsd.edu/), drawn as **2,764 pathway maps and
-one whole-model canvas per model** — 251,140 of BiGG's 251,424 reactions — are published under
+All 108 models in the [BiGG database](http://bigg.ucsd.edu/), drawn as **2,763 pathway maps and
+one whole-model canvas per model** — 251,405 of BiGG's 251,424 reactions — are published under
 CC BY 4.0, as Escher JSON and as SVG, at
 [forxhunter/Awesome_visualization_Metabolic_Network](https://github.com/forxhunter/Awesome_visualization_Metabolic_Network).
 No map has text on a node, an edge or other text.
@@ -41,7 +41,7 @@ metabolism), oxidative phosphorylation as energy metabolism, and transport and e
 
 [<img src="docs/figures/v2_e_coli_core_Canvas.svg" alt="e_coli_core on one canvas" width="100%">](docs/figures/v2_e_coli_core_Canvas.svg)
 
-**Recon3D** — 10,592 of the human reconstruction's 10,600 reactions on one page
+**Recon3D** — 10,598 of the human reconstruction's 10,600 reactions on one page
 (19 MB; it takes a few seconds to appear).
 
 [<img src="docs/figures/v2_Recon3D_Canvas.svg" alt="Recon3D on one canvas" width="100%">](docs/figures/v2_Recon3D_Canvas.svg)
@@ -66,7 +66,12 @@ Six ideas carry most of the quality. `layout_algorithm.md` is the design documen
 
 3. **Cycles drawn as cycles** (`src/layout/motifs.py`). Rings are detected on the whole-model
    graph, contracted for layering, then expanded onto a circle rotated so the entry arc faces
-   the pathway feeding it.
+   the pathway feeding it. The cycles every curated map draws round -- the TCA, urea and
+   methionine cycles -- are recognised by their compounds (BiGG id, KEGG id or name) and
+   drawn round whatever the flux does: Recon3D's pFBA runs aconitase backwards, which used to
+   open its TCA cycle into a column. Their reversible steps are turned to run around the ring,
+   citrate synthase is drawn oxaloacetate → citrate, and a shortcut such as the glyoxylate
+   shunt crosses the middle as a chord.
 
 4. **Layered placement** (`src/layout/sugiyama.py`). Greedy feedback-arc-set, layer assignment,
    cluster-constrained crossing reduction, then **Brandes–Köpf** coordinate assignment. The
@@ -235,18 +240,19 @@ The v2 collection, all 108 models:
 
 | | v2, all 108 models |
 |---|---|
-| reactions drawn | 251,140 of 251,424 (99.9%), none twice |
-| pathway maps / whole-model canvases | 2,764 / 108 |
+| reactions drawn | 251,405 of 251,424 (99.99%), none twice |
+| pathway maps / whole-model canvases | 2,763 / 108 |
 | text on a node, an edge or other text | 0, in every map and canvas |
 | pathways overlapping on a canvas (`cross_overlaps`) | 0 |
-| segments axis-aligned, median map | 0.985; 2,745 of 2,764 maps at 0.90 or above |
-| crossings per edge, median map | 0.070 (90th percentile 0.40) |
-| `hairball_index`, median map | 2.99 (target 3.0) |
-| canvas blank share, median (worst) | 0.228 (0.377) |
-| largest empty rectangle, median (worst) canvas | 2.1% (4.9%) of the canvas |
-| region cohesion on a canvas, median (worst) | 0.68 (0.51) |
+| segments axis-aligned, median map | 0.985; 2,742 of 2,763 maps at 0.90 or above |
+| crossings per edge, median map | 0.068 (90th percentile 0.41) |
+| `hairball_index`, median map | 2.98 (target 3.0) |
+| canvas blank share, median (worst) | 0.228 (0.307) |
+| largest empty rectangle, median (worst) canvas | 2.1% (5.0%) of the canvas |
+| region cohesion on a canvas, median (worst) | 0.67 (0.51) |
 | edges through an unrelated metabolite | 37 per 1,000 reactions |
-| nodes of unrelated reactions overlapping | 19 per 1,000 reactions |
+| nodes of unrelated reactions overlapping | 17 per 1,000 reactions |
+| TCA cycle drawn as a complete ring | 98 of 108 models |
 
 The last two are what is left to do: reactions that share nothing should never touch, and
 nearly four reactions in a hundred still run through a metabolite they have nothing to do with,
@@ -254,9 +260,9 @@ mostly a long route passing a stub on the way. Text overlaps are zero by constru
 
 ## Known limitations
 
-- 284 of 251,424 BiGG reactions have no drawable primary pair and are omitted.
+- 19 of 251,424 BiGG reactions have no drawable primary pair and are omitted.
 - Large merged pages (around 120 reactions, several compartments) still cross themselves:
-  the median page has 0.07 crossings per edge, the median page of 100 or more
+  the median page has 0.068 crossings per edge, the median page of 100 or more
   reactions 0.10, and one page in ten more than 0.4.
 - Whole-model maps (`--combined`, `--canvas`) are not print figures. Putting 10,600 reactions
   on one page leaves each so little area that labels land well under a point, however densely
@@ -288,11 +294,12 @@ orientation, rings, layered drawing with Brandes–Köpf — and drew the 2,621 
 published at the top level of the collection, where every existing link to them keeps working;
 the viewer's library reaches them through its v1 switch.
 
-What MetaCarto 2 adds: one canvas per model; 99.9% of reactions drawn rather than 95.6% (MetaCarto
+What MetaCarto 2 adds: one canvas per model; 99.99% of reactions drawn rather than 95.6% (MetaCarto
 1 dropped reactions whose compounds have no formula, most of a few models); no text on a node, an
 edge or other text in any map; oxidative phosphorylation and small pathways filed where they
 belong; any model rather than BiGG's alone; DIY maps; and pathway membership recorded in every
-map for the viewer's editing tools.
+map for the viewer's editing tools; and the TCA, urea and methionine cycles drawn as rings whatever
+the flux does.
 
 ## Licence and citation
 
@@ -302,8 +309,24 @@ collection. You may use, modify and redistribute this for any purpose including 
 courtesy.
 
 If you use MetaCarto, or maps it generated, in a paper, figure, talk, poster, database or
-derived software, please cite this repository. `CITATION.cff` carries the machine-readable
-form and GitHub renders it as *Cite this repository*.
+derived software, please cite the preprint, and this repository for MetaCarto 2 specifically.
+`CITATION.cff` carries the machine-readable form and GitHub renders it as *Cite this
+repository*.
+
+> Wu, T. (2026). MetaCarto: biologically faithful automatic layout for genome-scale metabolic
+> maps. *bioRxiv*. https://doi.org/10.64898/2026.09.19.752882
+
+```bibtex
+@article{wu_metacarto_2026,
+  author  = {Wu, Tianyu},
+  title   = {{MetaCarto}: biologically faithful automatic layout for genome-scale metabolic maps},
+  journal = {bioRxiv},
+  year    = {2026},
+  doi     = {10.64898/2026.09.19.752882}
+}
+```
+
+and, for MetaCarto 2 specifically, the software:
 
 ```bibtex
 @software{Wu_MetaCarto_constructive_layout,
@@ -325,3 +348,8 @@ the citation requirement identical across the software and the maps.
 
 **Created by Tianyu Wu (GitHub: [forxhunter](https://github.com/forxhunter))**, University of
 Illinois Urbana-Champaign.
+
+### Acknowledgements
+
+Thanks to **Prof. Stephen Chapman** for testing MetaCarto on MitoMammal and identifying the
+reversible-reaction rendering problem and missing reactions.

@@ -277,7 +277,7 @@ def is_boundary_cluster(reactions, cofactor_score):
 
 
 def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUSTER,
-                boundary=()):
+                boundary=(), hubs=frozenset()):
     """Fold undersized clusters into the neighbour they share the most with.
 
     Merging into a shared "Uncategorized" bucket, as the previous version did,
@@ -285,6 +285,14 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
     transport step and calls the result a pathway. Merging into the most
     chemically connected neighbour instead keeps the fragment with the pathway
     it came from, and the name follows the larger partner.
+
+    `hubs` are the members of the model's canonical cycles. They do not count
+    as shared chemistry, only as a tie-break: nearly every pathway meets the
+    TCA cycle at oxaloacetate, malate or 2-oxoglutarate, so touching a ring at
+    its own members says little about where a fragment belongs, and merged
+    into the ring's cluster it is drawn across the ring. e_coli_core's
+    anaplerotic reactions (PPC, PPCK, ME1, ME2) went into the TCA panel that
+    way, crossing the cycle's interior, once the whole cycle was drawn.
 
     Metabolite sets are cached and an inverted index limits each search to the
     clusters that actually share a metabolite. Recomputing both sides for every
@@ -354,8 +362,10 @@ def merge_small(groups, cofactor_score, min_size=MIN_CLUSTER, max_size=MAX_CLUST
                 continue
             if len(groups[other]) + len(groups[name]) > max_size:
                 continue
-            shared = len(mets[name] & mets[other])
-            score = (kinds[other] == kinds[name], shared, -len(groups[other]))
+            common = mets[name] & mets[other]
+            shared = len(common)
+            score = (kinds[other] == kinds[name], len(common - hubs), shared,
+                     -len(groups[other]))
             if shared > 0 and (best_score is None or score > best_score):
                 best, best_score = other, score
 
@@ -492,6 +502,28 @@ def _unique(groups, base):
 # cycle integrity
 # --------------------------------------------------------------------------
 
+_whole_cache = {}
+
+
+def _whole_graph(model):
+    """The whole model's oriented compound graph, built once per model."""
+    key = (id(model), len(model.reactions))
+    if key not in _whole_cache:
+        from .compound import build_compound_graph
+        from .direction import orient_compound_graph
+
+        whole = build_compound_graph(model, list(model.reactions))
+        orient_compound_graph(whole, model=model)
+        _whole_cache.clear()
+        _whole_cache[key] = whole
+    return _whole_cache[key]
+
+
+def ring_hubs(model):
+    """Metabolites on the model's canonical cycles (TCA, urea, methionine)."""
+    return frozenset(n for ring in _whole_graph(model).canonical_rings for n in ring)
+
+
 def close_cycles(groups, model, cofactor_score, max_size=MAX_CLUSTER, verbose=False):
     """Pull a split cycle back into one cluster.
 
@@ -507,13 +539,10 @@ def close_cycles(groups, model, cofactor_score, max_size=MAX_CLUSTER, verbose=Fa
     whose reactions are spread across clusters is consolidated into the cluster
     already holding most of it.
     """
-    from .compound import build_compound_graph
-    from .direction import orient_compound_graph
     from .motifs import find_rings
 
-    whole = build_compound_graph(model, list(model.reactions))
-    orient_compound_graph(whole, model=model)
-    rings = find_rings(whole.D)
+    whole = _whole_graph(model)
+    rings = find_rings(whole.D, preferred=getattr(whole, "canonical_rings", ()))
     if not rings:
         return groups
 
@@ -631,8 +660,9 @@ def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
 
     boundary = {name for name, reactions in sized.items()
                 if is_boundary_cluster(reactions, cofactor_score)}
+    hubs = ring_hubs(model) if close_rings else frozenset()
     merged = merge_small(sized, cofactor_score, min_size=min_size,
-                         max_size=max_size, boundary=boundary)
+                         max_size=max_size, boundary=boundary, hubs=hubs)
 
     # Name whatever structure produced before anything else looks at the names.
     # A caption reading "Cluster_8" tells a reader nothing, and the reactions in
@@ -651,7 +681,7 @@ def clusters(model, cofactor_score, max_size=MAX_CLUSTER, min_size=MIN_CLUSTER,
         boundary = {name for name, reactions in merged.items()
                     if is_boundary_cluster(reactions, cofactor_score)}
         merged = merge_small(merged, cofactor_score, min_size=min_size,
-                             max_size=max_size, boundary=boundary)
+                             max_size=max_size, boundary=boundary, hubs=hubs)
 
     if not name_structural:
         return merged

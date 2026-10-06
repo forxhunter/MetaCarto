@@ -260,14 +260,16 @@ def test_tca_cycle_is_drawn_as_a_circle(core_model, core_clusters):
     import math
     import statistics
     from src.layout.engine import layout_reactions
-    from src.layout.motifs import find_rings
 
     for name in sorted(core_clusters):
         result = layout_reactions(core_model, core_clusters[name], name,
                                   use_fba=True, render=False)
         if result is None:
             continue
-        for ring in find_rings(result.cgraph.D):
+        # The rings the layout drew. Re-detecting here without the canonical
+        # preference measured the glyoxylate-shunt cycle, a chord of the drawn
+        # TCA ring, rather than the ring itself.
+        for ring in result.rings:
             points = [result.pos[m] for m in ring if m in result.pos]
             if len(points) < 3:
                 continue
@@ -280,6 +282,60 @@ def test_tca_cycle_is_drawn_as_a_circle(core_model, core_clusters):
                 (name, cv))
             return
     pytest.skip("no cycle detected in e_coli_core; nothing to assert")
+
+
+@pytest.mark.parametrize("use_fba", [True, False])
+def test_tca_ring_is_the_whole_cycle_whatever_the_flux(core_model, use_fba):
+    """The drawn ring is the textbook TCA cycle, not the glyoxylate shunt.
+
+    Ring detection used to take directed cycles of the flux-oriented graph.
+    Recon3D's pFBA runs aconitase backwards, which broke the cycle and drew
+    the TCA cycle as a column; without FBA no ring was drawn at all; and in
+    e_coli_core the shorter shunt ring won, leaving 2-oxoglutarate and
+    succinyl-CoA on a long detour.
+    """
+    from src.layout.engine import layout_reactions
+
+    result = layout_reactions(core_model, list(core_model.reactions), "core",
+                              use_fba=use_fba, render=False)
+    tca = {"oaa_c", "cit_c", "icit_c", "akg_c", "succoa_c", "succ_c", "fum_c", "mal__L_c"}
+    assert any(tca <= set(ring) for ring in result.rings), result.rings
+    cs = result.cgraph.reactions["CS"]
+    assert (cs.main_sub, cs.main_prod) == ("oaa_c", "cit_c"), (
+        "citrate synthase is drawn on the ring, with acetyl-CoA joining it")
+
+
+def test_tca_ring_survives_reductive_flux(core_model):
+    """A reversible step running against the cycle does not open the ring."""
+    from src.layout import direction
+    from src.layout.engine import layout_reactions
+
+    fluxes = dict(direction.flux_directions(core_model))
+    fluxes["ACONTa"] = fluxes["ACONTb"] = fluxes["ICDHyr"] = -1
+    direction._flux_cache[id(core_model)] = fluxes
+    try:
+        result = layout_reactions(core_model, list(core_model.reactions), "core",
+                                  render=False)
+    finally:
+        direction._flux_cache.pop(id(core_model), None)
+    assert any({"cit_c", "icit_c", "akg_c"} <= set(ring) for ring in result.rings)
+
+
+def test_proton_transport_is_drawn():
+    """H+ -> H+ shares no skeleton, which used to drop the reaction entirely."""
+    cobra = pytest.importorskip("cobra")
+    from src.layout.engine import layout_reactions
+
+    model = cobra.Model("protons")
+    h = {c: cobra.Metabolite("h_" + c, formula="H", charge=1, compartment=c)
+         for c in "ecm"}
+    for rid, a, b in (("Hct", "e", "c"), ("Hmt", "e", "m")):
+        r = cobra.Reaction(rid, lower_bound=-1000, upper_bound=1000)
+        r.add_metabolites({h[a]: -1, h[b]: 1})
+        model.add_reactions([r])
+    result = layout_reactions(model, list(model.reactions), "protons", use_fba=False)
+    drawn = {r["bigg_id"] for r in result.escher_map[1]["reactions"].values()}
+    assert drawn == {"Hct", "Hmt"}
 
 
 # --------------------------------------------------------------------------
@@ -872,3 +928,23 @@ def test_a_small_pathway_merges_into_metabolism_not_transport(core_model):
     for rid in ("GLUDy", "GLNS", "ME1", "PPC"):
         assert "Transport" not in home[rid] and "exchange" not in home[rid], (rid, home[rid])
     assert "Oxidative Phosphorylation" in groups
+
+
+def test_a_ring_middle_is_not_counted_as_blank():
+    """The inside of a drawn ring is the ring, not a hole in the page."""
+    import math
+    from src.layout import metrics
+
+    def ring_map(tagged):
+        nodes = {}
+        for i in range(12):
+            a = 2 * math.pi * i / 12
+            x, y = 2000 * math.cos(a), 2000 * math.sin(a)
+            nodes[str(i)] = {"node_type": "metabolite", "x": x, "y": y,
+                             "label_x": x + 40, "label_y": y, "bigg_id": f"m{i}",
+                             "name": f"m{i}", **({"ring": "ring0"} if tagged else {})}
+        return [{}, {"nodes": nodes, "reactions": {}, "text_labels": {}}]
+
+    plain = metrics.blank_space(ring_map(False))["blank_share"]
+    ring = metrics.blank_space(ring_map(True))["blank_share"]
+    assert plain > 0.3 and ring < plain / 2, (plain, ring)

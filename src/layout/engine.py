@@ -46,7 +46,7 @@ def layout_reactions(model, reactions, map_name, author="AutoLayout",
 
     orient_compound_graph(cgraph, model=model, use_fba=use_fba, verbose=verbose)
 
-    rings = find_rings(cgraph.D)
+    rings = find_rings(cgraph.D, preferred=getattr(cgraph, "canonical_rings", ()))
     contracted, ring_records, ring_of = contract_rings(cgraph.D, rings, RING_PITCH)
     if verbose and rings:
         print(f"    rings: {[len(r) for r in rings]}")
@@ -113,7 +113,7 @@ def layout_reactions(model, reactions, map_name, author="AutoLayout",
         escher_map = build_escher_map(
             cgraph, {n: p for n, p in pos.items()
                      if not str(n).startswith("__dummy__")},
-            map_name, author=author, routes=routes,
+            map_name, author=author, routes=routes, rings=rings,
         )
     return LayoutResult(escher_map, cgraph, pos, rings, layering)
 
@@ -491,8 +491,10 @@ def _fill_gaps(fragments, cores, offsets, members, pos, width, height,
 def _build_routes(cgraph, layering, pos, ring_of, ring_members=None):
     """Polyline per reaction, following the layered pass's dummy chain."""
     ring_members = ring_members or {}
-    centres = {}
+    centres, adjacent = {}, set()
     for super_id, members in ring_members.items():
+        n = len(members)
+        adjacent.update(frozenset((members[i], members[(i + 1) % n])) for i in range(n))
         placed = [pos[m] for m in members if m in pos]
         if placed:
             centres[super_id] = (sum(p[0] for p in placed) / len(placed),
@@ -525,7 +527,12 @@ def _build_routes(cgraph, layering, pos, ring_of, ring_members=None):
                 "points": points if forward else points[::-1],
                 "orthogonal": orthogonal,
             }
-            if a == b and a in centres:
+            # Only consecutive members are joined by an arc. A chord -- the
+            # glyoxylate shunt from isocitrate to succinate across the TCA
+            # cycle -- drawn as an arc about the centre ran along the circle
+            # over 2-oxoglutarate dehydrogenase, markers on markers. It crosses
+            # the middle instead, as KEGG draws it.
+            if a == b and a in centres and frozenset((u, v)) in adjacent:
                 route["arc_centre"] = centres[a]
             routes[rid] = route
     return routes

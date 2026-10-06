@@ -619,6 +619,26 @@ def blank_space(escher_map, cell=120.0, reach=240.0):
         ink[int((top - y0) // cell):int((bottom - y0) // cell) + 1,
             int((left - x0) // cell):int((right - x0) // cell) + 1] = True
 
+    # A ring's middle is part of the drawing, not a hole: the TCA cycle is
+    # drawn as a circle with nothing inside, as every curated map draws it.
+    # Only the disc inside the ring is excused; space around it still counts.
+    rings = {}
+    for node in nodes.values():
+        if node.get("ring"):
+            rings.setdefault(node["ring"], []).append((node["x"], node["y"]))
+    for members in rings.values():
+        if len(members) < 3:
+            continue
+        cx = sum(x for x, _ in members) / len(members)
+        cy = sum(y for _, y in members) / len(members)
+        radius = max(math.hypot(x - cx, y - cy) for x, y in members)
+        r0, r1 = int((cy - radius - y0) // cell), int((cy + radius - y0) // cell)
+        c0, c1 = int((cx - radius - x0) // cell), int((cx + radius - x0) // cell)
+        for r in range(max(r0, 0), min(r1, rows - 1) + 1):
+            for c in range(max(c0, 0), min(c1, cols - 1) + 1):
+                if math.hypot(x0 + (c + 0.5) * cell - cx, y0 + (r + 0.5) * cell - cy) <= radius:
+                    ink[r, c] = True
+
     # Near ink: any ink within `reach`, by a box filter over prefix sums.
     k = max(0, int(round(reach / cell)))
     padded = np.pad(ink.astype(np.int32), k)

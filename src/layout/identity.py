@@ -123,6 +123,7 @@ for _key, (_kegg, _seed, _names) in _CURRENCY.items():
         _BY_NAME[_n] = _key
 
 _species, _currency, _compartment = {}, {}, {}
+_kegg, _name = {}, {}
 _registered = [None]
 
 
@@ -231,6 +232,8 @@ def register(model):
     _species.clear()
     _currency.clear()
     _compartment.clear()
+    _kegg.clear()
+    _name.clear()
     for met in model.metabolites:
         compartment = getattr(met, "compartment", "") or ""
         base = _strip(met.id, compartment)
@@ -244,6 +247,8 @@ def register(model):
         _species[met.id] = key
         _currency[met.id] = _currency_of(met, base, name)
         _compartment[met.id] = compartment
+        _kegg[met.id] = frozenset(_annotation(met, "kegg.compound"))
+        _name[met.id] = name
 
 
 def species(met):
@@ -269,6 +274,16 @@ def canonical(met):
     The vocabulary the pipeline's curated lists are written in: BiGG base ids.
     """
     return currency(met) or species(met)
+
+
+def kegg(met):
+    """The metabolite's KEGG compound ids, from its annotation; empty if none."""
+    return _kegg.get(getattr(met, "id", met), frozenset())
+
+
+def name(met):
+    """Lower-case name with compartment tags and appended formulas removed."""
+    return _name.get(getattr(met, "id", met), "")
 
 
 def compartment(met):

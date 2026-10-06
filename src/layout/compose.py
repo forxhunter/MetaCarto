@@ -118,6 +118,8 @@ def _offset_tile(escher_map, dx, dy, prefix, out_nodes, out_reactions):
         moved = dict(node)
         moved["x"] += dx
         moved["y"] += dy
+        if "ring" in moved:                 # ring ids are per tile
+            moved["ring"] = f"{prefix}_{moved['ring']}"
         if "label_x" in moved:
             moved["label_x"] += dx
             moved["label_y"] += dy

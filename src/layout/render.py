@@ -338,7 +338,7 @@ def _bezier_to_stub(anchor, stub, direction, forward):
 
 
 def build_escher_map(cgraph, pos, map_name, author="AutoLayout", description="",
-                     routes=None):
+                     routes=None, rings=()):
     """Turn primary-metabolite coordinates into a complete Escher map.
 
     `routes` maps a reaction id to {"points": [...], "orthogonal": bool}: the
@@ -367,6 +367,15 @@ def build_escher_map(cgraph, pos, map_name, author="AutoLayout", description="",
         # Placed by the layered pass, which already guaranteed its separation.
         builder.nodes[node_id]["_anchored"] = True
         metabolite_nodes[met_id] = node_id
+
+    # Ring members say which ring they are on. A ring's middle is empty by
+    # design -- a curated TCA cycle is a circle with nothing inside -- and
+    # `metrics.blank_space` reads this to count that middle as drawing rather
+    # than as a hole in the page. Outside the Escher schema, like label_text.
+    for index, ring in enumerate(rings):
+        for met_id in ring:
+            if met_id in metabolite_nodes:
+                builder.nodes[metabolite_nodes[met_id]]["ring"] = f"ring{index}"
 
     for rid, rec in cgraph.reactions.items():
         sub, prod = rec.main_sub, rec.main_prod
@@ -1039,6 +1048,13 @@ def _separate_nodes(builder, passes=14):
     nodes = [n for n in builder.nodes.values() if n["node_type"] == "metabolite"]
     if len(nodes) < 2:
         return 0
+    by_id = [(node_id, n) for node_id, n in builder.nodes.items()
+             if n["node_type"] == "metabolite"]
+    joined = set()
+    for reaction in builder.reactions.values():
+        for segment in reaction["segments"].values():
+            a, b = segment["from_node_id"], segment["to_node_id"]
+            joined.update(((a, b), (b, a)))
 
     cell = 2.2 * PRIMARY_RADIUS
     moved = 0
@@ -1080,9 +1096,52 @@ def _separate_nodes(builder, passes=14):
                         other["x"] -= ux * push
                         other["y"] -= uy * push
                         moved += 1
+        collisions += _clear_markers(builder, by_id, joined, cell)
         if not collisions:
             break
     return moved
+
+
+MARKER_RADIUS = {"multimarker": 6.0, "midmarker": 11.0}
+
+
+def _clear_markers(builder, metabolites, joined, cell):
+    """Push movable stubs off the markers of reactions they are not joined to.
+
+    Separation used to compare metabolites only with metabolites, so a
+    cofactor stub could sit on another reaction's arrow: in e_coli_core the
+    CO2 of PEP carboxylase landed on aconitase's midmarker once the
+    anaplerotic reactions were drawn beside the TCA ring. Markers belong to
+    the layout and stay put; the stub moves.
+    """
+    grid = {}
+    for node_id, node in builder.nodes.items():
+        if node["node_type"] in MARKER_RADIUS:
+            grid.setdefault((int(node["x"] // cell), int(node["y"] // cell)), []).append(node_id)
+    hits = 0
+    for node_id, node in metabolites:
+        if node.get("_anchored"):
+            continue
+        r = PRIMARY_RADIUS if node.get("node_is_primary", True) else SECONDARY_RADIUS
+        cx, cy = int(node["x"] // cell), int(node["y"] // cell)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for marker_id in grid.get((cx + dx, cy + dy), ()):
+                    if (node_id, marker_id) in joined:
+                        continue
+                    marker = builder.nodes[marker_id]
+                    needed = r + MARKER_RADIUS[marker["node_type"]] + 6.0
+                    ux, uy = node["x"] - marker["x"], node["y"] - marker["y"]
+                    distance = math.hypot(ux, uy)
+                    if distance >= needed:
+                        continue
+                    hits += 1
+                    if distance < 1e-6:
+                        angle = (hash(node["bigg_id"]) % 360) * math.pi / 180.0
+                        ux, uy, distance = math.cos(angle), math.sin(angle), 1.0
+                    node["x"] += ux / distance * (needed - distance)
+                    node["y"] += uy / distance * (needed - distance)
+    return hits
 
 
 def _unify_primary(builder):
