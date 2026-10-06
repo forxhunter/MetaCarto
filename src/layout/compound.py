@@ -144,6 +144,7 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
     prods = [m.id for m, c in rxn.metabolites.items() if c > 0]
     if not subs or not prods:
         return []
+    names = {m.id: (m.name or m.id) for m in rxn.metabolites}
 
     candidates = []
     for s in subs:
@@ -187,12 +188,19 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
 
             value = moiety_score(formulas.get(s, {}), formulas.get(p, {}))
             if not value and not (formulas.get(s) and formulas.get(p)):
-                # No formula to compare. Plenty of draft reconstructions leave
-                # formulas blank, and a zero here used to drop the reaction
-                # from the map without a word. The same compound on both sides
-                # is a transport step; otherwise every pair gets the same
-                # small score, and the tier, damping and topology below choose.
-                value = 1.0 if identity.species(s) == identity.species(p) else 0.05
+                # No formula to compare. Plenty of reconstructions leave them
+                # blank -- iMM1415, iYL1228 and iSynCJ816 have none at all --
+                # and a zero here dropped the reaction from the map without a
+                # word: 88% of iMM1415 went undrawn. The same compound on both
+                # sides is a transport step. Otherwise the names stand in for
+                # the skeleton: "D-glucose" and "D-glucose 6-phosphate" share
+                # most of theirs, UDP-glucose and glycogen little. A flat score
+                # here instead picked pairs alphabetically and tangled every
+                # such map. Both stay below any formula-backed score.
+                if identity.species(s) == identity.species(p):
+                    value = 1.0
+                else:
+                    value = 0.05 + 0.9 * _name_similarity(names.get(s, s), names.get(p, p))
             # Soft damping still orders candidates *within* a tier.
             value *= (1.0 - _COFACTOR_DAMPING * cof_s) * (1.0 - _COFACTOR_DAMPING * cof_p)
             # Tie-breakers: prefer the less connected pair, and a pair that
@@ -216,6 +224,24 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
     candidates.sort()
     best_tier = candidates[0][0]
     return [(s, p, -neg) for tier, neg, s, p in candidates if tier == best_tier]
+
+
+def _trigrams(text):
+    text = " " + text + " "
+    return {text[i:i + 3] for i in range(len(text) - 2)}
+
+
+def _name_similarity(a, b):
+    """Character-trigram overlap of two metabolite names, in [0, 1].
+
+    Names are compared without compartment tags or appended formulas, so
+    `ATP [cytoplasm]` and `ATP C10H12N5O13P3` are the same name.
+    """
+    a, b = identity._clean_name(a), identity._clean_name(b)
+    if not a or not b:
+        return 0.0
+    ta, tb = _trigrams(a), _trigrams(b)
+    return len(ta & tb) / float(len(ta | tb))
 
 
 _ALTERNATE_TOLERANCE = 0.70

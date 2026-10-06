@@ -653,7 +653,32 @@ def blank_space(escher_map, cell=120.0, reach=240.0):
         "blank_share": share,
         "largest_blank_share": (low * low) / total,
         "largest_blank": low * cell,
+        # A square undercounts a long empty band -- the gap between a title
+        # and a region that starts low, a strip beside a tall column -- which
+        # is exactly what reads as white space at fit-to-screen. The largest
+        # empty rectangle sees it.
+        "largest_blank_rect_share": _largest_rectangle(blank) / total,
     }
+
+
+def _largest_rectangle(grid):
+    """Cells in the largest all-True axis-aligned rectangle of a boolean grid."""
+    rows, cols = grid.shape
+    heights = [0] * cols
+    best = 0
+    for r in range(rows):
+        row = grid[r]
+        for c in range(cols):
+            heights[c] = heights[c] + 1 if row[c] else 0
+        stack = []
+        for c in range(cols + 1):
+            h = heights[c] if c < cols else 0
+            start = c
+            while stack and stack[-1][1] >= h:
+                start, top = stack.pop()
+                best = max(best, top * (c - start))
+            stack.append((start, h))
+    return best
 
 
 def format_report(values):

@@ -53,7 +53,7 @@ import math
 import numpy as np
 
 from .compose import _offset_tile
-from .metrics import _bezier_points, _label_boxes
+from .metrics import _bezier_points, _label_boxes, blank_space
 from .render import CHAR_WIDTH_RATIO, LINE_HEIGHT_RATIO
 from . import taxonomy
 
@@ -493,6 +493,18 @@ def _pack(shapes, gap, aspect, order):
 # outline before anyone knew where it was going; three let the canvas take the
 # tall one beside a column and the wide one under a row.
 PATHWAY_ASPECTS = (0.6, 1.0, 1.7)
+WIDE_PATHWAY_ASPECTS = (0.4, 0.7, 1.0, 1.4, 2.5)
+
+# Packing variants by model size, as (largest reaction count, variants). The
+# variant that wins must keep region cohesion within COHESION_SLACK and the
+# distance between linked pathways within LINK_SLACK of the default packing.
+VARIANT_BUDGET = ((400, 16), (1500, 10), (3000, 4))
+FRAME_FILLS = (0.55, 0.45)  # ink share of the page a framed variant aims for
+FRAME_OUTSIDE = 0.25        # cost per cell a shape reaches past the frame
+ORDER_JITTER = 0.3
+RECT_WEIGHT = 1.0          # one empty rectangle reads as worse than scattered air
+COHESION_SLACK = 0.05
+LINK_SLACK = 0.10
 
 # How strongly a pathway is drawn towards the rest of its region, against the
 # pull of the pathways it exchanges metabolites with: a region has to read as
@@ -500,8 +512,9 @@ PATHWAY_ASPECTS = (0.6, 1.0, 1.7)
 REGION_PULL = 2.0
 
 
-def _arrangements(name, tile):
+def _arrangements(name, tile, aspects=None):
     """A pathway's pieces, their shapes, and its distinct candidate arrangements."""
+    aspects = PATHWAY_ASPECTS if aspects is None else aspects
     pieces = split_pieces(tile)
     shapes, origin = {}, {}
     for p, piece in enumerate(pieces):
@@ -509,7 +522,7 @@ def _arrangements(name, tile):
         origin[p] = (ox, oy)
     order = sorted(shapes, key=lambda p: (-int(shapes[p].sum()), p))
     options = []
-    for aspect in PATHWAY_ASPECTS:
+    for aspect in aspects:
         inner, offsets = _pack(shapes, PIECE_GAP, aspect, order)
         if any(np.array_equal(inner, o["inner"]) for o in options):
             continue
@@ -574,20 +587,58 @@ class _Placement:
         return ch
 
 
-def _place_rigid(state, regions):
+def _place_rigid(state, regions, jitter=None, fill=None):
     """Grow regions outward from the first, each pathway as one drawn shape.
 
     Every placement takes the least canvas at the target aspect, sitting snug
     and pulled towards the rest of its region and the pathways it exchanges
     metabolites with. Regions come out cohesive and free-form, central carbon
     in the middle; on its own the whole grows as a round blob.
+
+    With `fill`, the page is sized before anything is placed -- every
+    pathway's area over `fill`, at the packer's aspect, centred on the first
+    pathway -- and a position costs for every cell it reaches past that
+    frame instead of for the canvas it adds. A round blob leaves a
+    rectangular page's corners empty however tightly it is packed; a frame
+    has corners, and the last pathways of each region are pulled into them
+    because they are the only free cells left inside it.
     """
     packer = state.packer
+    frame = None
+    if fill:
+        total = sum(int(_dilate(state.drawings[n]["options"][0]["mask"], 1).sum())
+                    for members in regions.values() for n in members)
+        total += sum(int(_dilate(_caption_mask(label.upper(), REGION_FONT), 1).sum())
+                     for label in regions)
+        area = total / fill
+        frame = (max(1, int(round(area / math.sqrt(area * packer.aspect)))),
+                 max(1, int(round(math.sqrt(area * packer.aspect)))))
+
+    def framed(anchor):
+        (t, l), (b, r) = packer.marks["rigid-frame-top-left"], packer.marks["rigid-frame-bottom-right"]
+        width = max(r - l + 1, b - t + 1)
+
+        def terms(pr, pc, box, contact):
+            ir0, ir1, ic0, ic1 = box
+            outside = (np.maximum(0, t - (pr + ir0)) + np.maximum(0, (pr + ir1) - b)
+                       + np.maximum(0, l - (pc + ic0)) + np.maximum(0, (pc + ic1) - r))
+            score = FRAME_OUTSIDE * outside - CONTACT_WEIGHT * contact
+            if anchor is not None:
+                score = score + ANCHOR_WEIGHT * np.hypot(pr + (ir0 + ir1) / 2.0 - anchor[0],
+                                                         pc + (ic0 + ic1) / 2.0 - anchor[1]) / width
+            return score
+        return terms
+
     for label, members in regions.items():
         packer.new_group()
         placed = []
         options_of = {n: state.drawings[n]["options"] for n in members}
         size = {n: int(options_of[n][0]["inner"].sum()) for n in members}
+        if jitter is not None:
+            # A variant: the same largest-first order, sizes perturbed so
+            # pathways of similar size swap turns.
+            size = {n: size[n] * jitter.uniform(1.0 - ORDER_JITTER, 1.0 + ORDER_JITTER)
+                    for n in sorted(size)}
         for name in sorted(members, key=lambda n: (-size[n], n)):
             packer.reserve([o["mask"] for o in options_of[name]])
             points = []
@@ -600,13 +651,32 @@ def _place_rigid(state, regions):
             anchor = _weighted_centre(points) if points else None
             best = None
             for i, option in enumerate(options_of[name]):
-                score, r, c = packer.evaluate(option["mask"], anchor)
+                if frame is not None and packer.box is not None:
+                    score, r, c = packer.evaluate(option["mask"], terms=framed(anchor))
+                else:
+                    score, r, c = packer.evaluate(option["mask"], anchor)
                 if best is None or score < best[0]:
                     best = (score, i, r, c)
             _, i, r, c = best
             packer.commit(name, options_of[name][i]["mask"], r, c)
             state.chosen[name] = i
             placed.append(name)
+            if frame is not None and "rigid-frame-top-left" not in packer.marks:
+                # Centre the frame on the first pathway and make the grid
+                # cover it before anything else is placed.
+                cr, cc = packer.centre_of(name, options_of[name][i]["mask"])
+                top, left = int(round(cr - frame[0] / 2.0)), int(round(cc - frame[1] / 2.0))
+                packer.marks["rigid-frame-top-left"] = (top, left)
+                packer.marks["rigid-frame-bottom-right"] = (top + frame[0] - 1, left + frame[1] - 1)
+                r0, c0, r1, c1 = packer.box
+                packer.box = (min(r0, top), min(c0, left),
+                              max(r1, top + frame[0] - 1), max(c1, left + frame[1] - 1))
+                before = packer.marks["rigid-frame-top-left"]
+                packer.reserve([np.ones((1, 1), dtype=bool)])
+                after = packer.marks["rigid-frame-top-left"]
+                dr, dc = after[0] - before[0], after[1] - before[1]
+                packer.box = (r0 + dr, c0 + dc, r1 + dr, c1 + dc)
+                packer.group_box = packer.box
         state.caption(("region", label), label.upper(), REGION_FONT,
                       lambda: packer.group_box)
 
@@ -721,14 +791,198 @@ def _place_membrane(state, label, members):
         state.caption(("caption", name), name, CAPTION_FONT, lambda: packer.group_box)
 
 
+# --------------------------------------------------------------------------
+# compaction
+# --------------------------------------------------------------------------
+
+COMPACT_ROUNDS = 8
+
+
+def _compact(packer, items, core_region=None, rounds=COMPACT_ROUNDS):
+    """Close up the gaps greedy placement leaves, without mixing regions.
+
+    Placement is greedy: each shape takes the best position for the canvas as
+    it stood at its turn, so room that opens up later is never used, and the
+    finished canvas keeps gaps nobody fills -- e_coli_core's transport region
+    sat a quarter of the page below its title with nothing above it. Two
+    levels of gravity close them:
+
+      pathways  each pathway -- its drawing, or its membrane pieces and
+                caption together -- slides towards the centre of its own
+                region, so a region tightens without changing what is in it;
+      regions   each region, caption included, slides as one rigid body
+                towards the centre of the core region, so regions close up
+                on central carbon and never interleave.
+
+    Moves are one cell at a time, only through empty cells, and every
+    clearance the placement used still holds: PIECE_GAP within a pathway,
+    PATHWAY_GAP within a region, REGION_GAP between regions. Nothing can
+    overlap and nothing passes anything else. Sliding single shapes
+    independently was tried first and is wrong: a pathway slid into the next
+    region's space, and region captions floated off to the top row.
+
+    `items` is {offset key: (mask, pathway or None, region)}; a region's
+    caption is the item whose pathway is None.
+    """
+    keys = [k for k in items if k in packer.offsets]
+    if len(keys) < 2:
+        return
+    index = {k: i + 1 for i, k in enumerate(keys)}
+    pathway = [None] + [items[k][1] for k in keys]
+    region = [None] + [items[k][2] for k in keys]
+    gaps = sorted({PIECE_GAP, PATHWAY_GAP, REGION_GAP}, reverse=True)
+
+    def clearance(a, b):
+        if pathway[a] is not None and pathway[a] == pathway[b]:
+            return PIECE_GAP
+        if region[a] == region[b]:
+            # A region's caption is a heading over its own pathways.
+            return PIECE_GAP if pathway[a] is None or pathway[b] is None else PATHWAY_GAP
+        return REGION_GAP
+
+    rows, cols = packer.done.shape
+    owner = np.zeros((rows, cols), dtype=np.int32)
+    pos, masks, grown, area = {}, {}, {}, {}
+    for k in keys:
+        i = index[k]
+        mask = items[k][0]
+        r, c = packer.offsets[k]
+        pos[i], masks[i] = [r, c], mask
+        grown[i] = {g: _dilate(mask, g) for g in gaps}
+        area[i] = float(mask.sum())
+        owner[r:r + mask.shape[0], c:c + mask.shape[1]][mask] = i
+
+    def fits(i, r, c):
+        mask = masks[i]
+        if r < 0 or c < 0 or r + mask.shape[0] > rows or c + mask.shape[1] > cols:
+            return False
+        for g in gaps:
+            kernel = grown[i][g]
+            r0, c0 = r - g, c - g
+            a0, b0 = max(r0, 0), max(c0, 0)
+            a1, b1 = min(r0 + kernel.shape[0], rows), min(c0 + kernel.shape[1], cols)
+            window = owner[a0:a1, b0:b1][kernel[a0 - r0:a1 - r0, b0 - c0:b1 - c0]]
+            for other in np.unique(window):
+                if other and other != i and clearance(i, other) >= g:
+                    return False
+        return True
+
+    def lift(group):
+        for i in group:
+            r, c = pos[i]
+            view = owner[r:r + masks[i].shape[0], c:c + masks[i].shape[1]]
+            view[masks[i] & (view == i)] = 0
+
+    def drop(group):
+        for i in group:
+            r, c = pos[i]
+            owner[r:r + masks[i].shape[0], c:c + masks[i].shape[1]][masks[i]] = i
+
+    def centre(group):
+        total = sum(area[i] for i in group) or 1.0
+        return (sum((pos[i][0] + masks[i].shape[0] / 2.0) * area[i] for i in group) / total,
+                sum((pos[i][1] + masks[i].shape[1] / 2.0) * area[i] for i in group) / total)
+
+    def slide(group, target):
+        """Step `group` towards `target` while a step fits; True if it moved."""
+        lift(group)
+        moved = False
+        for _ in range(rows + cols):
+            cr, cc = centre(group)
+            dr, dc = target[0] - cr, target[1] - cc
+            if abs(dr) < 1.0 and abs(dc) < 1.0:
+                break
+            sr, sc = int(np.sign(dr)) if abs(dr) >= 1.0 else 0, int(np.sign(dc)) if abs(dc) >= 1.0 else 0
+            steps = [(sr, sc)] if sr and sc else []
+            steps += sorted({(sr, 0), (0, sc)} - {(0, 0)},
+                            key=lambda s: -abs(dr if s[0] else dc))
+            for step in steps:
+                if all(fits(i, pos[i][0] + step[0], pos[i][1] + step[1]) for i in group):
+                    for i in group:
+                        pos[i][0] += step[0]
+                        pos[i][1] += step[1]
+                    moved = True
+                    break
+            else:
+                break
+        drop(group)
+        return moved
+
+    by_pathway, by_region, captions = {}, {}, {}
+    for i in pos:
+        by_region.setdefault(region[i], []).append(i)
+        if pathway[i] is None:
+            captions[region[i]] = i
+        else:
+            by_pathway.setdefault(pathway[i], []).append(i)
+
+    def region_body(label):
+        return [i for i in by_region[label] if pathway[i] is not None]
+
+    def anchor_caption(label):
+        """Put a region's caption back over its region's top-left corner."""
+        i = captions.get(label)
+        body = region_body(label)
+        if i is None or not body:
+            return
+        top = min(pos[j][0] for j in body)
+        left = min(pos[j][1] for j in body)
+        want = (top - masks[i].shape[0] - PIECE_GAP, left)
+        lift([i])
+        best = None
+        for dr in range(-8, 9):
+            for dc in range(-4, 13):
+                r, c = want[0] + dr, want[1] + dc
+                cost = abs(dr) + abs(dc)
+                if (best is None or cost < best[0]) and fits(i, r, c):
+                    best = (cost, r, c)
+        if best is not None:
+            pos[i] = [best[1], best[2]]
+        drop([i])
+
+    core = core_region if core_region in by_region else None
+    for _ in range(rounds):
+        moved = False
+        for label, members in by_region.items():
+            target = centre(region_body(label) or members)
+            names = sorted({pathway[i] for i in members if pathway[i] is not None},
+                           key=lambda n: sum((a - b) ** 2 for a, b in
+                                             zip(centre(by_pathway[n]), target)))
+            for name in names:
+                moved |= slide(by_pathway[name], target)
+            anchor_caption(label)
+        hub = centre(region_body(core) if core else list(pos))
+        for label in sorted(by_region, key=lambda l: sum((a - b) ** 2 for a, b in
+                                                     zip(centre(by_region[l]), hub))):
+            if label != core:
+                moved |= slide(by_region[label], hub)
+        if not moved:
+            break
+
+    for k in keys:
+        packer.offsets[k] = tuple(pos[index[k]])
+    occupied = owner > 0
+    packer.done = occupied
+    packer.group = np.zeros_like(occupied)
+    packer.fixed = np.zeros_like(occupied)
+    r_any = np.flatnonzero(occupied.any(1))
+    c_any = np.flatnonzero(occupied.any(0))
+    packer.box = (int(r_any[0]), int(c_any[0]), int(r_any[-1]), int(c_any[-1]))
+
+
 def compose_canvas(tiles, labels, meta_graph, map_name, author="AutoLayout",
-                   description="", membrane=True):
+                   description="", membrane=True, compact=True, variants=None):
     """Every pathway drawing of one model on a single, densely packed canvas.
 
     `tiles` is [(pathway name, escher map)], `labels` {pathway name: region}
     (from `taxonomy.classify`), `meta_graph` the flow between pathways from
     `compose.build_meta_graph`. With `membrane`, transport and exchange are
-    laid last, piece by piece, around the rest (`_place_membrane`).
+    laid last, piece by piece, around the rest (`_place_membrane`). With
+    `compact`, variants may close up into the space left free (`_compact`).
+    Smaller models are packed several ways (`_variants`) and the one with the
+    least white space that keeps the biology together is kept; `variants`
+    overrides the list, as (page aspect, arrangement set, order seed,
+    compact, frame fill or None) tuples.
     """
     tiles = [(name, m) for name, m in tiles if m and m[1]["nodes"]]
     if not tiles:
@@ -764,10 +1018,84 @@ def compose_canvas(tiles, labels, meta_graph, map_name, author="AutoLayout",
     rigid = {label: members for label, members in regions.items()
              if not (boundary and label == BOUNDARY)}
 
-    packer = Packer(PATHWAY_GAP, CANVAS_ASPECT, outer_gap=REGION_GAP)
+    drawing_sets = {}
+
+    def drawings_for(arrangement):
+        if arrangement not in drawing_sets:
+            aspects = PATHWAY_ASPECTS if arrangement == 0 else WIDE_PATHWAY_ASPECTS
+            drawing_sets[arrangement] = {name: _arrangements(name, tile, aspects)
+                                         for name, tile in tiles}
+        return drawing_sets[arrangement]
+
+    reaction_count = sum(len(m[1]["reactions"]) for _, m in tiles)
+    candidates = variants if variants is not None else _variants(reaction_count, compact)
+    names = [name for name, _ in tiles]
+    scored = []
+    for aspect, arrangement, seed, squeeze, fill in candidates:
+        drawings = drawings_for(arrangement)
+        packer, state = _lay_out(drawings, neighbours, regions, rigid, boundary,
+                                 aspect, seed, squeeze, fill)
+        sheet = _assemble(tiles, drawings, packer, state, regions, labels, index_of,
+                          tile_maps, map_name, author, description)
+        if len(candidates) == 1:
+            return sheet
+        blank = blank_space(sheet)
+        order = organisation(sheet, labels, meta_graph, names)
+        scored.append((blank["blank_share"] + RECT_WEIGHT * blank["largest_blank_rect_share"],
+                       order["region_cohesion"], order["link_ratio"], len(scored), sheet))
+    # The default arrangement sets the bar for the biology: a variant may not
+    # keep regions less together, or linked pathways further apart, to save
+    # space. Among those that hold it, the least white space wins.
+    _, cohesion0, link0, _, _ = scored[0]
+    fair = [v for v in scored if v[1] >= cohesion0 - COHESION_SLACK
+            and v[2] <= max(link0, 1.0) + LINK_SLACK]
+    return min(fair, key=lambda v: (v[0], v[3]))[4]
+
+
+def _variants(reaction_count, compact=True):
+    """Packing variants to try, deterministic, fewer for larger models.
+
+    Greedy packing of a few large, irregular pathways -- a small model --
+    leaves gaps that depend on the order and the page shape far more than on
+    any weight, and no single setting is best for every model: e_coli_core
+    packs tightest on a square page with more arrangements per pathway, iAB_RBC_283
+    on a square page compacted. A large model has hundreds of small shapes,
+    the greedy order matters little, and one packing already costs minutes.
+    """
+    count = 1
+    for limit, n in VARIANT_BUDGET:
+        if reaction_count <= limit:
+            count = n
+            break
+    first = (CANVAS_ASPECT, 0, 0, compact, None)
+    # Framed and free packings alternate, so even a small budget tries both:
+    # a frame uses a page's corners, a free packing on a square page often
+    # fits a few large shapes better.
+    framed = [(aspect, arrangement, 0, compact, fill) for fill in FRAME_FILLS
+              for aspect in (CANVAS_ASPECT, 1.0) for arrangement in (0, 1)]
+    free = [(aspect, arrangement, 0, c, None) for c in ((True, False) if compact else (False,))
+            for aspect in (1.0, CANVAS_ASPECT, 1.8) for arrangement in (0, 1)]
+    free = [v for v in free if v != first]
+    out = [first]
+    for pair in zip(framed, free):
+        out.extend(pair)
+    out.extend(framed[len(free):] + free[len(framed):])
+    seed = 1
+    while len(out) < count:
+        base = out[1 + (seed - 1) % (len(out) - 1)]
+        out.append(base[:2] + (seed,) + base[3:])
+        seed += 1
+    return out[:count]
+
+
+def _lay_out(drawings, neighbours, regions, rigid, boundary, aspect, seed, squeeze, fill=None):
+    """Place every pathway for one variant; returns (packer, state)."""
+    import random
+    jitter = random.Random(seed) if seed else None
+    packer = Packer(PATHWAY_GAP, aspect, outer_gap=REGION_GAP)
     state = _Placement(packer, drawings, neighbours)
     if rigid:
-        _place_rigid(state, rigid)
+        _place_rigid(state, rigid, jitter, fill)
     if boundary:
         if packer.box is None:
             # Nothing rigid to wrap around: lay the membrane as ordinary shapes.
@@ -775,6 +1103,27 @@ def compose_canvas(tiles, labels, meta_graph, map_name, author="AutoLayout",
         else:
             _place_membrane(state, BOUNDARY, boundary)
 
+    if squeeze:
+        region_of = {name: label for label, members in regions.items() for name in members}
+        items = {("region", label): (_caption_mask(label.upper(), REGION_FONT), None, label)
+                 for label in regions}
+        for name in region_of:
+            drawing = drawings[name]
+            if name in state.chosen:
+                items[name] = (drawing["options"][state.chosen[name]]["mask"], name,
+                               region_of[name])
+            else:
+                for p in state.fluid.get(name, ()):
+                    items[(name, p)] = (drawing["shapes"][p], name, region_of[name])
+                items[("caption", name)] = (_caption_mask(name, CAPTION_FONT), name,
+                                            region_of[name])
+        _compact(packer, items, core_region=next(iter(rigid), None))
+    return packer, state
+
+
+def _assemble(tiles, drawings, packer, state, regions, labels, index_of, tile_maps,
+              map_name, author, description):
+    """The Escher map for one placement: every piece moved to where it was put."""
     canvas_mask, offsets = packer.finish()
     canvas_mask, title_cells, (top, left) = _with_caption(canvas_mask, map_name,
                                                           TITLE_FONT, gap=2)

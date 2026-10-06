@@ -819,3 +819,26 @@ def test_publishing_v2_leaves_v1_in_place(tmp_path):
     v2_maps = json.loads((repo / "v2" / "e_coli_core" / "model_index.json").read_text())["maps"]
     assert v2_maps[0]["canvas"] and v2_maps[0]["file"] == "e_coli_core_Canvas.json"
     assert json.loads((repo / "e_coli_core" / "model_index.json").read_text())["maps"][0]["file"] == "Old_page.json"
+
+
+def test_a_small_model_canvas_is_not_mostly_white(core_model, core_clusters):
+    """e_coli_core's canvas once left a quarter of the page empty.
+
+    Greedy growth from central carbon makes a round cluster, and on a
+    rectangular page with a handful of large pathways the corners stay empty
+    -- the transport region sat far below the title with nothing above it.
+    Small models are now packed several ways, including into a frame sized
+    up front, and the tightest packing that keeps the regions together wins.
+    """
+    from src.layout import metrics, taxonomy
+    from src.layout.canvas import organisation
+    from src.layout.compose import build_meta_graph
+    from src.layout.compound import compute_cofactor_scores
+    tiles, canvas = _core_canvas(core_model, core_clusters)
+    blank = metrics.blank_space(canvas)
+    assert blank["blank_share"] < 0.25, blank
+    assert blank["largest_blank_rect_share"] < 0.07, blank
+    labels = {n: taxonomy.classify(n, core_clusters[n]) for n, _ in tiles}
+    meta = build_meta_graph(core_clusters, compute_cofactor_scores(core_model))
+    order = organisation(canvas, labels, meta, [n for n, _ in tiles])
+    assert order["region_cohesion"] > 0.8, order

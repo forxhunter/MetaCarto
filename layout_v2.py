@@ -173,6 +173,10 @@ def species_canvas(model, model_id, targets, tiles):
                             compute_cofactor_scores(model))
     _, species, common = organisms.describe(model_id)
     title = model_id + (f" - {species}" if species else "") + (f" ({common})" if common else "")
+    # The organism table only knows BiGG ids; any other model names itself.
+    own = (getattr(model, "name", "") or "").strip()
+    if not species and own and own != model_id:
+        title = f"{model_id} - {own}"
     return compose_canvas(tiles, labels, meta, title, author=AUTHOR)
 
 
@@ -326,6 +330,7 @@ def main(argv=None):
             continue
 
         page_members = {}
+        pathway_groups = None
         if args.raw_subsystems:
             groups = subsystems_of(model)
         else:
@@ -336,6 +341,7 @@ def main(argv=None):
             if args.min_cluster:
                 size_limits["min_size"] = args.min_cluster
             groups = clusters(model, compute_cofactor_scores(model), **size_limits)
+            pathway_groups = groups if not size_limits else None
             if args.group_function:
                 pathway_count = len(groups)
                 groups = merge_by_function(groups, max_size=args.max_cluster,
@@ -350,7 +356,10 @@ def main(argv=None):
         print(f"  {len(groups)} clusters")
 
         tiles = []
+        page_drawings_needed = not args.canvas_only or args.subsystem
         for name, reactions in sorted(targets.items()):
+            if not page_drawings_needed:
+                break
             try:
                 tile = emit(model, reactions, name, out_dir, args.preview,
                             not args.no_fba, not args.quiet, LAYER_GAP,
@@ -379,9 +388,26 @@ def main(argv=None):
                 print(f"  combined: FAILED {exc}")
                 traceback.print_exc()
 
-        if (args.canvas or args.canvas_only) and not args.subsystem and tiles:
+        if (args.canvas or args.canvas_only) and not args.subsystem:
             try:
-                sheet = species_canvas(model, model_id, targets, tiles)
+                # The canvas is tiled by pathway, not by page. A merged page is
+                # one superclass already, so tiling by pages leaves the canvas
+                # a handful of large, fixed shapes to fit together; pathways
+                # are smaller and many, which is what lets regions form
+                # free-form and fill the page (`canvas.py`). The default
+                # cluster sizes are the ones the canvas was measured with.
+                if args.raw_subsystems:
+                    canvas_groups, canvas_tiles = targets, tiles
+                else:
+                    canvas_groups = pathway_groups or clusters(model, compute_cofactor_scores(model))
+                    canvas_tiles = []
+                    for name, reactions in sorted(canvas_groups.items()):
+                        tile = emit(model, reactions, name, out_dir, False, not args.no_fba,
+                                    False, LAYER_GAP, write=False)
+                        if tile is not None:
+                            canvas_tiles.append((name, tile))
+                sheet = (species_canvas(model, model_id, canvas_groups, canvas_tiles)
+                         if canvas_tiles else None)
                 if sheet is not None:
                     save_map(sheet, out_dir, f"{model_id}_Canvas",
                              args.preview, LAYER_GAP, not args.quiet)

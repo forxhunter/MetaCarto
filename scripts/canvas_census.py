@@ -6,6 +6,7 @@ rectangle-packed poster (`compose.compose`) -- scored on the same tiles:
 
   blank_share      area with nothing drawn within a node spacing
   largest_blank    the largest empty square, as a share of the drawing
+  largest_blank_rect  the largest empty rectangle: a long empty band
   cross_overlaps   cells where two different pathways' ink meet (must be 0)
   region_cohesion  local share of neighbours in the same superclass
   link_ratio       distance between pathways that exchange metabolites over
@@ -50,6 +51,7 @@ def measure(escher_map, labels, meta, names):
     return {
         "blank_share": blank["blank_share"],
         "largest_blank": blank["largest_blank_share"],
+        "largest_blank_rect": blank["largest_blank_rect_share"],
         "cross_overlaps": canvas.cross_overlaps(escher_map),
         "region_cohesion": organisation["region_cohesion"],
         "link_ratio": organisation["link_ratio"],
