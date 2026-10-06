@@ -2,8 +2,10 @@
 
 **Constructive layout synthesis for genome-scale metabolic networks**
 
-> **This is MetaCarto 2** — branch `v2`, release `v2.0.0`. MetaCarto 1 stays on `main`, and the
-> maps it drew stay published beside the new ones.
+> **MetaCarto 2** (release [`v2.0.0`](https://github.com/forxhunter/MetaCarto/releases/tag/v2.0.0)).
+> MetaCarto 1 is frozen as release
+> [`v1.0.0`](https://github.com/forxhunter/MetaCarto/releases/tag/v1.0.0) — see
+> [MetaCarto 1](#metacarto-1) at the end.
 
 MetaCarto reads a genome-scale metabolic model and draws it the way a curator would — linear
 pathway backbones, cycles as rings, cofactors as side branches — rather than the way a
@@ -16,21 +18,15 @@ intervention. The same model always produces the same map.
 
 ## The generated collection
 
-All 108 models in the [BiGG database](http://bigg.ucsd.edu/) are published under CC BY 4.0 — as
-Escher JSON and as SVG — at
-[forxhunter/Awesome_visualization_Metabolic_Network](https://github.com/forxhunter/Awesome_visualization_Metabolic_Network),
-in two generations side by side:
+All 108 models in the [BiGG database](http://bigg.ucsd.edu/), drawn as **2,764 pathway maps and
+one whole-model canvas per model** — 251,140 of BiGG's 251,424 reactions — are published under
+CC BY 4.0, as Escher JSON and as SVG, at
+[forxhunter/Awesome_visualization_Metabolic_Network](https://github.com/forxhunter/Awesome_visualization_Metabolic_Network).
+No map has text on a node, an edge or other text.
 
-| | v1 (top level) | v2 (`v2/`) |
-|---|---|---|
-| pathway maps | 2,621 | 2,764 |
-| reactions drawn | 240,398 of 251,424 (95.6%) | 251,140 of 251,424 (99.9%) |
-| whole-model canvas | none | one per model |
-| text on a node, an edge or other text | not guaranteed | none in any map |
-
-Browse them in the viewer at **[forxhunter.github.io/escher](https://forxhunter.github.io/escher/)**
-via *Map ▸ Load map from library…*, which reads the collection directly; v2 opens by default and
-a switch at the top of the library goes back to v1.
+Browse them in the viewer at **[forxhunter.github.io/escher](https://forxhunter.github.io/escher/)**:
+it opens on e_coli_core's canvas, and *Map ▸ Load map from library…* reads the whole collection
+directly — nothing to download.
 
 ### A whole model on one canvas
 
@@ -192,9 +188,11 @@ python layout_v2.py --model iML1515 --canvas-only --preview   # the whole model 
 # it: without it the same models give roughly a third as many, larger maps.
 python layout_v2.py --all --group-function --max-cluster 120 --canvas --out data/v2_maps
 
-# Publish beside v1, never over it, and index each generation on its own.
+# Publish into the collection's v2/ (the maps of MetaCarto 1 stay at its top level),
+# and index it -- the collection's default index lists v2.
 python scripts/prepare_repo.py --source data/v2_maps --repo escher_maps_BiGG/v2
 python scripts/build_map_index.py --root escher_maps_BiGG/v2
+python scripts/build_map_index.py --root escher_maps_BiGG/v2     --base-url https://raw.githubusercontent.com/forxhunter/Awesome_visualization_Metabolic_Network/main/v2/     --out escher_maps_BiGG/map_index.json
 ```
 
 Useful flags: `--group-function` merges pathway clusters into functional maps, `--subsystem`
@@ -268,9 +266,10 @@ mostly a long route passing a stub on the way. Text overlaps are zero by constru
 - H⁺ and H₂O are suppressed from every map.
 - Compartments are not drawn as envelopes: the Escher schema has no region primitive.
 
-## Legacy v1 pipeline
+## Legacy simulated-annealing pipeline
 
-`process_subsystems.py` and `src/refinement.py` are the original simulated-annealing pipeline.
+`process_subsystems.py` and `src/refinement.py` are the original simulated-annealing pipeline,
+older than either MetaCarto release.
 They are kept for comparison and are **not** the production path. Their Escher output is
 schema-invalid — `node_type` is set to `"reaction"`, which is not a legal value; every segment
 has null `b1`/`b2` so edges draw as straight diagonals; stoichiometric coefficients are
@@ -279,6 +278,21 @@ and is a demo, not a driver.
 
 `plan.md` describes a GNN + reinforcement-learning architecture that was explored and
 abandoned. None of it is on either production path; see `experiments/README.md`.
+
+## MetaCarto 1
+
+MetaCarto 1 is frozen as release
+[`v1.0.0`](https://github.com/forxhunter/MetaCarto/releases/tag/v1.0.0) (branch `v1`). It
+introduced the layout this release still builds on — primary-compound reduction, pFBA
+orientation, rings, layered drawing with Brandes–Köpf — and drew the 2,621 maps that remain
+published at the top level of the collection, where every existing link to them keeps working;
+the viewer's library reaches them through its v1 switch.
+
+What MetaCarto 2 adds: one canvas per model; 99.9% of reactions drawn rather than 95.6% (MetaCarto
+1 dropped reactions whose compounds have no formula, most of a few models); no text on a node, an
+edge or other text in any map; oxidative phosphorylation and small pathways filed where they
+belong; any model rather than BiGG's alone; DIY maps; and pathway membership recorded in every
+map for the viewer's editing tools.
 
 ## Licence and citation
 
