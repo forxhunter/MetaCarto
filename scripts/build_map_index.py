@@ -17,7 +17,13 @@ gets its own `<model>/model_index.json`, fetched when that model is selected.
 
 v1 and v2 live in one repository: v1 at the root, as it always was, and v2
 under `v2/` with an index of its own. Each index covers its own directory
-only, so publishing one never touches the other.
+only, so publishing one never touches the other. The repository's default
+index -- `map_index.json` at its root, which any client reads unless told
+otherwise -- lists v2, resolving into `v2/` through an absolute `base_url`;
+v1 keeps `map_index_v1.json`:
+
+    python scripts/build_map_index.py --root escher_maps_BiGG/v2         --base-url https://raw.githubusercontent.com/forxhunter/Awesome_visualization_Metabolic_Network/main/v2/         --out escher_maps_BiGG/map_index.json
+    python scripts/build_map_index.py --root escher_maps_BiGG --out escher_maps_BiGG/map_index_v1.json
 """
 
 import argparse
@@ -101,7 +107,9 @@ def build(root, base_url):
             "id": model_id,
             "index": f"{model_id}/{MODEL_INDEX_NAME}",
             "map_count": len(maps),
-            "reactions": sum(m["reactions"] for m in maps),
+            # A whole-model map repeats every pathway map's reactions;
+            # counting both doubled every v2 model.
+            "reactions": sum(m["reactions"] for m in maps if not m["combined"]),
             "organism": organism,
             "species": binomial,
             "common_name": common,
