@@ -58,3 +58,8 @@ templates/
 # "Requirements", which is where the code cites them from.
 CLAUDE.md
 constraints.md
+
+# Correspondence from users (feedback emails), and what is drawn for them.
+# Their models and maps are *.json and already ignored; replies and figures
+# for a user go under data/, which is ignored as a whole.
+suggestions*.md
