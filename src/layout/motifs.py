@@ -167,8 +167,14 @@ def canonical_cycles(cgraph):
             if rec.is_boundary or rec.main_sub is None:
                 continue
             st = rec.stoichiometry
+            # A carrier swapping citrate for isocitrate converts neither.
+            moved = ({identity.species(m) for m, c in st.items() if c < 0}
+                     & {identity.species(m) for m, c in st.items() if c > 0})
             for x in anchored.intersection(st):
                 for y, c in st.items():
+                    if (identity.species(x) != identity.species(y)
+                            and moved & {identity.species(x), identity.species(y)}):
+                        continue
                     if c * st[x] < 0 and y in D and identity.canonical(y) not in currency:
                         link(x, y, rid)
 

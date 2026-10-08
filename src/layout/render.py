@@ -813,7 +813,20 @@ def _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied, route=
         lane = (index - (len(siblings) - 1) / 2.0) * LANE_GAP
         if (sub, prod) != canonical:
             lane = -lane
-    if lane:
+    # A step of a ring keeps the ring's middle empty: the first of its
+    # reactions rides the circle, any others bow further *out*, and every
+    # cofactor faces away from the centre. Lanes centred on the circle, as
+    # between two ordinary metabolites, put one paralog inside the ring with
+    # its cofactors fanned across the middle -- isocitrate dehydrogenase's
+    # NADP, succinyl-CoA synthetase's ATP and ADP, fumarate reductase's
+    # quinones -- in every model with two enzymes for one step.
+    ring_centre = arc_centre if len(path) == 2 else None
+    if lane and ring_centre is not None:
+        chord = _signed_sagitta(path[0], path[1], ring_centre)
+        outward = siblings.index(rec.rid) * LANE_GAP
+        if outward:
+            arc_centre = _bow_centre(path[0], path[1], chord + math.copysign(outward, chord))
+    elif lane:
         if len(path) == 2:
             chord = _signed_sagitta(path[0], path[1], arc_centre) if arc_centre else 0.0
             arc_centre = _bow_centre(path[0], path[1], chord + lane)
@@ -899,7 +912,12 @@ def _draw_reaction(builder, cgraph, rec, pos, metabolite_nodes, occupied, route=
 
     # Cofactor fans, both sides of the axis chosen once per reaction.
     side = _cofactor_side(midpoint, direction, occupied)
-    if lane:
+    if ring_centre is not None:
+        left = (-direction[1], direction[0])
+        away = ((midpoint[0] - ring_centre[0]) * left[0]
+                + (midpoint[1] - ring_centre[1]) * left[1])
+        side = 1 if away > 0 else -1
+    elif lane:
         # Outward from the pair, so one lane's cofactors never cross the other.
         side = 1 if lane > 0 else -1
     metabolite_entries = []

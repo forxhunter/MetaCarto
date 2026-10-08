@@ -10,7 +10,7 @@ import math
 from .compound import build_compound_graph
 from .direction import flux_directions, orient_compound_graph
 from .motifs import contract_rings, expand_rings, find_rings
-from .render import build_escher_map
+from .render import LANE_GAP, build_escher_map
 from .sugiyama import layered_layout
 
 NODE_HEIGHT = 80.0         # drawn height of a metabolite node, with its label
@@ -50,6 +50,21 @@ def layout_reactions(model, reactions, map_name, author="AutoLayout",
     contracted, ring_records, ring_of = contract_rings(cgraph.D, rings, RING_PITCH)
     if verbose and rings:
         print(f"    rings: {[len(r) for r in rings]}")
+
+    # A ring takes up more than its circle. Every step's cofactors fan
+    # outward, and a step with several enzymes adds a lane outside the circle
+    # per extra enzyme (render._draw_reaction), so the layered pass reserves
+    # that margin too. Reserving the circle alone packed neighbours against
+    # the rim, under the fans: iCHOv1's oxalosuccinate branch sat on top of
+    # isocitrate dehydrogenase's NADP.
+    for record in ring_records.values():
+        members = record["members"]
+        steps = zip(members, members[1:] + members[:1])
+        lanes = max(sum(len(cgraph.D.edges[e]["rxns"]) for e in ((x, y), (y, x))
+                        if cgraph.D.has_edge(*e))
+                    for x, y in steps)
+        record["margin"] = RING_FAN + max(lanes - 1, 0) * LANE_GAP
+        record["size"] = 2.0 * (record["radius"] + record["margin"])
 
     width, height = {}, {}
     for node in contracted.nodes:
@@ -102,7 +117,8 @@ def layout_reactions(model, reactions, map_name, author="AutoLayout",
     pos_contracted = _pack_components(contracted, layering, pos_contracted, width, height)
     pos = expand_rings(pos_contracted, ring_records, ring_of, cgraph.D)
     routes = _build_routes(cgraph, layering, pos, ring_of,
-                           {sid: rec["members"] for sid, rec in ring_records.items()})
+                           {sid: rec["members"] for sid, rec in ring_records.items()},
+                           {sid: rec["margin"] for sid, rec in ring_records.items()})
 
     # `render=False` returns the placement without drawing it. The benchmark
     # needs that: it renders separately, under its own conditions, and timing
@@ -228,8 +244,11 @@ def _pack_components(contracted, layering, pos, width, height,
 
     cores.sort(key=lambda b: -b[4])
     order = [b[0] for b in cores]
-    box_width = {b[0]: b[3] + gap for b in cores}
-    box_height = {b[0]: b[4] + gap for b in cores}
+    # _skyline_pack adds the gap itself; adding it here as well spaced the
+    # cores two gutters apart. That went unnoticed while the packed positions
+    # were misread (see below), because the misreading overlapped them anyway.
+    box_width = {b[0]: b[3] for b in cores}
+    box_height = {b[0]: b[4] for b in cores}
     # Packed to the width of the *whole* drawing, fragments included, not to
     # the width the cores alone need. Sizing this to the cores is what broke
     # the first version of the two-tier packer: the core block came out exactly
@@ -239,11 +258,14 @@ def _pack_components(contracted, layering, pos, width, height,
     # aspect ratio 0.86 to 0.20 across the 93 Recon3D function maps.
     placed = _skyline_pack(order, box_width, box_height, gap, row_width)
 
-    origin = {b[0]: (b[1], b[2]) for b in boxes}
+    # _skyline_pack returns each tile's *centre*. Read as its top-left corner,
+    # a small component's corner went on a large one's centre: iRC1080's
+    # flagellar malate dehydrogenase was packed across its TCA cycle.
+    origin = {b[0]: (b[1], b[2], b[3], b[4]) for b in boxes}
     offsets = {}
     for index, (px, py) in placed.items():
-        left, top = origin[index]
-        offsets[index] = (px - left, py - top)
+        left, top, w, h = origin[index]
+        offsets[index] = (px - w / 2.0 - left, py - h / 2.0 - top)
 
     if fragments:
         offsets.update(_fill_gaps(fragments, cores, offsets, members, pos,
@@ -488,10 +510,120 @@ def _fill_gaps(fragments, cores, offsets, members, pos, width, height,
     return out
 
 
-def _build_routes(cgraph, layering, pos, ring_of, ring_members=None):
+# What a ring's own drawing takes outside its circle: the cofactor fans of its
+# steps, which face outward and reach render.STUB_RADIUS, and their labels.
+RING_FAN = 200.0
+
+
+def _crosses_disk(polyline, centre, radius):
+    """True if any leg of `polyline` comes within `radius` of `centre`."""
+    cx, cy = centre
+    for (x0, y0), (x1, y1) in zip(polyline, polyline[1:]):
+        dx, dy = x1 - x0, y1 - y0
+        length = dx * dx + dy * dy
+        t = 0.0 if length == 0 else max(0.0, min(1.0, ((cx - x0) * dx + (cy - y0) * dy) / length))
+        if math.hypot(x0 + t * dx - cx, y0 + t * dy - cy) < radius:
+            return True
+    return False
+
+
+def _around_ring(start, ahead, centre, radius, margin):
+    """Waypoints from ring member `start` out of its ring and round it to the
+    side facing `ahead`, all on a square `margin` outside the circle -- the
+    edge of the box the layered pass reserved for the ring.
+
+    Straight out along the axis nearest the member's own direction from the
+    centre, which never re-enters the circle, then corner to corner the short
+    way round. Each leg is axis-aligned, so the orthogonal router keeps it.
+    """
+    cx, cy = centre
+    h = radius + margin
+
+    def side(p):
+        dx, dy = p[0] - cx, p[1] - cy
+        if abs(dx) >= abs(dy):
+            return "E" if dx > 0 else "W"
+        return "S" if dy > 0 else "N"
+
+    order = ("N", "E", "S", "W")
+    corner = {frozenset("NE"): (cx + h, cy - h), frozenset("ES"): (cx + h, cy + h),
+              frozenset("SW"): (cx - h, cy + h), frozenset("WN"): (cx - h, cy - h)}
+    first, last = side(start), side(ahead)
+    out = [{"E": (cx + h, start[1]), "W": (cx - h, start[1]),
+            "S": (start[0], cy + h), "N": (start[0], cy - h)}[first]]
+    i, j = order.index(first), order.index(last)
+    step = 1 if (j - i) % 4 <= (i - j) % 4 else -1
+    while i != j:
+        k = (i + step) % 4
+        out.append(corner[frozenset(order[i] + order[k])])
+        i = k
+    if last in "EW":
+        out.append((cx + h if last == "E" else cx - h, min(max(ahead[1], cy - h), cy + h)))
+    else:
+        out.append((min(max(ahead[0], cx - h), cx + h), cy + h if last == "S" else cy - h))
+    return out
+
+
+def _keep_out_of_rings(points, start_ring, end_ring):
+    """Re-route a reaction leaving a ring member so it does not cross the ring.
+
+    The layered pass sees a ring as one box and routes from the box, but the
+    reaction is drawn from a member on its rim. When the member faces away
+    from where the reaction goes, the route ran straight through the middle
+    of the ring: PEP carboxykinase across B. subtilis's TCA cycle, a
+    peroxisomal isocitrate carrier across Recon3D's.
+    """
+    from .render import _route_polyline
+
+    for ring, flip in ((start_ring, False), (end_ring, True)):
+        if ring is None or len(points) < 2:
+            continue
+        centre, radius, margin = ring
+        path = points[::-1] if flip else points
+        if _crosses_disk(_route_polyline(path), centre, 0.9 * radius):
+            path = [path[0]] + _around_ring(path[0], path[1], centre, radius, margin) + path[1:]
+        points = path[::-1] if flip else path
+    return points
+
+
+def _avoid_rings(points, rings):
+    """Re-shape any leg of a route whose orthogonal drawing crosses a ring.
+
+    A route need not touch a ring to cross it. The router bends each leg at
+    its midpoint, and a long edge passing beside a ring could put that bend
+    inside it: yeast's cytosolic malate dehydrogenase cut through the
+    mitochondrial TCA cycle on its way down the page. Each crossing leg takes
+    the shortest alternative that clears every ring -- an L bent the other
+    way, or a channel along the edge of the ring's reserved box.
+    """
+    from .render import _orthogonal_path, _path_length
+
+    def clear(path):
+        return not any(_crosses_disk(path, c, 0.9 * r) for c, r, _ in rings)
+
+    out = [points[0]]
+    for p, q in zip(points, points[1:]):
+        if clear(_orthogonal_path(p, q)):
+            out.append(q)
+            continue
+        options = [[p, (p[0], q[1]), q], [p, (q[0], p[1]), q]]
+        for (cx, cy), r, margin in rings:
+            h = r + margin
+            options += [[p, (p[0], cy - h), (q[0], cy - h), q],
+                        [p, (p[0], cy + h), (q[0], cy + h), q],
+                        [p, (cx - h, p[1]), (cx - h, q[1]), q],
+                        [p, (cx + h, p[1]), (cx + h, q[1]), q]]
+        good = [o for o in options if clear(o)]
+        best = min(good, key=_path_length) if good else [p, q]
+        out.extend(best[1:])
+    return out
+
+
+def _build_routes(cgraph, layering, pos, ring_of, ring_members=None, ring_margins=None):
     """Polyline per reaction, following the layered pass's dummy chain."""
     ring_members = ring_members or {}
-    centres, adjacent = {}, set()
+    ring_margins = ring_margins or {}
+    centres, radii, adjacent = {}, {}, set()
     for super_id, members in ring_members.items():
         n = len(members)
         adjacent.update(frozenset((members[i], members[(i + 1) % n])) for i in range(n))
@@ -499,6 +631,9 @@ def _build_routes(cgraph, layering, pos, ring_of, ring_members=None):
         if placed:
             centres[super_id] = (sum(p[0] for p in placed) / len(placed),
                                  sum(p[1] for p in placed) / len(placed))
+            radii[super_id] = sum(math.hypot(p[0] - centres[super_id][0],
+                                             p[1] - centres[super_id][1])
+                                  for p in placed) / len(placed)
 
     routes = {}
     for u, v, data in cgraph.D.edges(data=True):
@@ -517,6 +652,16 @@ def _build_routes(cgraph, layering, pos, ring_of, ring_members=None):
                 chain = chain[::-1] if chain else []
             points = [pos[u]] + [pos[d] for d in chain] + [pos[v]]
             orthogonal = True
+            points = _keep_out_of_rings(
+                points,
+                (centres[a], radii[a], ring_margins.get(a, RING_FAN))
+                if a in centres and a != u else None,
+                (centres[b], radii[b], ring_margins.get(b, RING_FAN))
+                if b in centres and b != v else None)
+            if centres:
+                points = _avoid_rings(points, [(centres[k], radii[k],
+                                                ring_margins.get(k, RING_FAN))
+                                               for k in centres])
 
         for rid in data["rxns"]:
             record = cgraph.reactions.get(rid)

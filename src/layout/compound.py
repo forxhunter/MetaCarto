@@ -148,6 +148,18 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
     if not subs or not prods:
         return []
     names = {m.id: (m.name or m.id) for m in rxn.metabolites}
+    # Compounds the reaction carries across a membrane. An antiporter
+    # (succ_c + mal_m -> succ_m + mal_c) converts nothing, but malate ->
+    # succinate shares the whole C4 skeleton and, on a whole model, closes a
+    # cycle through fumarate -- so it won, MitoMammal's succinate/malate carrier
+    # was drawn as a chord across the TCA cycle, and ring closure pulled it into
+    # the TCA map. Yeast's citrate/isocitrate carrier, the ornithine/citrulline
+    # carrier across the urea cycle and the ADP/ATP translocase were drawn as
+    # conversions the same way. A pair joining a carried compound to a
+    # *different* one goes in a tier of its own; the carried compound paired
+    # with itself is always available instead.
+    moved = ({identity.species(s) for s in subs}
+             & {identity.species(p) for p in prods})
 
     candidates = []
     for s in subs:
@@ -188,6 +200,9 @@ def _candidate_pairs(rxn, formulas, cofactor_score, degrees):
             never = ((strip_compartment(s) in NEVER_PRIMARY)
                      + (strip_compartment(p) in NEVER_PRIMARY))
             tier = never
+            if (identity.species(s) != identity.species(p)
+                    and moved & {identity.species(s), identity.species(p)}):
+                tier += 3
 
             value = moiety_score(formulas.get(s, {}), formulas.get(p, {}))
             if not value and identity.species(s) == identity.species(p):

@@ -948,3 +948,65 @@ def test_a_ring_middle_is_not_counted_as_blank():
     plain = metrics.blank_space(ring_map(False))["blank_share"]
     ring = metrics.blank_space(ring_map(True))["blank_share"]
     assert plain > 0.3 and ring < plain / 2, (plain, ring)
+
+
+# --------------------------------------------------------------------------
+# The TCA cycle, end to end. Shipped wrong three ways: MitoMammal's fumarase
+# and malate dehydrogenase were filed under the malate-aspartate shuttle,
+# because ring closure met the shuttle's ring before the TCA cycle; its
+# succinate/malate carrier was paired malate -> succinate on the whole model,
+# which is a chord of the ring, so ring closure pulled a transporter into the
+# TCA map; and antiporters across the corpus (yeast's citrate/isocitrate
+# carrier, the ornithine/citrulline carrier, the ADP/ATP translocase) were
+# drawn as conversions between the two compounds they swap.
+# --------------------------------------------------------------------------
+
+def test_a_carrier_is_drawn_as_the_compound_it_carries(core_model):
+    """An antiporter converts nothing, however much skeleton the two swapped
+    compounds share and whatever cycle pairing them would close."""
+    import cobra
+    from src.layout import identity
+    from src.layout.compound import build_compound_graph
+
+    model = core_model.copy()
+    carrier = cobra.Reaction("SUCMALt_test", lower_bound=-1000, upper_bound=1000)
+    m = model.metabolites
+    carrier.add_metabolites({m.succ_c: -1, m.mal__L_e: -1, m.succ_e: 1, m.mal__L_c: 1})
+    model.add_reactions([carrier])
+    identity.register(model)
+    rec = build_compound_graph(model, list(model.reactions)).reactions["SUCMALt_test"]
+    assert identity.species(rec.main_sub) == identity.species(rec.main_prod), (
+        rec.main_sub, rec.main_prod)
+
+
+def _tca_report(path, **kwargs):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "check_tca", os.path.join("scripts", "check_tca.py"))
+    check_tca = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(check_tca)
+    report = check_tca.check_model(path, **kwargs)
+    failures = [f"{name}: {detail}" for name, ok, detail in report.rows if ok is False]
+    checked = {name for name, ok, _ in report.rows if ok is not None}
+    return failures, checked
+
+
+def test_tca_cycle_is_drawn_whole_and_correct(core_model):
+    """Ring in textbook order, one node per member, round, every step on its
+    own arc, no false chord, one cluster, clean text: scripts/check_tca.py."""
+    failures, checked = _tca_report(os.path.join("data", "bigg", "models", "e_coli_core.json"))
+    assert {"cluster", "ring", "closed", "round", "arcs", "chords", "middle", "clean"} <= checked
+    assert not failures, failures
+
+
+MITOMAMMAL = os.path.join("data", "other_models", "MitoMammal.json")
+
+
+@pytest.mark.skipif(not os.path.exists(MITOMAMMAL),
+                    reason="MitoMammal.json not present (data/other_models/)")
+def test_mitomammal_tca_cycle_is_one_map():
+    """FUMm and MDHm on the TCA map, with complex II closing the ring, and
+    no transporter pulled in as a chord."""
+    failures, checked = _tca_report(MITOMAMMAL)
+    assert {"cluster", "ring", "closed", "round", "arcs", "chords", "middle"} <= checked
+    assert not failures, failures
