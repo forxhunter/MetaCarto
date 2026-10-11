@@ -117,6 +117,9 @@ ORGANISM = {
     'iYS854': 'Staphylococcus aureus subsp. aureus USA300_TCH1516',
     'iZ_1308': 'Escherichia coli O157:H7 str. EDL933',
     'ic_1306': 'Escherichia coli CFT073',
+    # Not from BiGG: the consensus yeast model, yeast-GEM v9 (SysBioChalmers),
+    # published in the collection under its release name.
+    'Yeast9': 'Saccharomyces cerevisiae S288C',
 }
 
 COMMON = {
